@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Force light mode and prevent dark class from being applied */
+html {
+  color-scheme: light !important;
+}
+
+html.dark {
+  color-scheme: light !important;
+}
+
+/* Override any dark mode styles */
+.dark {
+  color-scheme: light !important;
+}
+
+/* Ensure all components use light mode colors */
+:root {
+  --color-mode: 'light';
+}

@@ -1,0 +1,41 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@nuxt/eslint": "1.10.0",
+    "@nuxt/image": "2.0.0",
+    "@nuxt/scripts": "0.13.0",
+    "@nuxt/test-utils": "3.20.1",
+    "@nuxt/ui": "3",
+    "@pinia-plugin-persistedstate/nuxt": "^1.2.1",
+    "@pinia/nuxt": "^0.11.2",
+    "@prisma/client": "^6.19.0",
+    "@supabase/supabase-js": "^2.79.0",
+    "@unhead/vue": "^2.0.3",
+    "bcrypt": "^6.0.0",
+    "eslint": "^9.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "nuxt": "^3.20.1",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "typescript": "^5.9.3",
+    "vite-plugin-checker": "^0.11.0",
+    "vue": "^3.5.22",
+    "vue-currency-input": "^3.2.1",
+    "vue-router": "^4.6.3"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "devDependencies": {
+    "prisma": "6.19.0",
+    "vue-tsc": "^3.1.3"
+  }
+}
