@@ -48,6 +48,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    preset: 'vercel'
+    preset: 'vercel',
+    externals: {
+      inline: ['.prisma/client', '@prisma/client']
+    }
   }
 });
