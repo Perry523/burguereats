@@ -1,4 +1,5 @@
-import prisma from '../../utils/prisma'
+import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
+import prisma from '~/server/utils/prisma'
 
 const toSlug = (value: string) =>
   value
@@ -33,18 +34,20 @@ export default defineEventHandler(async (event) => {
     const order = Number.isFinite(parsedOrder) ? parsedOrder : 0
 
     if (!name || !companyId) {
-      throw createError({
+      return sendError(event, {
         statusCode: 400,
-        statusMessage: 'Name and companyId are required',
+        code: 'CATEGORY_VALIDATION_FAILED',
+        message: 'Name and companyId are required',
       })
     }
 
     const slug = toSlug(slugInput || name)
 
     if (!slug) {
-      throw createError({
+      return sendError(event, {
         statusCode: 400,
-        statusMessage: 'Valid slug is required',
+        code: 'CATEGORY_SLUG_INVALID',
+        message: 'Valid slug is required',
       })
     }
 
@@ -56,9 +59,10 @@ export default defineEventHandler(async (event) => {
     })
 
     if (existing) {
-      throw createError({
+      return sendError(event, {
         statusCode: 409,
-        statusMessage: 'Category slug already exists for this company',
+        code: 'CATEGORY_DUPLICATE',
+        message: 'Category slug already exists for this company',
       })
     }
 
@@ -74,15 +78,15 @@ export default defineEventHandler(async (event) => {
       data: createData,
     })
 
-    return {
-      success: true,
+    return sendSuccess(event, {
+      statusCode: 201,
       data: serializeCategory(category),
-    }
+    })
   } catch (error) {
-    console.error('Error creating category:', error)
-    throw createError({
+    return handleServerError(event, error, {
       statusCode: 500,
-      statusMessage: 'Failed to create category',
+      code: 'CATEGORY_CREATE_FAILED',
+      message: 'Failed to create category',
     })
   }
 })

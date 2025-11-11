@@ -12,7 +12,7 @@
         <div v-else>
           <div
             v-if="filteredDishes.length"
-            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
           >
             <UCard
               v-for="dish in filteredDishes"
@@ -36,11 +36,12 @@
                   <h3 class="text-lg font-semibold text-gray-900">
                     {{ dish.name }}
                   </h3>
-                  <span class="text-lg font-bold text-primary">{{
-                    currencyFormatter.format(dish.price)
-                  }}</span>
+         
                 </div>
                 <p class="text-sm text-gray-500">{{ dish.description }}</p>
+                <span class="text-lg font-bold text-primary">{{
+                    currencyFormatter.format(dish.price)
+                  }}</span>
                 <UButton
                   size="sm"
                   icon="i-heroicons-plus"

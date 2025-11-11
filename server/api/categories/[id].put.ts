@@ -1,4 +1,5 @@
-import prisma from '../../utils/prisma'
+import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
+import prisma from '~/server/utils/prisma'
 
 const toSlug = (value: string) =>
   value
@@ -27,9 +28,10 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
 
     if (!id) {
-      throw createError({
+      return sendError(event, {
         statusCode: 400,
-        statusMessage: 'Category ID is required',
+        code: 'CATEGORY_ID_REQUIRED',
+        message: 'Category ID is required',
       })
     }
 
@@ -38,9 +40,10 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!existingCategory) {
-      throw createError({
+      return sendError(event, {
         statusCode: 404,
-        statusMessage: 'Category not found',
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'Category not found',
       })
     }
 
@@ -49,9 +52,10 @@ export default defineEventHandler(async (event) => {
     if (Object.prototype.hasOwnProperty.call(body, 'name')) {
       const name = typeof body.name === 'string' ? body.name.trim() : ''
       if (!name) {
-        throw createError({
+        return sendError(event, {
           statusCode: 400,
-          statusMessage: 'Name cannot be empty',
+          code: 'CATEGORY_VALIDATION_FAILED',
+          message: 'Name cannot be empty',
         })
       }
       data.name = name
@@ -67,9 +71,10 @@ export default defineEventHandler(async (event) => {
       const slugInput = typeof body.slug === 'string' ? body.slug.trim() : ''
       resolvedSlug = toSlug(slugInput || (typeof body.name === 'string' ? body.name : existingCategory.name))
       if (!resolvedSlug) {
-        throw createError({
+        return sendError(event, {
           statusCode: 400,
-          statusMessage: 'Valid slug is required',
+          code: 'CATEGORY_SLUG_INVALID',
+          message: 'Valid slug is required',
         })
       }
     }
@@ -89,9 +94,10 @@ export default defineEventHandler(async (event) => {
       })
 
       if (conflict) {
-        throw createError({
+        return sendError(event, {
           statusCode: 409,
-          statusMessage: 'Category slug already exists for this company',
+          code: 'CATEGORY_DUPLICATE',
+          message: 'Category slug already exists for this company',
         })
       }
 

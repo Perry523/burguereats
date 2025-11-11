@@ -1,4 +1,5 @@
-import prisma from '../../utils/prisma'
+import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
+import prisma from '~/server/utils/prisma'
 
 const serializeCategory = (category: { id: string; name: string; slug: string; description: string | null; order: number; companyId: string; createdAt: Date; updatedAt: Date }) => ({
   id: category.id,
@@ -16,9 +17,10 @@ export default defineEventHandler(async (event) => {
     const id = getRouterParam(event, 'id')
 
     if (!id) {
-      throw createError({
+      return sendError(event, {
         statusCode: 400,
-        statusMessage: 'Category ID is required',
+        code: 'CATEGORY_ID_REQUIRED',
+        message: 'Category ID is required',
       })
     }
 
@@ -27,21 +29,21 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!category) {
-      throw createError({
+      return sendError(event, {
         statusCode: 404,
-        statusMessage: 'Category not found',
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'Category not found',
       })
     }
 
-    return {
-      success: true,
+    return sendSuccess(event, {
       data: serializeCategory(category),
-    }
+    })
   } catch (error) {
-    console.error('Error fetching category:', error)
-    throw createError({
+    return handleServerError(event, error, {
       statusCode: 500,
-      statusMessage: 'Failed to fetch category',
+      code: 'CATEGORY_FETCH_FAILED',
+      message: 'Failed to fetch category',
     })
   }
 })

@@ -1,4 +1,5 @@
-import prisma from '../../utils/prisma'
+import { handleServerError, sendSuccess } from '~/server/utils/http'
+import prisma from '~/server/utils/prisma'
 
 const serializeCategory = (category: { id: string; name: string; slug: string; description: string | null; order: number; companyId: string; createdAt: Date; updatedAt: Date }) => ({
   id: category.id,
@@ -21,15 +22,14 @@ export default defineEventHandler(async (event) => {
       orderBy: [{ order: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
     })
 
-    return {
-      success: true,
+    return sendSuccess(event, {
       data: categories.map((category) => serializeCategory(category)),
-    }
+    })
   } catch (error) {
-    console.error('Error fetching categories:', error)
-    throw createError({
+    return handleServerError(event, error, {
       statusCode: 500,
-      statusMessage: 'Failed to fetch categories',
+      code: 'CATEGORIES_FETCH_FAILED',
+      message: 'Failed to fetch categories',
     })
   }
 })
