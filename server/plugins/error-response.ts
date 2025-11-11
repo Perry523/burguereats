@@ -1,4 +1,3 @@
-import { defineNitroPlugin } from 'nitro/app'
 import { H3Error, setResponseStatus } from 'h3'
 import { sendError } from '~/server/utils/http'
 
