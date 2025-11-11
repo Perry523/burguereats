@@ -105,10 +105,9 @@ export default defineEventHandler(async (event) => {
     }
 
     if (Object.keys(data).length === 0) {
-      return {
-        success: true,
+      return sendSuccess(event, {
         data: serializeCategory(existingCategory),
-      }
+      })
     }
 
     const category = await prisma.category.update({
@@ -116,15 +115,14 @@ export default defineEventHandler(async (event) => {
       data,
     })
 
-    return {
-      success: true,
+    return sendSuccess(event, {
       data: serializeCategory(category),
-    }
+    })
   } catch (error) {
-    console.error('Error updating category:', error)
-    throw createError({
+    return handleServerError(event, error, {
       statusCode: 500,
-      statusMessage: 'Failed to update category',
+      code: 'CATEGORY_UPDATE_FAILED',
+      message: 'Failed to update category',
     })
   }
 })

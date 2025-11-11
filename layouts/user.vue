@@ -11,7 +11,7 @@
             <UInput
               v-model="searchQuery"
               placeholder="Buscar pratos..."
-              class="w-64"
+              class="hidden w-64 md:block"
               icon="i-heroicons-magnifying-glass"
             />
             <UButton icon="i-heroicons-shopping-bag" variant="outline" @click="openCartPanel">

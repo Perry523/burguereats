@@ -1,13 +1,15 @@
-import prisma from '../../utils/prisma'
+import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
     const id = getRouterParam(event, 'id')
 
     if (!id) {
-      throw createError({
+      return sendError(event, {
         statusCode: 400,
-        statusMessage: 'Category ID is required',
+        code: 'CATEGORY_ID_REQUIRED',
+        message: 'Category ID is required',
       })
     }
 
@@ -16,9 +18,10 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!existingCategory) {
-      throw createError({
+      return sendError(event, {
         statusCode: 404,
-        statusMessage: 'Category not found',
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'Category not found',
       })
     }
 
@@ -26,14 +29,14 @@ export default defineEventHandler(async (event) => {
       where: { id },
     })
 
-    return {
-      success: true,
-    }
+    return sendSuccess(event, {
+      data: null,
+    })
   } catch (error) {
-    console.error('Error deleting category:', error)
-    throw createError({
+    return handleServerError(event, error, {
       statusCode: 500,
-      statusMessage: 'Failed to delete category',
+      code: 'CATEGORY_DELETE_FAILED',
+      message: 'Failed to delete category',
     })
   }
 })
