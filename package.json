@@ -5,9 +5,9 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "postinstall": "nuxt prepare",
+    "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "generate": "prisma generate && cp node_modules/.prisma/client/query-engine-rhel-openssl-3.0.x generated/prisma/",
+    "postinstall": "prisma generate && nuxt prepare",
     "seed": "prisma db seed"
   },
   "dependencies": {
