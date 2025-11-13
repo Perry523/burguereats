@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
-import prisma from '~/server/utils/prisma'
+import { DatabaseHelper } from '~/server/utils/database'
 
 const toSlug = (value: string) =>
   value
@@ -35,9 +35,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const existingCategory = await prisma.category.findUnique({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    const existingCategory = await db.findById('Category', id)
 
     if (!existingCategory) {
       return sendError(event, {
@@ -85,13 +84,11 @@ export default defineEventHandler(async (event) => {
     }
 
     if (resolvedSlug) {
-      const conflict = await prisma.category.findFirst({
-        where: {
-          companyId: existingCategory.companyId,
-          slug: resolvedSlug,
-          id: { not: id },
-        },
-      })
+      const conflict = await db.db('Category')
+        .where('companyId', existingCategory.companyId)
+        .where('slug', resolvedSlug)
+        .whereNot('id', id)
+        .first()
 
       if (conflict) {
         return sendError(event, {
@@ -110,10 +107,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const category = await prisma.category.update({
-      where: { id },
-      data,
-    })
+    const category = await db.update('Category', id, data)
 
     return sendSuccess(event, {
       data: serializeCategory(category),

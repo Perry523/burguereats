@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,9 +11,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await prisma.admins.delete({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    await db.delete('Admins', id)
 
     return { success: true, message: 'Admin deleted successfully' }
   } catch (error) {

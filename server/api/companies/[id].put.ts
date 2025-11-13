@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,17 +12,24 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const company = await prisma.company.update({
-      where: { id },
-      data: {
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        zipCode: body.zipCode,
-      },
+    const db = new DatabaseHelper()
+    const existingCompany = await db.findById('Company', id)
+
+    if (!existingCompany) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Company not found',
+      })
+    }
+
+    const company = await db.update('Company', id, {
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      zip_code: body.zipCode,
     })
 
     return { success: true, data: company }

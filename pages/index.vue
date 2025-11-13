@@ -4,52 +4,101 @@
       <div class="space-y-8">
         <div
           v-if="pending"
-          class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
         >
           <USkeleton v-for="index in 8" :key="index" class="h-64 rounded-3xl" />
         </div>
 
         <div v-else>
-          <div
-            v-if="filteredDishes.length"
-            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
-          >
+          <div v-if="activeCategory === 'todos'">
+            <div
+              v-for="group in groupedDishes"
+              :key="group.slug"
+              class="mb-8"
+            >
+              <h2 class="text-2xl font-bold mb-4">{{ group.name }}</h2>
+              <div class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                <UCard
+                  v-for="dish in group.dishes"
+                  :key="dish.id"
+                  class="group flex flex-row lg:flex-col overflow-hidden border-0 shadow-lg shadow-gray-200/60 transition hover:-translate-y-1 hover:shadow-orange-200/60"
+                >
+              <div class="flex flex-row lg:flex-col">
+                <div class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none">
+                  <nuxt-img
+                    :src="formatImage(dish.image)"
+                    :alt="dish.name"
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <!-- <span
+                    class="absolute left-1 top-1 lg:left-4 lg:top-4 rounded-full bg-white/90 px-1.5 py-0.5 lg:px-3 lg:py-1 text-xs font-semibold text-gray-700"
+                  >
+                    {{ primaryCategoryLabel(dish) }}
+                  </span> -->
+                </div>
+                <div class="flex flex-1 flex-col gap-2 p-3 lg:py-3">
+                  <div class="flex items-start justify-between gap-4">
+                    <h3 class="text-base lg:text-lg font-semibold text-gray-900">
+                      {{ dish.name }}
+                    </h3>
+                  </div>
+                  <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">{{ dish.description }}</p>
+                  <span class="text-sm lg:text-lg font-bold text-primary">{{
+                      currencyFormatter.format(dish.price)
+                    }}</span>
+                  <UButton
+                    size="sm"
+                    icon="i-heroicons-plus"
+                    class="mt-auto w-full lg:w-max"
+                    @click="openDishModal(dish)"
+                  >
+                    Adicionar a sacola
+                  </UButton>
+                </div>
+              </div>
+            </UCard>
+          </div>
+            </div>
+          </div>
+
+          <div v-else-if="filteredDishes.length" class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
             <UCard
               v-for="dish in filteredDishes"
               :key="dish.id"
-              class="group flex flex-col overflow-hidden border-0 shadow-lg shadow-gray-200/60 transition hover:-translate-y-1 hover:shadow-orange-200/60"
+              class="group flex flex-row lg:flex-col overflow-hidden border-0 shadow-lg shadow-gray-200/60 transition hover:-translate-y-1 hover:shadow-orange-200/60"
             >
-              <div class="relative h-40 overflow-hidden">
-                <nuxt-img
-                  :src="formatImage(dish.image)"
-                  :alt="dish.name"
-                  class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-                <span
-                  class="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-gray-700"
-                >
-                  {{ primaryCategoryLabel(dish) }}
-                </span>
-              </div>
-              <div class="flex flex-1 flex-col gap-3 py-3">
-                <div class="flex items-start justify-between gap-4">
-                  <h3 class="text-lg font-semibold text-gray-900">
-                    {{ dish.name }}
-                  </h3>
-         
+              <div class="flex flex-row lg:flex-col">
+                <div class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none">
+                  <nuxt-img
+                    :src="formatImage(dish.image)"
+                    :alt="dish.name"
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <!-- <span
+                    class="absolute left-1 top-1 lg:left-4 lg:top-4 rounded-full bg-white/90 px-1.5 py-0.5 lg:px-3 lg:py-1 text-xs font-semibold text-gray-700"
+                  >
+                    {{ primaryCategoryLabel(dish) }}
+                  </span> -->
                 </div>
-                <p class="text-sm text-gray-500">{{ dish.description }}</p>
-                <span class="text-lg font-bold text-primary">{{
-                    currencyFormatter.format(dish.price)
-                  }}</span>
-                <UButton
-                  size="sm"
-                  icon="i-heroicons-plus"
-                  class="mt-auto w-max"
-                  @click="openDishModal(dish)"
-                >
-                  Adicionar ao carrinho
-                </UButton>
+                <div class="flex flex-1 flex-col gap-2 p-3 lg:py-3">
+                  <div class="flex items-start justify-between gap-4">
+                    <h3 class="text-base lg:text-lg font-semibold text-gray-900">
+                      {{ dish.name }}
+                    </h3>
+                  </div>
+                  <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">{{ dish.description }}</p>
+                  <span class="text-sm lg:text-lg font-bold text-primary">{{
+                      currencyFormatter.format(dish.price)
+                    }}</span>
+                  <UButton
+                    size="sm"
+                    icon="i-heroicons-plus"
+                    class="mt-auto w-full lg:w-max"
+                    @click="openDishModal(dish)"
+                  >
+                    Adicionar a sacola
+                  </UButton>
+                </div>
               </div>
             </UCard>
           </div>
@@ -297,7 +346,7 @@
                       :disabled="!canConfirmSelection"
                       @click="addDishToCart"
                     >
-                      Adicionar ao carrinho
+                      Adicionar a sacola
                     </UButton>
                   </div>
                 </div>
@@ -789,18 +838,36 @@ watchEffect(() => {
   categoriesState.value = [{ id: "todos", name: "Todos" }, ...sortedCategories];
 });
 
-const filteredDishes = computed<Dish[]>(() => {
-  const category = activeCategory.value;
+const searchFilteredDishes = computed<Dish[]>(() => {
   const term = searchQuery.value.trim().toLowerCase();
 
   return dishes.value.filter((dish) => {
-    const matchesCategory = dishMatchesCategory(dish, category);
     const matchesSearch =
       term.length === 0 ||
       dish.name.toLowerCase().includes(term) ||
       (dish.description ?? "").toLowerCase().includes(term);
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
+});
+
+const filteredDishes = computed<Dish[]>(() => {
+  const category = activeCategory.value;
+  return searchFilteredDishes.value.filter((dish) =>
+    dishMatchesCategory(dish, category)
+  );
+});
+
+const groupedDishes = computed<{slug: string, name: string, dishes: Dish[]}[]>(() => {
+  const groups = new Map<string, {slug: string, name: string, dishes: Dish[]}>();
+  for (const dish of searchFilteredDishes.value) {
+    const catSlug = dish.categories[0]?.slug || dish.category;
+    const catName = dish.categories[0]?.name || formatCategoryLabel(catSlug);
+    if (!groups.has(catSlug)) {
+      groups.set(catSlug, {slug: catSlug, name: catName, dishes: []});
+    }
+    groups.get(catSlug)!.dishes.push(dish);
+  }
+  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const suggestionDishes = computed<Dish[]>(() => {

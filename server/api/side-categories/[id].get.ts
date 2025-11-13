@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,10 +11,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const category = await prisma.sideCategory.findUnique({
-      where: { id },
-      include: { sides: true },
-    })
+    const db = new DatabaseHelper()
+    const category = await db.findById('SideCategory', id)
 
     if (!category) {
       throw createError({
@@ -25,28 +23,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      data: {
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        isRequired: category.isRequired,
-        maxSelections: category.maxSelections,
-        order: category.order,
-        companyId: category.companyId,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-        sides: category.sides.map((side) => ({
-          id: side.id,
-          name: side.name,
-          description: side.description,
-          priceIncrement: side.priceIncrement,
-          image: side.image,
-          isAvailable: side.isAvailable,
-          categoryId: side.categoryId,
-          createdAt: side.createdAt,
-          updatedAt: side.updatedAt,
-        })),
-      },
+      data: category,
     }
   } catch (error) {
     console.error('Error fetching side category:', error)

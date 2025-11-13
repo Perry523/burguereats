@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
@@ -24,11 +24,8 @@ export default defineEventHandler(async (event) => {
       updateData.password = await bcrypt.hash(body.password, 10)
     }
 
-    const admin = await prisma.admins.update({
-      where: { id },
-      data: updateData,
-      include: { company: true },
-    })
+    const db = new DatabaseHelper()
+    const admin = await db.update('Admins', id, updateData)
 
     return { success: true, data: admin }
   } catch (error) {

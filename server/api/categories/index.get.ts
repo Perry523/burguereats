@@ -1,5 +1,5 @@
 import { handleServerError, sendSuccess } from '~/server/utils/http'
-import prisma from '~/server/utils/prisma'
+import { DatabaseHelper } from '~/server/utils/database'
 
 const serializeCategory = (category: { id: string; name: string; slug: string; description: string | null; order: number; companyId: string; createdAt: Date; updatedAt: Date }) => ({
   id: category.id,
@@ -17,13 +17,20 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const companyId = typeof query.companyId === 'string' ? query.companyId : undefined
 
-    const categories = await prisma.category.findMany({
-      where: companyId ? { companyId } : undefined,
-      orderBy: [{ order: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
-    })
+    const db = new DatabaseHelper()
+    let knexQuery = db.db('Category')
+
+    if (companyId) {
+      knexQuery = knexQuery.where('companyId', companyId)
+    }
+
+    const categories = await knexQuery
+      .orderBy('order', 'asc')
+      .orderBy('name', 'asc')
+      .orderBy('createdAt', 'asc')
 
     return sendSuccess(event, {
-      data: categories.map((category) => serializeCategory(category)),
+      data: categories.map((category: any) => serializeCategory(category)),
     })
   } catch (error) {
     return handleServerError(event, error, {

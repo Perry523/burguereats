@@ -1,21 +1,24 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event)
     const companyId = query.companyId as string
 
+    const db = new DatabaseHelper()
+    let admins
+
     if (companyId) {
-      const admins = await prisma.admins.findMany({
-        where: { companyId },
-        include: { company: true },
-      })
-      return { success: true, data: admins }
+      admins = await db.db('Admins')
+        .where('companyId', companyId)
+        .join('Company', 'Admins.companyId', 'Company.id')
+        .select('Admins.*', 'Company.name as company_name', 'Company.email as company_email')
+    } else {
+      admins = await db.db('Admins')
+        .join('Company', 'Admins.companyId', 'Company.id')
+        .select('Admins.*', 'Company.name as company_name', 'Company.email as company_email')
     }
 
-    const admins = await prisma.admins.findMany({
-      include: { company: true },
-    })
     return { success: true, data: admins }
   } catch (error) {
     console.error('Error fetching admins:', error)

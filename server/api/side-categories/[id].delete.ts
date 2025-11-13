@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,9 +11,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await prisma.dishSideCategory.deleteMany({ where: { sideCategoryId: id } })
-    await prisma.sideOption.deleteMany({ where: { categoryId: id } })
-    await prisma.sideCategory.delete({ where: { id } })
+    const db = new DatabaseHelper()
+    const existingCategory = await db.findById('SideCategory', id)
+
+    if (!existingCategory) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Side category not found',
+      })
+    }
+
+    await db.delete('SideCategory', id)
 
     return { success: true }
   } catch (error) {

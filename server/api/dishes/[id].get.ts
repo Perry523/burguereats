@@ -1,5 +1,4 @@
-import prisma from '../../utils/prisma'
-import { serializeDish } from '../../utils/dishes'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,23 +11,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const dish = await prisma.dish.findUnique({
-      where: { id },
-      include: {
-        sideCategories: {
-          include: {
-            sideCategory: {
-              include: { sides: true },
-            },
-          },
-        },
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-      },
-    })
+    const db = new DatabaseHelper()
+    const dish = await db.findById('Dish', id)
 
     if (!dish) {
       throw createError({
@@ -37,7 +21,26 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    return { success: true, data: serializeDish(dish) }
+    // Fetch related categories
+    const dishCategories = await db.db('DishCategory')
+      .join('Category', 'DishCategory.categoryId', 'Category.id')
+      .where('DishCategory.dishId', id)
+      .select('Category.*')
+
+    // Fetch related side categories
+    const dishSideCategories = await db.db('DishSideCategory')
+      .join('SideCategory', 'DishSideCategory.sideCategoryId', 'SideCategory.id')
+      .where('DishSideCategory.dishId', id)
+      .select('SideCategory.*', 'DishSideCategory.order as dishOrder')
+
+    return {
+      success: true,
+      data: {
+        ...dish,
+        categories: dishCategories,
+        sideCategories: dishSideCategories
+      }
+    }
   } catch (error) {
     console.error('Error fetching dish:', error)
     throw createError({

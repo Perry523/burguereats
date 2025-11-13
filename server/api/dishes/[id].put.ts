@@ -1,22 +1,5 @@
-import prisma from '../../utils/prisma'
-import { serializeDish } from '../../utils/dishes'
-
-const formatCategoryName = (slug: string) =>
-  slug
-    .split('-')
-    .filter((segment) => segment.length)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ')
-
-const toSlug = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+import { DatabaseHelper } from '../../utils/database'
+import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -30,75 +13,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const existingDish = await prisma.dish.findUnique({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    const existingDish = await db.findById('Dish', id)
 
     if (!existingDish) {
       throw createError({
         statusCode: 404,
         statusMessage: 'Dish not found',
-      })
-    }
-
-    const sideCategoryIds: string[] | undefined = Array.isArray(body.sideCategoryIds)
-      ? body.sideCategoryIds.filter((value: unknown): value is string => typeof value === 'string')
-      : undefined
-
-    const hasCategoryIds = Object.prototype.hasOwnProperty.call(body, 'categoryIds')
-    const hasCategorySlug = Object.prototype.hasOwnProperty.call(body, 'category')
-
-    const incomingImage = typeof body.imageUrl === 'string' ? body.imageUrl : body.image
-    const normalizedImage = typeof incomingImage === 'string' ? incomingImage.trim() : undefined
-
-    let resolvedCategoryIds: string[] | undefined
-    let resolvedPrimarySlug = hasCategorySlug && typeof body.category === 'string' ? toSlug(body.category) : undefined
-
-    if (hasCategoryIds) {
-      const categoryIds: string[] = Array.isArray(body.categoryIds)
-        ? body.categoryIds.filter((value: unknown): value is string => typeof value === 'string')
-        : []
-      resolvedCategoryIds = [...new Set(categoryIds)]
-    }
-
-    if (!resolvedPrimarySlug && resolvedCategoryIds && resolvedCategoryIds.length) {
-      const firstCategory = await prisma.category.findFirst({
-        where: {
-          id: {
-            in: resolvedCategoryIds,
-          },
-        },
-        orderBy: { name: 'asc' },
-      })
-      resolvedPrimarySlug = firstCategory?.slug
-    }
-
-    if ((resolvedCategoryIds === undefined || resolvedCategoryIds.length === 0) && resolvedPrimarySlug) {
-      const existingCategory = await prisma.category.findFirst({
-        where: {
-          companyId: existingDish.companyId,
-          slug: resolvedPrimarySlug,
-        },
-      })
-
-      if (existingCategory) {
-        resolvedCategoryIds = [existingCategory.id]
-      } else {
-        const createdCategory = await prisma.category.create({
-          data: {
-            name: formatCategoryName(resolvedPrimarySlug),
-            slug: resolvedPrimarySlug,
-            companyId: existingDish.companyId,
-          },
-        })
-        resolvedCategoryIds = [createdCategory.id]
-      }
-    }
-
-    if (resolvedCategoryIds && resolvedCategoryIds.length === 0 && !resolvedPrimarySlug) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'At least one category is required',
       })
     }
 
@@ -126,6 +47,8 @@ export default defineEventHandler(async (event) => {
       updateData.price = parsedPrice
     }
 
+    const incomingImage = typeof body.imageUrl === 'string' ? body.imageUrl : body.image
+    const normalizedImage = typeof incomingImage === 'string' ? incomingImage.trim() : undefined
     if (normalizedImage !== undefined) {
       updateData.image = normalizedImage || null
     }
@@ -134,69 +57,47 @@ export default defineEventHandler(async (event) => {
       updateData.isAvailable = body.isAvailable
     }
 
-    if (resolvedPrimarySlug) {
-      updateData.category = resolvedPrimarySlug
+    // Update basic dish data
+    const dish = await db.update('Dish', id, updateData)
+
+    // Handle category relationships
+    if (Array.isArray(body.categoryIds)) {
+      const categoryIds = body.categoryIds.filter(id => typeof id === 'string')
+
+      // Remove existing category relationships
+      await db.db('DishCategory').where('dishId', id).del()
+
+      // Add new category relationships
+      if (categoryIds.length > 0) {
+        const dishCategories = categoryIds.map(categoryId => ({
+          id: randomUUID(),
+          dishId: id,
+          categoryId,
+        }))
+        await db.db('DishCategory').insert(dishCategories)
+      }
     }
 
-    const dish = await prisma.dish.update({
-      where: { id },
-      data: updateData,
-    })
+    // Handle side category relationships
+    if (Array.isArray(body.sideCategoryIds)) {
+      const sideCategoryIds = body.sideCategoryIds.filter(id => typeof id === 'string')
 
-    if (sideCategoryIds) {
-      await prisma.dishSideCategory.deleteMany({ where: { dishId: dish.id } })
-      if (sideCategoryIds.length) {
-        const sideCategoryData = sideCategoryIds.map((sideCategoryId, index) => ({
-          dishId: dish.id,
+      // Remove existing side category relationships
+      await db.db('DishSideCategory').where('dishId', id).del()
+
+      // Add new side category relationships
+      if (sideCategoryIds.length > 0) {
+        const dishSideCategories = sideCategoryIds.map((sideCategoryId, index) => ({
+          id: randomUUID(),
+          dishId: id,
           sideCategoryId,
           order: index,
         }))
-        await prisma.dishSideCategory.createMany({
-          data: sideCategoryData,
-        })
+        await db.db('DishSideCategory').insert(dishSideCategories)
       }
     }
 
-    if (resolvedCategoryIds) {
-      await prisma.dishCategory.deleteMany({ where: { dishId: dish.id } })
-      if (resolvedCategoryIds.length) {
-        const categoryData = resolvedCategoryIds.map((categoryId) => ({
-          dishId: dish.id,
-          categoryId,
-        }))
-        await prisma.dishCategory.createMany({
-          data: categoryData,
-          skipDuplicates: true,
-        })
-      }
-    }
-
-    const dishWithRelations = await prisma.dish.findUnique({
-      where: { id: dish.id },
-      include: {
-        sideCategories: {
-          include: {
-            sideCategory: {
-              include: { sides: true },
-            },
-          },
-        },
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-      },
-    })
-
-    if (!dishWithRelations) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to load dish after update',
-      })
-    }
-
-    return { success: true, data: serializeDish(dishWithRelations) }
+    return { success: true, data: dish }
   } catch (error) {
     console.error('Error updating dish:', error)
     throw createError({

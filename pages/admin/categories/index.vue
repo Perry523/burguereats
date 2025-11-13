@@ -150,8 +150,10 @@ watch(
   }
 );
 
-const formatDate = (value: string) => {
+const formatDate = (value: string | Date | null | undefined) => {
+  if (!value) return "Nunca";
   const date = new Date(value);
+  if (isNaN(date.getTime())) return "Data inválida";
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",

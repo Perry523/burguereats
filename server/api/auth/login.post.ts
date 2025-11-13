@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 // import { H3Error } from 'h3'
@@ -14,10 +14,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const admin = await prisma.admins.findUnique({
-      where: { email: body.email },
-      include: { company: true },
-    })
+    const db = new DatabaseHelper()
+    const admin = await db.db('Admins').where('email', body.email).first()
 
     if (!admin) {
       throw createError({
@@ -41,6 +39,8 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Invalid email or password',
       })
     }
+
+    const company = await db.findById('Company', admin.companyId)
 
     const token = jwt.sign(
       {
@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
         id: admin.id,
         email: admin.email,
         name: admin.name,
-        company: admin.company,
+        company: company,
       },
     }
   } catch (error) {

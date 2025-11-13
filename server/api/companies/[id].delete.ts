@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,9 +11,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await prisma.company.delete({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    const existingCompany = await db.findById('Company', id)
+
+    if (!existingCompany) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Company not found',
+      })
+    }
+
+    await db.delete('Company', id)
 
     return { success: true, message: 'Company deleted successfully' }
   } catch (error) {

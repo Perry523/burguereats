@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,94 +12,43 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const sides = Array.isArray(body.sides) ? body.sides : []
+    const db = new DatabaseHelper()
+    const existingCategory = await db.findById('SideCategory', id)
 
-    const category = await prisma.sideCategory.update({
-      where: { id },
-      data: {
-        name: body.name,
-        description: body.description,
-        isRequired:
-          typeof body.isRequired === 'boolean' ? body.isRequired : undefined,
-        maxSelections:
-          typeof body.maxSelections === 'number' ? body.maxSelections : undefined,
-        order: typeof body.order === 'number' ? body.order : undefined,
-      },
-      include: { sides: true },
-    })
-
-    const incomingIds = sides
-      .map((side: any) => side?.id)
-      .filter((value: unknown): value is string => typeof value === 'string')
-
-    await prisma.sideOption.deleteMany({
-      where: {
-        categoryId: id,
-        id: incomingIds.length ? { notIn: incomingIds } : undefined,
-      },
-    })
-
-    for (const side of sides) {
-      const payload = {
-        name: side.name,
-        description: side.description,
-        priceIncrement:
-          typeof side.priceIncrement === 'number'
-            ? side.priceIncrement
-            : parseFloat(side.priceIncrement ?? 0),
-        image: side.image,
-        isAvailable:
-          typeof side.isAvailable === 'boolean' ? side.isAvailable : true,
-        categoryId: id,
-      }
-
-      if (typeof side.id === 'string') {
-        await prisma.sideOption.upsert({
-          where: { id: side.id },
-          update: payload,
-          create: { ...payload, id: side.id },
-        })
-      } else {
-        await prisma.sideOption.create({ data: payload })
-      }
-    }
-
-    const updatedCategory = await prisma.sideCategory.findUnique({
-      where: { id },
-      include: { sides: true },
-    })
-
-    if (!updatedCategory) {
+    if (!existingCategory) {
       throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to refresh side category',
+        statusCode: 404,
+        statusMessage: 'Side category not found',
       })
     }
 
+    const updateData: Record<string, unknown> = {}
+
+    if (typeof body.name === 'string') {
+      updateData.name = body.name
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'description')) {
+      updateData.description = body.description
+    }
+
+    if (typeof body.isRequired === 'boolean') {
+      updateData.is_required = body.isRequired
+    }
+
+    if (typeof body.maxSelections === 'number') {
+      updateData.max_selections = body.maxSelections
+    }
+
+    if (typeof body.order === 'number') {
+      updateData.order = body.order
+    }
+
+    const category = await db.update('SideCategory', id, updateData)
+
     return {
       success: true,
-      data: {
-        id: updatedCategory.id,
-        name: updatedCategory.name,
-        description: updatedCategory.description,
-        isRequired: updatedCategory.isRequired,
-        maxSelections: updatedCategory.maxSelections,
-        order: updatedCategory.order,
-        companyId: updatedCategory.companyId,
-        createdAt: updatedCategory.createdAt,
-        updatedAt: updatedCategory.updatedAt,
-        sides: updatedCategory.sides.map((side) => ({
-          id: side.id,
-          name: side.name,
-          description: side.description,
-          priceIncrement: side.priceIncrement,
-          image: side.image,
-          isAvailable: side.isAvailable,
-          categoryId: side.categoryId,
-          createdAt: side.createdAt,
-          updatedAt: side.updatedAt,
-        })),
-      },
+      data: category,
     }
   } catch (error) {
     console.error('Error updating side category:', error)

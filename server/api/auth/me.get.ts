@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,10 +18,8 @@ export default defineEventHandler(async (event) => {
       companyId: string
     }
 
-    const admin = await prisma.admins.findUnique({
-      where: { id: decoded.id },
-      include: { company: true },
-    })
+    const db = new DatabaseHelper()
+    const admin = await db.db('Admins').where('id', decoded.id).first()
 
     if (!admin) {
       throw createError({
@@ -30,13 +28,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const company = await db.findById('Company', admin.companyId)
+
     return {
       success: true,
       data: {
         id: admin.id,
         email: admin.email,
         name: admin.name,
-        company: admin.company,
+        company: company,
       },
     }
   } catch (error) {

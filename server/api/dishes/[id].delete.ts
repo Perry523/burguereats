@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,9 +11,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await prisma.dish.delete({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    const existingDish = await db.findById('Dish', id)
+
+    if (!existingDish) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Dish not found',
+      })
+    }
+
+    await db.delete('Dish', id)
 
     return { success: true, message: 'Dish deleted successfully' }
   } catch (error) {

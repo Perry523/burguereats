@@ -1,13 +1,9 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async () => {
   try {
-    const companies = await prisma.company.findMany({
-      include: {
-        admins: true,
-        dishes: true,
-      },
-    })
+    const db = new DatabaseHelper()
+    const companies = await db.findAll('Company')
     return { success: true, data: companies }
   } catch (error) {
     console.error('Error fetching companies:', error)

@@ -1,5 +1,6 @@
 import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
-import prisma from '~/server/utils/prisma'
+import { DatabaseHelper } from '~/server/utils/database'
+import { randomUUID } from 'crypto'
 
 const toSlug = (value: string) =>
   value
@@ -51,12 +52,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const existing = await prisma.category.findFirst({
-      where: {
-        companyId,
-        slug,
-      },
-    })
+    const db = new DatabaseHelper()
+    const existing = await db.db('Category').where('companyId', companyId).where('slug', slug).first()
 
     if (existing) {
       return sendError(event, {
@@ -67,16 +64,15 @@ export default defineEventHandler(async (event) => {
     }
 
     const createData = {
+      id: randomUUID(),
       name,
       slug,
       description: descriptionInput ? descriptionInput : null,
-      companyId,
+      companyId: companyId,
       order,
     }
 
-    const category = await prisma.category.create({
-      data: createData,
-    })
+    const category = await db.create('Category', createData)
 
     return sendSuccess(event, {
       statusCode: 201,

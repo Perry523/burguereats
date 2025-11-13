@@ -11,11 +11,11 @@
             <UInput
               v-model="searchQuery"
               placeholder="Buscar pratos..."
-              class="hidden w-64 md:block"
-              icon="i-heroicons-magnifying-glass"
+              class="hidden w-64 md:hidden"
+              icon="i-heroicons-magnifying-glass "
             />
-            <UButton icon="i-heroicons-shopping-bag" variant="outline" @click="openCartPanel">
-              Carrinho ({{ itemCount }})
+            <UButton class="md:hidden" icon="i-heroicons-shopping-bag" variant="outline" @click="openCartPanel">
+              Sacola ({{ itemCount }})
             </UButton>
           </div>
         </div>
@@ -51,7 +51,7 @@
         <aside v-if="hasMultipleItems" class="hidden lg:block">
           <div class="sticky top-24 space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-slate-900">Seu carrinho</h2>
+              <h2 class="text-lg font-semibold text-slate-900">Sua sacola</h2>
               <span class="text-sm font-medium text-slate-500">{{ itemCount }} itens</span>
             </div>
             <ul class="space-y-5">
@@ -126,7 +126,7 @@
           <div class="absolute inset-y-0 right-0 flex h-full w-full max-w-xs flex-col rounded-l-3xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
               <div class="space-y-1">
-                <h2 class="text-base font-semibold text-slate-900">Seu carrinho</h2>
+                <h2 class="text-base font-semibold text-slate-900">Sua sacola</h2>
                 <span class="text-xs font-medium text-slate-500">{{ itemCount }} itens</span>
               </div>
               <button
@@ -139,7 +139,7 @@
             </div>
             <div class="flex-1 overflow-y-auto px-6 py-5">
               <div v-if="!cartItems.length" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-500">
-                Seu carrinho está vazio
+                Sacola vazia. Adicione itens para fazer seu pedido.
               </div>
               <ul v-else class="space-y-6">
                 <li v-for="item in cartItems" :key="item.id">

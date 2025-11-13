@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
-import prisma from '~/server/utils/prisma'
+import { DatabaseHelper } from '~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,9 +13,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const existingCategory = await prisma.category.findUnique({
-      where: { id },
-    })
+    const db = new DatabaseHelper()
+    const existingCategory = await db.findById('Category', id)
 
     if (!existingCategory) {
       return sendError(event, {
@@ -25,9 +24,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await prisma.category.delete({
-      where: { id },
-    })
+    await db.delete('Category', id)
 
     return sendSuccess(event, {
       data: null,

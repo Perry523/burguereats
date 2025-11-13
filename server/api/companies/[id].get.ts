@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,13 +11,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const company = await prisma.company.findUnique({
-      where: { id },
-      include: {
-        admins: true,
-        dishes: true,
-      },
-    })
+    const db = new DatabaseHelper()
+    const company = await db.findById('Company', id)
 
     if (!company) {
       throw createError({

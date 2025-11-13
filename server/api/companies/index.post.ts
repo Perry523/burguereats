@@ -1,4 +1,5 @@
-import prisma from '../../utils/prisma'
+import { DatabaseHelper } from '../../utils/database'
+import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,16 +12,16 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const company = await prisma.company.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        zipCode: body.zipCode,
-      },
+    const db = new DatabaseHelper()
+    const company = await db.create('Company', {
+      id: randomUUID(),
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      zipCode: body.zipCode,
     })
 
     return { success: true, data: company }
