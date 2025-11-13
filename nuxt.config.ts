@@ -51,7 +51,9 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'vercel',
     externals: {
-      inline: ['.prisma/client', '@prisma/client']
-    }
+      inline: ['.prisma/client', '@prisma/client', 'knex', 'pg']
+    },
+    // Ensure knex and pg are bundled for Vercel
+    moduleSideEffects: ['knex']
   }
 });
