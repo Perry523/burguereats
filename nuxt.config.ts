@@ -54,26 +54,26 @@ export default defineNuxtConfig({
     preset: 'vercel',
     externals: {
       inline: [
-        // 'knex',
-        // 'pg',           // PostgreSQL driver
-        // 'tarn',         // Connection pool manager used by knex
-        // 'pg-connection-string',  // Used by knex to parse connection strings
-        // 'pg-pool',      // PostgreSQL connection pooling
-        // 'pg-types',     // PostgreSQL type parsing
-        // 'pg-int8',      // PostgreSQL bigint support
-        // 'pg-protocol',  // PostgreSQL wire protocol
-        // 'pgpass',       // PostgreSQL password file support
+        'knex',
+        'pg',
+        'tarn',
+        'pg-connection-string',
+        'pg-pool',
+        'pg-types',
       ],
     },
+    // rollupConfig: {
+    //   external: (id) => {
+    //     // Keep knex and pg packages bundled (not external)
+    //     if (id === 'knex' || id.startsWith('pg')) {
+    //       return false
+    //     }
+    //     // Externalize everything else
+    //     return true
+    //   }
+    // }
     rollupConfig: {
-      external: (id) => {
-        // Keep knex and pg packages bundled (not external)
-        if (id === 'knex' || id.startsWith('pg')) {
-          return false
-        }
-        // Externalize everything else
-        return true
-      }
-    }
+      external: [],
+    },
   }
 });
