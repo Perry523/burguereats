@@ -619,18 +619,18 @@ const defaultDishes: Dish[] = [
       "https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?auto=format&fit=crop&w=1200&q=80",
     sideCategories: cloneSideCategories(),
   },
-  {
-    id: "default-8",
-    name: "Suco Detox Citrus",
-    description:
-      "Laranja, limão siciliano, hortelã e toque de gengibre extra refrescante.",
-    price: 14.9,
-    category: "bebidas",
-    categories: buildDishCategories(["bebidas", "vegetariano"]),
-    image:
-      "https://images.unsplash.com/photo-1527169402691-feff5539e52c?auto=format&fit=crop&w=1200&q=80",
-    sideCategories: cloneSideCategories(),
-  },
+  // {
+  //   id: "default-8",
+  //   name: "Suco Detox Citrus",
+  //   description:
+  //     "Laranja, limão siciliano, hortelã e toque de gengibre extra refrescante.",
+  //   price: 14.9,
+  //   category: "bebidas",
+  //   categories: buildDishCategories(["bebidas", "vegetariano"]),
+  //   image:
+  //     "https://images.unsplash.com/photo-1527169402691-feff5539e52c?auto=format&fit=crop&w=1200&q=80",
+  //   sideCategories: cloneSideCategories(),
+  // },
 ];
 
 const highlightCards = [
