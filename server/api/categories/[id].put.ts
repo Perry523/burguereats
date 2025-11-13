@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
 
     const data: Record<string, unknown> = {};
 
-    if (Object.prototype.hasOwnProperty.call(body, "name")) {
+    if (Object.prototype?.hasOwnProperty?.call(body, "name")) {
       const name = typeof body.name === "string" ? body.name.trim() : "";
       if (!name) {
         return sendError(event, {
@@ -69,14 +69,14 @@ export default defineEventHandler(async (event) => {
       data.name = name;
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, "description")) {
+    if (Object.prototype?.hasOwnProperty?.call(body, "description")) {
       const descriptionInput =
         typeof body.description === "string" ? body.description.trim() : "";
       data.description = descriptionInput ? descriptionInput : null;
     }
 
     let resolvedSlug: string | undefined;
-    if (Object.prototype.hasOwnProperty.call(body, "slug")) {
+    if (Object.prototype?.hasOwnProperty?.call(body, "slug")) {
       const slugInput = typeof body.slug === "string" ? body.slug.trim() : "";
       resolvedSlug = toSlug(
         slugInput ||
@@ -91,7 +91,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, "order")) {
+    if (Object.prototype?.hasOwnProperty?.call(body, "order")) {
       const parsedOrder = Number(body.order);
       data.order = Number.isFinite(parsedOrder) ? parsedOrder : 0;
     }
