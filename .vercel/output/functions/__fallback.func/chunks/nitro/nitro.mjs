@@ -4708,7 +4708,7 @@ function _expandFromEnv(value) {
 const _inlineRuntimeConfig = {
   "app": {
     "baseURL": "/",
-    "buildId": "49781033-f974-48db-a8bf-69d9949242e7",
+    "buildId": "989b81e0-fc2f-4daf-9d1a-970fa8239f98",
     "buildAssetsDir": "/_nuxt/",
     "cdnURL": ""
   },
@@ -20814,17 +20814,25 @@ var pgTypes = {};
 
 const require$$0$4 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(postgresArray);
 
-var array$1 = require$$0$4;
+var arrayParser;
+var hasRequiredArrayParser;
 
-var arrayParser$2 = {
-  create: function (source, transform) {
-    return {
-      parse: function() {
-        return array$1.parse(source, transform);
-      }
-    };
-  }
-};
+function requireArrayParser () {
+	if (hasRequiredArrayParser) return arrayParser;
+	hasRequiredArrayParser = 1;
+	var array = require$$0$4;
+
+	arrayParser = {
+	  create: function (source, transform) {
+	    return {
+	      parse: function() {
+	        return array.parse(source, transform);
+	      }
+	    };
+	  }
+	};
+	return arrayParser;
+}
 
 const require$$2$3 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(postgresDate);
 
@@ -20832,576 +20840,601 @@ const require$$3$1 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(postgr
 
 const require$$4 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(postgresBytea);
 
-var array = require$$0$4;
-var arrayParser$1 = arrayParser$2;
-var parseDate$1 = require$$2$3;
-var parseInterval = require$$3$1;
-var parseByteA = require$$4;
+var textParsers;
+var hasRequiredTextParsers;
 
-function allowNull (fn) {
-  return function nullAllowed (value) {
-    if (value === null) return value
-    return fn(value)
-  }
-}
+function requireTextParsers () {
+	if (hasRequiredTextParsers) return textParsers;
+	hasRequiredTextParsers = 1;
+	var array = require$$0$4;
+	var arrayParser = /*@__PURE__*/ requireArrayParser();
+	var parseDate = require$$2$3;
+	var parseInterval = require$$3$1;
+	var parseByteA = require$$4;
 
-function parseBool$1 (value) {
-  if (value === null) return value
-  return value === 'TRUE' ||
-    value === 't' ||
-    value === 'true' ||
-    value === 'y' ||
-    value === 'yes' ||
-    value === 'on' ||
-    value === '1';
-}
-
-function parseBoolArray (value) {
-  if (!value) return null
-  return array.parse(value, parseBool$1)
-}
-
-function parseBaseTenInt (string) {
-  return parseInt(string, 10)
-}
-
-function parseIntegerArray (value) {
-  if (!value) return null
-  return array.parse(value, allowNull(parseBaseTenInt))
-}
-
-function parseBigIntegerArray (value) {
-  if (!value) return null
-  return array.parse(value, allowNull(function (entry) {
-    return parseBigInteger(entry).trim()
-  }))
-}
-
-var parsePointArray = function(value) {
-  if(!value) { return null; }
-  var p = arrayParser$1.create(value, function(entry) {
-    if(entry !== null) {
-      entry = parsePoint(entry);
-    }
-    return entry;
-  });
-
-  return p.parse();
-};
-
-var parseFloatArray = function(value) {
-  if(!value) { return null; }
-  var p = arrayParser$1.create(value, function(entry) {
-    if(entry !== null) {
-      entry = parseFloat(entry);
-    }
-    return entry;
-  });
-
-  return p.parse();
-};
-
-var parseStringArray = function(value) {
-  if(!value) { return null; }
-
-  var p = arrayParser$1.create(value);
-  return p.parse();
-};
-
-var parseDateArray = function(value) {
-  if (!value) { return null; }
-
-  var p = arrayParser$1.create(value, function(entry) {
-    if (entry !== null) {
-      entry = parseDate$1(entry);
-    }
-    return entry;
-  });
-
-  return p.parse();
-};
-
-var parseIntervalArray = function(value) {
-  if (!value) { return null; }
-
-  var p = arrayParser$1.create(value, function(entry) {
-    if (entry !== null) {
-      entry = parseInterval(entry);
-    }
-    return entry;
-  });
-
-  return p.parse();
-};
-
-var parseByteAArray = function(value) {
-  if (!value) { return null; }
-
-  return array.parse(value, allowNull(parseByteA));
-};
-
-var parseInteger = function(value) {
-  return parseInt(value, 10);
-};
-
-var parseBigInteger = function(value) {
-  var valStr = String(value);
-  if (/^\d+$/.test(valStr)) { return valStr; }
-  return value;
-};
-
-var parseJsonArray = function(value) {
-  if (!value) { return null; }
-
-  return array.parse(value, allowNull(JSON.parse));
-};
-
-var parsePoint = function(value) {
-  if (value[0] !== '(') { return null; }
-
-  value = value.substring( 1, value.length - 1 ).split(',');
-
-  return {
-    x: parseFloat(value[0])
-  , y: parseFloat(value[1])
-  };
-};
-
-var parseCircle = function(value) {
-  if (value[0] !== '<' && value[1] !== '(') { return null; }
-
-  var point = '(';
-  var radius = '';
-  var pointParsed = false;
-  for (var i = 2; i < value.length - 1; i++){
-    if (!pointParsed) {
-      point += value[i];
-    }
-
-    if (value[i] === ')') {
-      pointParsed = true;
-      continue;
-    } else if (!pointParsed) {
-      continue;
-    }
-
-    if (value[i] === ','){
-      continue;
-    }
-
-    radius += value[i];
-  }
-  var result = parsePoint(point);
-  result.radius = parseFloat(radius);
-
-  return result;
-};
-
-var init$1 = function(register) {
-  register(20, parseBigInteger); // int8
-  register(21, parseInteger); // int2
-  register(23, parseInteger); // int4
-  register(26, parseInteger); // oid
-  register(700, parseFloat); // float4/real
-  register(701, parseFloat); // float8/double
-  register(16, parseBool$1);
-  register(1082, parseDate$1); // date
-  register(1114, parseDate$1); // timestamp without timezone
-  register(1184, parseDate$1); // timestamp
-  register(600, parsePoint); // point
-  register(651, parseStringArray); // cidr[]
-  register(718, parseCircle); // circle
-  register(1000, parseBoolArray);
-  register(1001, parseByteAArray);
-  register(1005, parseIntegerArray); // _int2
-  register(1007, parseIntegerArray); // _int4
-  register(1028, parseIntegerArray); // oid[]
-  register(1016, parseBigIntegerArray); // _int8
-  register(1017, parsePointArray); // point[]
-  register(1021, parseFloatArray); // _float4
-  register(1022, parseFloatArray); // _float8
-  register(1231, parseFloatArray); // _numeric
-  register(1014, parseStringArray); //char
-  register(1015, parseStringArray); //varchar
-  register(1008, parseStringArray);
-  register(1009, parseStringArray);
-  register(1040, parseStringArray); // macaddr[]
-  register(1041, parseStringArray); // inet[]
-  register(1115, parseDateArray); // timestamp without time zone[]
-  register(1182, parseDateArray); // _date
-  register(1185, parseDateArray); // timestamp with time zone[]
-  register(1186, parseInterval);
-  register(1187, parseIntervalArray);
-  register(17, parseByteA);
-  register(114, JSON.parse.bind(JSON)); // json
-  register(3802, JSON.parse.bind(JSON)); // jsonb
-  register(199, parseJsonArray); // json[]
-  register(3807, parseJsonArray); // jsonb[]
-  register(3907, parseStringArray); // numrange[]
-  register(2951, parseStringArray); // uuid[]
-  register(791, parseStringArray); // money[]
-  register(1183, parseStringArray); // time[]
-  register(1270, parseStringArray); // timetz[]
-};
-
-var textParsers$1 = {
-  init: init$1
-};
-
-// selected so (BASE - 1) * 0x100000000 + 0xffffffff is a safe integer
-var BASE = 1000000;
-
-function readInt8(buffer) {
-	var high = buffer.readInt32BE(0);
-	var low = buffer.readUInt32BE(4);
-	var sign = '';
-
-	if (high < 0) {
-		high = ~high + (low === 0);
-		low = (~low + 1) >>> 0;
-		sign = '-';
+	function allowNull (fn) {
+	  return function nullAllowed (value) {
+	    if (value === null) return value
+	    return fn(value)
+	  }
 	}
 
-	var result = '';
-	var carry;
-	var t;
-	var digits;
-	var pad;
-	var l;
-	var i;
+	function parseBool (value) {
+	  if (value === null) return value
+	  return value === 'TRUE' ||
+	    value === 't' ||
+	    value === 'true' ||
+	    value === 'y' ||
+	    value === 'yes' ||
+	    value === 'on' ||
+	    value === '1';
+	}
 
-	{
-		carry = high % BASE;
-		high = high / BASE >>> 0;
+	function parseBoolArray (value) {
+	  if (!value) return null
+	  return array.parse(value, parseBool)
+	}
 
-		t = 0x100000000 * carry + low;
-		low = t / BASE >>> 0;
-		digits = '' + (t - BASE * low);
+	function parseBaseTenInt (string) {
+	  return parseInt(string, 10)
+	}
 
-		if (low === 0 && high === 0) {
+	function parseIntegerArray (value) {
+	  if (!value) return null
+	  return array.parse(value, allowNull(parseBaseTenInt))
+	}
+
+	function parseBigIntegerArray (value) {
+	  if (!value) return null
+	  return array.parse(value, allowNull(function (entry) {
+	    return parseBigInteger(entry).trim()
+	  }))
+	}
+
+	var parsePointArray = function(value) {
+	  if(!value) { return null; }
+	  var p = arrayParser.create(value, function(entry) {
+	    if(entry !== null) {
+	      entry = parsePoint(entry);
+	    }
+	    return entry;
+	  });
+
+	  return p.parse();
+	};
+
+	var parseFloatArray = function(value) {
+	  if(!value) { return null; }
+	  var p = arrayParser.create(value, function(entry) {
+	    if(entry !== null) {
+	      entry = parseFloat(entry);
+	    }
+	    return entry;
+	  });
+
+	  return p.parse();
+	};
+
+	var parseStringArray = function(value) {
+	  if(!value) { return null; }
+
+	  var p = arrayParser.create(value);
+	  return p.parse();
+	};
+
+	var parseDateArray = function(value) {
+	  if (!value) { return null; }
+
+	  var p = arrayParser.create(value, function(entry) {
+	    if (entry !== null) {
+	      entry = parseDate(entry);
+	    }
+	    return entry;
+	  });
+
+	  return p.parse();
+	};
+
+	var parseIntervalArray = function(value) {
+	  if (!value) { return null; }
+
+	  var p = arrayParser.create(value, function(entry) {
+	    if (entry !== null) {
+	      entry = parseInterval(entry);
+	    }
+	    return entry;
+	  });
+
+	  return p.parse();
+	};
+
+	var parseByteAArray = function(value) {
+	  if (!value) { return null; }
+
+	  return array.parse(value, allowNull(parseByteA));
+	};
+
+	var parseInteger = function(value) {
+	  return parseInt(value, 10);
+	};
+
+	var parseBigInteger = function(value) {
+	  var valStr = String(value);
+	  if (/^\d+$/.test(valStr)) { return valStr; }
+	  return value;
+	};
+
+	var parseJsonArray = function(value) {
+	  if (!value) { return null; }
+
+	  return array.parse(value, allowNull(JSON.parse));
+	};
+
+	var parsePoint = function(value) {
+	  if (value[0] !== '(') { return null; }
+
+	  value = value.substring( 1, value.length - 1 ).split(',');
+
+	  return {
+	    x: parseFloat(value[0])
+	  , y: parseFloat(value[1])
+	  };
+	};
+
+	var parseCircle = function(value) {
+	  if (value[0] !== '<' && value[1] !== '(') { return null; }
+
+	  var point = '(';
+	  var radius = '';
+	  var pointParsed = false;
+	  for (var i = 2; i < value.length - 1; i++){
+	    if (!pointParsed) {
+	      point += value[i];
+	    }
+
+	    if (value[i] === ')') {
+	      pointParsed = true;
+	      continue;
+	    } else if (!pointParsed) {
+	      continue;
+	    }
+
+	    if (value[i] === ','){
+	      continue;
+	    }
+
+	    radius += value[i];
+	  }
+	  var result = parsePoint(point);
+	  result.radius = parseFloat(radius);
+
+	  return result;
+	};
+
+	var init = function(register) {
+	  register(20, parseBigInteger); // int8
+	  register(21, parseInteger); // int2
+	  register(23, parseInteger); // int4
+	  register(26, parseInteger); // oid
+	  register(700, parseFloat); // float4/real
+	  register(701, parseFloat); // float8/double
+	  register(16, parseBool);
+	  register(1082, parseDate); // date
+	  register(1114, parseDate); // timestamp without timezone
+	  register(1184, parseDate); // timestamp
+	  register(600, parsePoint); // point
+	  register(651, parseStringArray); // cidr[]
+	  register(718, parseCircle); // circle
+	  register(1000, parseBoolArray);
+	  register(1001, parseByteAArray);
+	  register(1005, parseIntegerArray); // _int2
+	  register(1007, parseIntegerArray); // _int4
+	  register(1028, parseIntegerArray); // oid[]
+	  register(1016, parseBigIntegerArray); // _int8
+	  register(1017, parsePointArray); // point[]
+	  register(1021, parseFloatArray); // _float4
+	  register(1022, parseFloatArray); // _float8
+	  register(1231, parseFloatArray); // _numeric
+	  register(1014, parseStringArray); //char
+	  register(1015, parseStringArray); //varchar
+	  register(1008, parseStringArray);
+	  register(1009, parseStringArray);
+	  register(1040, parseStringArray); // macaddr[]
+	  register(1041, parseStringArray); // inet[]
+	  register(1115, parseDateArray); // timestamp without time zone[]
+	  register(1182, parseDateArray); // _date
+	  register(1185, parseDateArray); // timestamp with time zone[]
+	  register(1186, parseInterval);
+	  register(1187, parseIntervalArray);
+	  register(17, parseByteA);
+	  register(114, JSON.parse.bind(JSON)); // json
+	  register(3802, JSON.parse.bind(JSON)); // jsonb
+	  register(199, parseJsonArray); // json[]
+	  register(3807, parseJsonArray); // jsonb[]
+	  register(3907, parseStringArray); // numrange[]
+	  register(2951, parseStringArray); // uuid[]
+	  register(791, parseStringArray); // money[]
+	  register(1183, parseStringArray); // time[]
+	  register(1270, parseStringArray); // timetz[]
+	};
+
+	textParsers = {
+	  init: init
+	};
+	return textParsers;
+}
+
+var pgInt8;
+var hasRequiredPgInt8;
+
+function requirePgInt8 () {
+	if (hasRequiredPgInt8) return pgInt8;
+	hasRequiredPgInt8 = 1;
+
+	// selected so (BASE - 1) * 0x100000000 + 0xffffffff is a safe integer
+	var BASE = 1000000;
+
+	function readInt8(buffer) {
+		var high = buffer.readInt32BE(0);
+		var low = buffer.readUInt32BE(4);
+		var sign = '';
+
+		if (high < 0) {
+			high = ~high + (low === 0);
+			low = (~low + 1) >>> 0;
+			sign = '-';
+		}
+
+		var result = '';
+		var carry;
+		var t;
+		var digits;
+		var pad;
+		var l;
+		var i;
+
+		{
+			carry = high % BASE;
+			high = high / BASE >>> 0;
+
+			t = 0x100000000 * carry + low;
+			low = t / BASE >>> 0;
+			digits = '' + (t - BASE * low);
+
+			if (low === 0 && high === 0) {
+				return sign + digits + result;
+			}
+
+			pad = '';
+			l = 6 - digits.length;
+
+			for (i = 0; i < l; i++) {
+				pad += '0';
+			}
+
+			result = pad + digits + result;
+		}
+
+		{
+			carry = high % BASE;
+			high = high / BASE >>> 0;
+
+			t = 0x100000000 * carry + low;
+			low = t / BASE >>> 0;
+			digits = '' + (t - BASE * low);
+
+			if (low === 0 && high === 0) {
+				return sign + digits + result;
+			}
+
+			pad = '';
+			l = 6 - digits.length;
+
+			for (i = 0; i < l; i++) {
+				pad += '0';
+			}
+
+			result = pad + digits + result;
+		}
+
+		{
+			carry = high % BASE;
+			high = high / BASE >>> 0;
+
+			t = 0x100000000 * carry + low;
+			low = t / BASE >>> 0;
+			digits = '' + (t - BASE * low);
+
+			if (low === 0 && high === 0) {
+				return sign + digits + result;
+			}
+
+			pad = '';
+			l = 6 - digits.length;
+
+			for (i = 0; i < l; i++) {
+				pad += '0';
+			}
+
+			result = pad + digits + result;
+		}
+
+		{
+			carry = high % BASE;
+			t = 0x100000000 * carry + low;
+			digits = '' + t % BASE;
+
 			return sign + digits + result;
 		}
-
-		pad = '';
-		l = 6 - digits.length;
-
-		for (i = 0; i < l; i++) {
-			pad += '0';
-		}
-
-		result = pad + digits + result;
 	}
 
-	{
-		carry = high % BASE;
-		high = high / BASE >>> 0;
-
-		t = 0x100000000 * carry + low;
-		low = t / BASE >>> 0;
-		digits = '' + (t - BASE * low);
-
-		if (low === 0 && high === 0) {
-			return sign + digits + result;
-		}
-
-		pad = '';
-		l = 6 - digits.length;
-
-		for (i = 0; i < l; i++) {
-			pad += '0';
-		}
-
-		result = pad + digits + result;
-	}
-
-	{
-		carry = high % BASE;
-		high = high / BASE >>> 0;
-
-		t = 0x100000000 * carry + low;
-		low = t / BASE >>> 0;
-		digits = '' + (t - BASE * low);
-
-		if (low === 0 && high === 0) {
-			return sign + digits + result;
-		}
-
-		pad = '';
-		l = 6 - digits.length;
-
-		for (i = 0; i < l; i++) {
-			pad += '0';
-		}
-
-		result = pad + digits + result;
-	}
-
-	{
-		carry = high % BASE;
-		t = 0x100000000 * carry + low;
-		digits = '' + t % BASE;
-
-		return sign + digits + result;
-	}
+	pgInt8 = readInt8;
+	return pgInt8;
 }
 
-var pgInt8 = readInt8;
+var binaryParsers;
+var hasRequiredBinaryParsers;
 
-var parseInt64 = pgInt8;
+function requireBinaryParsers () {
+	if (hasRequiredBinaryParsers) return binaryParsers;
+	hasRequiredBinaryParsers = 1;
+	var parseInt64 = /*@__PURE__*/ requirePgInt8();
 
-var parseBits = function(data, bits, offset, invert, callback) {
-  offset = offset || 0;
-  invert = invert || false;
-  callback = callback || function(lastValue, newValue, bits) { return (lastValue * Math.pow(2, bits)) + newValue; };
-  var offsetBytes = offset >> 3;
+	var parseBits = function(data, bits, offset, invert, callback) {
+	  offset = offset || 0;
+	  invert = invert || false;
+	  callback = callback || function(lastValue, newValue, bits) { return (lastValue * Math.pow(2, bits)) + newValue; };
+	  var offsetBytes = offset >> 3;
 
-  var inv = function(value) {
-    if (invert) {
-      return ~value & 0xff;
-    }
+	  var inv = function(value) {
+	    if (invert) {
+	      return ~value & 0xff;
+	    }
 
-    return value;
-  };
+	    return value;
+	  };
 
-  // read first (maybe partial) byte
-  var mask = 0xff;
-  var firstBits = 8 - (offset % 8);
-  if (bits < firstBits) {
-    mask = (0xff << (8 - bits)) & 0xff;
-    firstBits = bits;
-  }
+	  // read first (maybe partial) byte
+	  var mask = 0xff;
+	  var firstBits = 8 - (offset % 8);
+	  if (bits < firstBits) {
+	    mask = (0xff << (8 - bits)) & 0xff;
+	    firstBits = bits;
+	  }
 
-  if (offset) {
-    mask = mask >> (offset % 8);
-  }
+	  if (offset) {
+	    mask = mask >> (offset % 8);
+	  }
 
-  var result = 0;
-  if ((offset % 8) + bits >= 8) {
-    result = callback(0, inv(data[offsetBytes]) & mask, firstBits);
-  }
+	  var result = 0;
+	  if ((offset % 8) + bits >= 8) {
+	    result = callback(0, inv(data[offsetBytes]) & mask, firstBits);
+	  }
 
-  // read bytes
-  var bytes = (bits + offset) >> 3;
-  for (var i = offsetBytes + 1; i < bytes; i++) {
-    result = callback(result, inv(data[i]), 8);
-  }
+	  // read bytes
+	  var bytes = (bits + offset) >> 3;
+	  for (var i = offsetBytes + 1; i < bytes; i++) {
+	    result = callback(result, inv(data[i]), 8);
+	  }
 
-  // bits to read, that are not a complete byte
-  var lastBits = (bits + offset) % 8;
-  if (lastBits > 0) {
-    result = callback(result, inv(data[bytes]) >> (8 - lastBits), lastBits);
-  }
+	  // bits to read, that are not a complete byte
+	  var lastBits = (bits + offset) % 8;
+	  if (lastBits > 0) {
+	    result = callback(result, inv(data[bytes]) >> (8 - lastBits), lastBits);
+	  }
 
-  return result;
-};
+	  return result;
+	};
 
-var parseFloatFromBits = function(data, precisionBits, exponentBits) {
-  var bias = Math.pow(2, exponentBits - 1) - 1;
-  var sign = parseBits(data, 1);
-  var exponent = parseBits(data, exponentBits, 1);
+	var parseFloatFromBits = function(data, precisionBits, exponentBits) {
+	  var bias = Math.pow(2, exponentBits - 1) - 1;
+	  var sign = parseBits(data, 1);
+	  var exponent = parseBits(data, exponentBits, 1);
 
-  if (exponent === 0) {
-    return 0;
-  }
+	  if (exponent === 0) {
+	    return 0;
+	  }
 
-  // parse mantissa
-  var precisionBitsCounter = 1;
-  var parsePrecisionBits = function(lastValue, newValue, bits) {
-    if (lastValue === 0) {
-      lastValue = 1;
-    }
+	  // parse mantissa
+	  var precisionBitsCounter = 1;
+	  var parsePrecisionBits = function(lastValue, newValue, bits) {
+	    if (lastValue === 0) {
+	      lastValue = 1;
+	    }
 
-    for (var i = 1; i <= bits; i++) {
-      precisionBitsCounter /= 2;
-      if ((newValue & (0x1 << (bits - i))) > 0) {
-        lastValue += precisionBitsCounter;
-      }
-    }
+	    for (var i = 1; i <= bits; i++) {
+	      precisionBitsCounter /= 2;
+	      if ((newValue & (0x1 << (bits - i))) > 0) {
+	        lastValue += precisionBitsCounter;
+	      }
+	    }
 
-    return lastValue;
-  };
+	    return lastValue;
+	  };
 
-  var mantissa = parseBits(data, precisionBits, exponentBits + 1, false, parsePrecisionBits);
+	  var mantissa = parseBits(data, precisionBits, exponentBits + 1, false, parsePrecisionBits);
 
-  // special cases
-  if (exponent == (Math.pow(2, exponentBits + 1) - 1)) {
-    if (mantissa === 0) {
-      return (sign === 0) ? Infinity : -Infinity;
-    }
+	  // special cases
+	  if (exponent == (Math.pow(2, exponentBits + 1) - 1)) {
+	    if (mantissa === 0) {
+	      return (sign === 0) ? Infinity : -Infinity;
+	    }
 
-    return NaN;
-  }
+	    return NaN;
+	  }
 
-  // normale number
-  return ((sign === 0) ? 1 : -1) * Math.pow(2, exponent - bias) * mantissa;
-};
+	  // normale number
+	  return ((sign === 0) ? 1 : -1) * Math.pow(2, exponent - bias) * mantissa;
+	};
 
-var parseInt16 = function(value) {
-  if (parseBits(value, 1) == 1) {
-    return -1 * (parseBits(value, 15, 1, true) + 1);
-  }
+	var parseInt16 = function(value) {
+	  if (parseBits(value, 1) == 1) {
+	    return -1 * (parseBits(value, 15, 1, true) + 1);
+	  }
 
-  return parseBits(value, 15, 1);
-};
+	  return parseBits(value, 15, 1);
+	};
 
-var parseInt32 = function(value) {
-  if (parseBits(value, 1) == 1) {
-    return -1 * (parseBits(value, 31, 1, true) + 1);
-  }
+	var parseInt32 = function(value) {
+	  if (parseBits(value, 1) == 1) {
+	    return -1 * (parseBits(value, 31, 1, true) + 1);
+	  }
 
-  return parseBits(value, 31, 1);
-};
+	  return parseBits(value, 31, 1);
+	};
 
-var parseFloat32 = function(value) {
-  return parseFloatFromBits(value, 23, 8);
-};
+	var parseFloat32 = function(value) {
+	  return parseFloatFromBits(value, 23, 8);
+	};
 
-var parseFloat64 = function(value) {
-  return parseFloatFromBits(value, 52, 11);
-};
+	var parseFloat64 = function(value) {
+	  return parseFloatFromBits(value, 52, 11);
+	};
 
-var parseNumeric = function(value) {
-  var sign = parseBits(value, 16, 32);
-  if (sign == 0xc000) {
-    return NaN;
-  }
+	var parseNumeric = function(value) {
+	  var sign = parseBits(value, 16, 32);
+	  if (sign == 0xc000) {
+	    return NaN;
+	  }
 
-  var weight = Math.pow(10000, parseBits(value, 16, 16));
-  var result = 0;
-  var ndigits = parseBits(value, 16);
-  for (var i = 0; i < ndigits; i++) {
-    result += parseBits(value, 16, 64 + (16 * i)) * weight;
-    weight /= 10000;
-  }
+	  var weight = Math.pow(10000, parseBits(value, 16, 16));
+	  var result = 0;
+	  var ndigits = parseBits(value, 16);
+	  for (var i = 0; i < ndigits; i++) {
+	    result += parseBits(value, 16, 64 + (16 * i)) * weight;
+	    weight /= 10000;
+	  }
 
-  var scale = Math.pow(10, parseBits(value, 16, 48));
-  return ((sign === 0) ? 1 : -1) * Math.round(result * scale) / scale;
-};
+	  var scale = Math.pow(10, parseBits(value, 16, 48));
+	  return ((sign === 0) ? 1 : -1) * Math.round(result * scale) / scale;
+	};
 
-var parseDate = function(isUTC, value) {
-  var sign = parseBits(value, 1);
-  var rawValue = parseBits(value, 63, 1);
+	var parseDate = function(isUTC, value) {
+	  var sign = parseBits(value, 1);
+	  var rawValue = parseBits(value, 63, 1);
 
-  // discard usecs and shift from 2000 to 1970
-  var result = new Date((((sign === 0) ? 1 : -1) * rawValue / 1000) + 946684800000);
+	  // discard usecs and shift from 2000 to 1970
+	  var result = new Date((((sign === 0) ? 1 : -1) * rawValue / 1000) + 946684800000);
 
-  if (!isUTC) {
-    result.setTime(result.getTime() + result.getTimezoneOffset() * 60000);
-  }
+	  if (!isUTC) {
+	    result.setTime(result.getTime() + result.getTimezoneOffset() * 60000);
+	  }
 
-  // add microseconds to the date
-  result.usec = rawValue % 1000;
-  result.getMicroSeconds = function() {
-    return this.usec;
-  };
-  result.setMicroSeconds = function(value) {
-    this.usec = value;
-  };
-  result.getUTCMicroSeconds = function() {
-    return this.usec;
-  };
+	  // add microseconds to the date
+	  result.usec = rawValue % 1000;
+	  result.getMicroSeconds = function() {
+	    return this.usec;
+	  };
+	  result.setMicroSeconds = function(value) {
+	    this.usec = value;
+	  };
+	  result.getUTCMicroSeconds = function() {
+	    return this.usec;
+	  };
 
-  return result;
-};
+	  return result;
+	};
 
-var parseArray = function(value) {
-  var dim = parseBits(value, 32);
+	var parseArray = function(value) {
+	  var dim = parseBits(value, 32);
 
-  parseBits(value, 32, 32);
-  var elementType = parseBits(value, 32, 64);
+	  parseBits(value, 32, 32);
+	  var elementType = parseBits(value, 32, 64);
 
-  var offset = 96;
-  var dims = [];
-  for (var i = 0; i < dim; i++) {
-    // parse dimension
-    dims[i] = parseBits(value, 32, offset);
-    offset += 32;
+	  var offset = 96;
+	  var dims = [];
+	  for (var i = 0; i < dim; i++) {
+	    // parse dimension
+	    dims[i] = parseBits(value, 32, offset);
+	    offset += 32;
 
-    // ignore lower bounds
-    offset += 32;
-  }
+	    // ignore lower bounds
+	    offset += 32;
+	  }
 
-  var parseElement = function(elementType) {
-    // parse content length
-    var length = parseBits(value, 32, offset);
-    offset += 32;
+	  var parseElement = function(elementType) {
+	    // parse content length
+	    var length = parseBits(value, 32, offset);
+	    offset += 32;
 
-    // parse null values
-    if (length == 0xffffffff) {
-      return null;
-    }
+	    // parse null values
+	    if (length == 0xffffffff) {
+	      return null;
+	    }
 
-    var result;
-    if ((elementType == 0x17) || (elementType == 0x14)) {
-      // int/bigint
-      result = parseBits(value, length * 8, offset);
-      offset += length * 8;
-      return result;
-    }
-    else if (elementType == 0x19) {
-      // string
-      result = value.toString(this.encoding, offset >> 3, (offset += (length << 3)) >> 3);
-      return result;
-    }
-    else {
-      console.log("ERROR: ElementType not implemented: " + elementType);
-    }
-  };
+	    var result;
+	    if ((elementType == 0x17) || (elementType == 0x14)) {
+	      // int/bigint
+	      result = parseBits(value, length * 8, offset);
+	      offset += length * 8;
+	      return result;
+	    }
+	    else if (elementType == 0x19) {
+	      // string
+	      result = value.toString(this.encoding, offset >> 3, (offset += (length << 3)) >> 3);
+	      return result;
+	    }
+	    else {
+	      console.log("ERROR: ElementType not implemented: " + elementType);
+	    }
+	  };
 
-  var parse = function(dimension, elementType) {
-    var array = [];
-    var i;
+	  var parse = function(dimension, elementType) {
+	    var array = [];
+	    var i;
 
-    if (dimension.length > 1) {
-      var count = dimension.shift();
-      for (i = 0; i < count; i++) {
-        array[i] = parse(dimension, elementType);
-      }
-      dimension.unshift(count);
-    }
-    else {
-      for (i = 0; i < dimension[0]; i++) {
-        array[i] = parseElement(elementType);
-      }
-    }
+	    if (dimension.length > 1) {
+	      var count = dimension.shift();
+	      for (i = 0; i < count; i++) {
+	        array[i] = parse(dimension, elementType);
+	      }
+	      dimension.unshift(count);
+	    }
+	    else {
+	      for (i = 0; i < dimension[0]; i++) {
+	        array[i] = parseElement(elementType);
+	      }
+	    }
 
-    return array;
-  };
+	    return array;
+	  };
 
-  return parse(dims, elementType);
-};
+	  return parse(dims, elementType);
+	};
 
-var parseText = function(value) {
-  return value.toString('utf8');
-};
+	var parseText = function(value) {
+	  return value.toString('utf8');
+	};
 
-var parseBool = function(value) {
-  if(value === null) return null;
-  return (parseBits(value, 8) > 0);
-};
+	var parseBool = function(value) {
+	  if(value === null) return null;
+	  return (parseBits(value, 8) > 0);
+	};
 
-var init = function(register) {
-  register(20, parseInt64);
-  register(21, parseInt16);
-  register(23, parseInt32);
-  register(26, parseInt32);
-  register(1700, parseNumeric);
-  register(700, parseFloat32);
-  register(701, parseFloat64);
-  register(16, parseBool);
-  register(1114, parseDate.bind(null, false));
-  register(1184, parseDate.bind(null, true));
-  register(1000, parseArray);
-  register(1007, parseArray);
-  register(1016, parseArray);
-  register(1008, parseArray);
-  register(1009, parseArray);
-  register(25, parseText);
-};
+	var init = function(register) {
+	  register(20, parseInt64);
+	  register(21, parseInt16);
+	  register(23, parseInt32);
+	  register(26, parseInt32);
+	  register(1700, parseNumeric);
+	  register(700, parseFloat32);
+	  register(701, parseFloat64);
+	  register(16, parseBool);
+	  register(1114, parseDate.bind(null, false));
+	  register(1184, parseDate.bind(null, true));
+	  register(1000, parseArray);
+	  register(1007, parseArray);
+	  register(1016, parseArray);
+	  register(1008, parseArray);
+	  register(1009, parseArray);
+	  register(25, parseText);
+	};
 
-var binaryParsers$1 = {
-  init: init
-};
+	binaryParsers = {
+	  init: init
+	};
+	return binaryParsers;
+}
 
 /**
  * Following query was used to generate this file:
@@ -21414,113 +21447,128 @@ var binaryParsers$1 = {
  AND typisdefined -- Ignore undefined types
  */
 
-var builtins = {
-    BOOL: 16,
-    BYTEA: 17,
-    CHAR: 18,
-    INT8: 20,
-    INT2: 21,
-    INT4: 23,
-    REGPROC: 24,
-    TEXT: 25,
-    OID: 26,
-    TID: 27,
-    XID: 28,
-    CID: 29,
-    JSON: 114,
-    XML: 142,
-    PG_NODE_TREE: 194,
-    SMGR: 210,
-    PATH: 602,
-    POLYGON: 604,
-    CIDR: 650,
-    FLOAT4: 700,
-    FLOAT8: 701,
-    ABSTIME: 702,
-    RELTIME: 703,
-    TINTERVAL: 704,
-    CIRCLE: 718,
-    MACADDR8: 774,
-    MONEY: 790,
-    MACADDR: 829,
-    INET: 869,
-    ACLITEM: 1033,
-    BPCHAR: 1042,
-    VARCHAR: 1043,
-    DATE: 1082,
-    TIME: 1083,
-    TIMESTAMP: 1114,
-    TIMESTAMPTZ: 1184,
-    INTERVAL: 1186,
-    TIMETZ: 1266,
-    BIT: 1560,
-    VARBIT: 1562,
-    NUMERIC: 1700,
-    REFCURSOR: 1790,
-    REGPROCEDURE: 2202,
-    REGOPER: 2203,
-    REGOPERATOR: 2204,
-    REGCLASS: 2205,
-    REGTYPE: 2206,
-    UUID: 2950,
-    TXID_SNAPSHOT: 2970,
-    PG_LSN: 3220,
-    PG_NDISTINCT: 3361,
-    PG_DEPENDENCIES: 3402,
-    TSVECTOR: 3614,
-    TSQUERY: 3615,
-    GTSVECTOR: 3642,
-    REGCONFIG: 3734,
-    REGDICTIONARY: 3769,
-    JSONB: 3802,
-    REGNAMESPACE: 4089,
-    REGROLE: 4096
-};
+var builtins;
+var hasRequiredBuiltins;
 
-var textParsers = textParsers$1;
-var binaryParsers = binaryParsers$1;
-var arrayParser = arrayParser$2;
-var builtinTypes = builtins;
-
-pgTypes.getTypeParser = getTypeParser;
-pgTypes.setTypeParser = setTypeParser;
-pgTypes.arrayParser = arrayParser;
-pgTypes.builtins = builtinTypes;
-
-var typeParsers = {
-  text: {},
-  binary: {}
-};
-
-//the empty parse function
-function noParse (val) {
-  return String(val);
+function requireBuiltins () {
+	if (hasRequiredBuiltins) return builtins;
+	hasRequiredBuiltins = 1;
+	builtins = {
+	    BOOL: 16,
+	    BYTEA: 17,
+	    CHAR: 18,
+	    INT8: 20,
+	    INT2: 21,
+	    INT4: 23,
+	    REGPROC: 24,
+	    TEXT: 25,
+	    OID: 26,
+	    TID: 27,
+	    XID: 28,
+	    CID: 29,
+	    JSON: 114,
+	    XML: 142,
+	    PG_NODE_TREE: 194,
+	    SMGR: 210,
+	    PATH: 602,
+	    POLYGON: 604,
+	    CIDR: 650,
+	    FLOAT4: 700,
+	    FLOAT8: 701,
+	    ABSTIME: 702,
+	    RELTIME: 703,
+	    TINTERVAL: 704,
+	    CIRCLE: 718,
+	    MACADDR8: 774,
+	    MONEY: 790,
+	    MACADDR: 829,
+	    INET: 869,
+	    ACLITEM: 1033,
+	    BPCHAR: 1042,
+	    VARCHAR: 1043,
+	    DATE: 1082,
+	    TIME: 1083,
+	    TIMESTAMP: 1114,
+	    TIMESTAMPTZ: 1184,
+	    INTERVAL: 1186,
+	    TIMETZ: 1266,
+	    BIT: 1560,
+	    VARBIT: 1562,
+	    NUMERIC: 1700,
+	    REFCURSOR: 1790,
+	    REGPROCEDURE: 2202,
+	    REGOPER: 2203,
+	    REGOPERATOR: 2204,
+	    REGCLASS: 2205,
+	    REGTYPE: 2206,
+	    UUID: 2950,
+	    TXID_SNAPSHOT: 2970,
+	    PG_LSN: 3220,
+	    PG_NDISTINCT: 3361,
+	    PG_DEPENDENCIES: 3402,
+	    TSVECTOR: 3614,
+	    TSQUERY: 3615,
+	    GTSVECTOR: 3642,
+	    REGCONFIG: 3734,
+	    REGDICTIONARY: 3769,
+	    JSONB: 3802,
+	    REGNAMESPACE: 4089,
+	    REGROLE: 4096
+	};
+	return builtins;
 }
-//returns a function used to convert a specific type (specified by
-//oid) into a result javascript type
-//note: the oid can be obtained via the following sql query:
-//SELECT oid FROM pg_type WHERE typname = 'TYPE_NAME_HERE';
-function getTypeParser (oid, format) {
-  format = format || 'text';
-  if (!typeParsers[format]) {
-    return noParse;
-  }
-  return typeParsers[format][oid] || noParse;
-}
-function setTypeParser (oid, format, parseFn) {
-  if(typeof format == 'function') {
-    parseFn = format;
-    format = 'text';
-  }
-  typeParsers[format][oid] = parseFn;
-}
-textParsers.init(function(oid, converter) {
-  typeParsers.text[oid] = converter;
-});
 
-binaryParsers.init(function(oid, converter) {
-  typeParsers.binary[oid] = converter;
-});
+var hasRequiredPgTypes;
+
+function requirePgTypes () {
+	if (hasRequiredPgTypes) return pgTypes;
+	hasRequiredPgTypes = 1;
+	var textParsers = /*@__PURE__*/ requireTextParsers();
+	var binaryParsers = /*@__PURE__*/ requireBinaryParsers();
+	var arrayParser = /*@__PURE__*/ requireArrayParser();
+	var builtinTypes = /*@__PURE__*/ requireBuiltins();
+
+	pgTypes.getTypeParser = getTypeParser;
+	pgTypes.setTypeParser = setTypeParser;
+	pgTypes.arrayParser = arrayParser;
+	pgTypes.builtins = builtinTypes;
+
+	var typeParsers = {
+	  text: {},
+	  binary: {}
+	};
+
+	//the empty parse function
+	function noParse (val) {
+	  return String(val);
+	}
+	//returns a function used to convert a specific type (specified by
+	//oid) into a result javascript type
+	//note: the oid can be obtained via the following sql query:
+	//SELECT oid FROM pg_type WHERE typname = 'TYPE_NAME_HERE';
+	function getTypeParser (oid, format) {
+	  format = format || 'text';
+	  if (!typeParsers[format]) {
+	    return noParse;
+	  }
+	  return typeParsers[format][oid] || noParse;
+	}
+	function setTypeParser (oid, format, parseFn) {
+	  if(typeof format == 'function') {
+	    parseFn = format;
+	    format = 'text';
+	  }
+	  typeParsers[format][oid] = parseFn;
+	}
+	textParsers.init(function(oid, converter) {
+	  typeParsers.text[oid] = converter;
+	});
+
+	binaryParsers.init(function(oid, converter) {
+	  typeParsers.binary[oid] = converter;
+	});
+	return pgTypes;
+}
 
 (function (module) {
 
@@ -21596,15 +21644,15 @@ binaryParsers.init(function(oid, converter) {
 	  keepalives_idle: 0,
 	};
 
-	const pgTypes$1 = pgTypes;
+	const pgTypes = /*@__PURE__*/ requirePgTypes();
 	// save default parsers
-	const parseBigInteger = pgTypes$1.getTypeParser(20, 'text');
-	const parseBigIntegerArray = pgTypes$1.getTypeParser(1016, 'text');
+	const parseBigInteger = pgTypes.getTypeParser(20, 'text');
+	const parseBigIntegerArray = pgTypes.getTypeParser(1016, 'text');
 
 	// parse int8 so you can get your count values as actual numbers
 	module.exports.__defineSetter__('parseInt8', function (val) {
-	  pgTypes$1.setTypeParser(20, 'text', val ? pgTypes$1.getTypeParser(23, 'text') : parseBigInteger);
-	  pgTypes$1.setTypeParser(1016, 'text', val ? pgTypes$1.getTypeParser(1007, 'text') : parseBigIntegerArray);
+	  pgTypes.setTypeParser(20, 'text', val ? pgTypes.getTypeParser(23, 'text') : parseBigInteger);
+	  pgTypes.setTypeParser(1016, 'text', val ? pgTypes.getTypeParser(1007, 'text') : parseBigIntegerArray);
 	}); 
 } (defaults$4));
 
@@ -22324,7 +22372,7 @@ var sasl$1 = {
   finalizeSession,
 };
 
-const types$2 = pgTypes;
+const types$2 = /*@__PURE__*/ requirePgTypes();
 
 function TypeOverrides$2(userTypes) {
   this._types = userTypes || types$2;
@@ -22753,7 +22801,7 @@ let ConnectionParameters$1 = class ConnectionParameters {
 
 var connectionParameters = ConnectionParameters$1;
 
-const types$1 = pgTypes;
+const types$1 = /*@__PURE__*/ requirePgTypes();
 
 const matchRegexp = /^([A-Za-z]+)(?: (\d+))?(?: (\d+))?/;
 
@@ -26218,7 +26266,7 @@ function requireNative () {
 	  this.Pool = poolFactory(this.Client);
 	  this._pools = [];
 	  this.Connection = Connection;
-	  this.types = pgTypes;
+	  this.types = /*@__PURE__*/ requirePgTypes();
 	  this.DatabaseError = DatabaseError;
 	  this.TypeOverrides = TypeOverrides;
 	  this.escapeIdentifier = escapeIdentifier;
