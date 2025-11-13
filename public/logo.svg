@@ -1,0 +1,22 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="120" height="40" rx="8" fill="url(#gradient)"/>
+  
+  <!-- Icon -->
+  <circle cx="20" cy="20" r="8" fill="white" opacity="0.9"/>
+  <path d="M16 20h8M20 16v8" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Text -->
+  <text x="35" y="16" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">Integra</text>
+  <text x="75" y="16" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fb923c">+</text>
+  <text x="35" y="28" font-family="Arial, sans-serif" font-size="8" fill="white" opacity="0.8">Business Platform</text>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ea580c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fb923c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

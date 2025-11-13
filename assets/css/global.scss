@@ -1,0 +1,76 @@
+.h-sm {
+  height: calc(100svh - 48px);
+}
+
+.h-navigation {
+  height: calc(100svh - 168px);
+}
+.navbar {
+  padding: 0px 4px !important;
+  min-height: 0px;
+}
+.input {
+  height: 2.4rem !important;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+}
+.select {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+}
+::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px rgb(176, 176, 176);
+  background: rgb(198, 198, 198);
+  border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--b2, var(--b1)) / 1);;
+  box-shadow: inset 0 0 5px rgb(217, 214, 214);
+  border-radius: 5px;
+}
+.label{
+  padding-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+// Corporate theme enhancements
+.corporate-gradient {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+}
+
+.corporate-card {
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  box-shadow: 0 8px 32px rgba(234, 88, 12, 0.1);
+}
+
+.corporate-button {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(234, 88, 12, 0.3);
+  }
+}
+
+.corporate-text-gradient {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

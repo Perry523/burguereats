@@ -1,0 +1,11 @@
+{
+    "nuxt.isNuxtApp": false,
+    
+    "editor.codeActionsOnSave": {
+        // "source.fixAll.eslint": "explicit",
+        // "source.organizeImports": "always"
+        // format on save
+      },
+      "editor.formatOnSave": true,
+      "typescript.tsdk": "node_modules/typescript/lib",
+}

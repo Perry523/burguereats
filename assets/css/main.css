@@ -1,3 +1,4 @@
+@use "./global.scss";
 @import "tailwindcss";
 @import "@nuxt/ui";
 
@@ -17,5 +18,5 @@ html.dark {
 
 /* Ensure all components use light mode colors */
 :root {
-  --color-mode: 'light';
+  --color-mode: "light";
 }

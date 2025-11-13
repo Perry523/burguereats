@@ -1,0 +1,57 @@
+name: Build and Deploy
+
+# Dispara o workflow ao fazer push na branch main (ou outra branch que desejar)
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checa o código da branch principal (main)
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Execute o build (substitua pelo seu comando de build)
+      - name: Run Build
+        run: |
+          npm install
+          npm run generate
+      # Verifica se a branch build já existe no repositório remoto
+      - name: Setup build branch
+        run: |
+          git fetch origin
+          if git show-ref --quiet refs/remotes/origin/build; then
+            git checkout --track origin/build
+          else
+            git checkout -b build
+          fi
+      # Remove todos os arquivos do diretório raiz, exceto a pasta build e o diretório .git
+      - name: Move git para pasta build
+        run: |
+          # Remove apenas arquivos (não diretórios)
+          mv ./.git ../
+          mv ./.output ../
+          rm -r ./*
+          mv -f ../.output/public/*  ./
+          mv ../.git ./
+          mkdir _ipx
+          cd _ipx
+          mkdir _
+          mv ../images ./_/
+          mv ../icons ./_/
+      # Move os arquivos da pasta build para a raiz e o .env
+      # Adicione credenciais
+      - name: Setup Git User
+        run: |
+          git config user.name "Perry523"
+          git config user.email "wendel.renato@gmail.com"
+      # Adiciona apenas os arquivos da pasta build (que agora estão no diretório raiz)
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Update build from main"
+          git push origin build
