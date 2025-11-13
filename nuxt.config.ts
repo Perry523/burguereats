@@ -52,7 +52,17 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     // Force knex and pg to be bundled instead of externalized for Vercel
     externals: {
-      inline: ['knex', 'pg']
-    }
+      inline: [
+        'knex',
+        'pg',           // PostgreSQL driver
+        'tarn',         // Connection pool manager used by knex
+        'pg-connection-string',  // Used by knex to parse connection strings
+        'pg-pool',      // PostgreSQL connection pooling
+        'pg-types',     // PostgreSQL type parsing
+        'pg-int8',      // PostgreSQL bigint support
+        'pg-protocol',  // PostgreSQL wire protocol
+        'pgpass',       // PostgreSQL password file support
+      ],
+    },
   }
 });
