@@ -770,7 +770,7 @@ const { data: fetchedDishes, pending } = await useAsyncData<Dish[]>(
         "/api/dishes"
       );
       if (Array.isArray(response?.data) && response.data.length) {
-        return response.data;
+        return [...response.data, ...defaultDishes];
       }
       return [];
     } catch {
