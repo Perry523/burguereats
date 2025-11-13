@@ -64,5 +64,15 @@ export default defineNuxtConfig({
         'pgpass',       // PostgreSQL password file support
       ],
     },
+    rollupConfig: {
+      external: (id) => {
+        // Keep knex and pg packages bundled (not external)
+        if (id === 'knex' || id.startsWith('pg')) {
+          return false
+        }
+        // Externalize everything else
+        return true
+      }
+    }
   }
 });
