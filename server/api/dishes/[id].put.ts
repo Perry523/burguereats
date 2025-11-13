@@ -32,12 +32,18 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (Object.prototype?.hasOwnProperty?.call(body, "description")) {
+    if (
+      typeof Object.prototype?.hasOwnProperty?.call === "function" &&
+      Object.prototype?.hasOwnProperty?.call(body, "description")
+    ) {
       updateData.description =
         typeof body.description === "string" ? body.description : null;
     }
 
-    if (Object.prototype?.hasOwnProperty?.call(body, "price")) {
+    if (
+      typeof Object.prototype?.hasOwnProperty?.call === "function" &&
+      Object.prototype?.hasOwnProperty?.call(body, "price")
+    ) {
       const parsedPrice =
         typeof body.price !== "undefined" ? parseFloat(body.price) : NaN;
       if (Number.isNaN(parsedPrice)) {

@@ -28,7 +28,10 @@ export default defineEventHandler(async (event) => {
       updateData.name = body.name;
     }
 
-    if (Object.prototype?.hasOwnProperty?.call(body, "description")) {
+    if (
+      typeof Object.prototype?.hasOwnProperty?.call === "function" &&
+      Object.prototype?.hasOwnProperty?.call(body, "description")
+    ) {
       updateData.description = body.description;
     }
 
