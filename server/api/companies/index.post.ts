@@ -1,4 +1,4 @@
-import { DatabaseHelper } from '../../utils/database'
+import { DatabaseHelper } from '~/utils/database'
 import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {

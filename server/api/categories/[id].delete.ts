@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
-import { DatabaseHelper } from '~/server/utils/database'
+import { DatabaseHelper } from '../../utils/database'
 
 export default defineEventHandler(async (event) => {
   try {

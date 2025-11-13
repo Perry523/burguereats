@@ -1,4 +1,4 @@
-import { DatabaseHelper } from '../../utils/database'
+import { DatabaseHelper } from '~/utils/database'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 // import { H3Error } from 'h3'

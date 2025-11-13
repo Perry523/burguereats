@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from '~/server/utils/http'
-import { DatabaseHelper } from '~/server/utils/database'
+import { DatabaseHelper } from '../../utils/database'
 
 const serializeCategory = (category: { id: string; name: string; slug: string; description: string | null; order: number; companyId: string; createdAt: Date; updatedAt: Date }) => ({
   id: category.id,

@@ -1,4 +1,4 @@
-import { DatabaseHelper } from '../../utils/database'
+import { DatabaseHelper } from '~/utils/database'
 import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
