@@ -2738,18 +2738,6 @@
   resolved "https://registry.yarnpkg.com/@poppinss/exception/-/exception-1.2.2.tgz#8d30d42e126c54fe84e997433e4dcac610090743"
   integrity sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==
 
-"@preact/signals-core@^1.9.0":
-  version "1.10.0"
-  resolved "https://registry.npmjs.org/@preact/signals-core/-/signals-core-1.10.0.tgz"
-  integrity sha512-qlKeXlfqtlC+sjxCPHt6Sk0/dXBrKZVcPlianqjNc/vW263YBFiP5mRrgKpHoO0q222Thm1TdYQWfCKpbbgvwA==
-
-"@preact/signals@^2":
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/@preact/signals/-/signals-2.2.0.tgz"
-  integrity sha512-P3KPcEYyVk9Wiwfw68QQzRpPkt0H+zjfH3X4AaGCDlc86GuRBYFGiAxT1nC5F5qlsVIEmjNJ9yVYe7C91z3L+g==
-  dependencies:
-    "@preact/signals-core" "^1.9.0"
-
 "@redocly/ajv@^8.11.2":
   version "8.11.2"
   resolved "https://registry.npmjs.org/@redocly/ajv/-/ajv-8.11.2.tgz"
@@ -3130,41 +3118,6 @@
   version "4.53.2"
   resolved "https://registry.yarnpkg.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.53.2.tgz#d9ab606437fd072b2cb7df7e54bcdc7f1ccbe8b4"
   integrity sha512-k+/Rkcyx//P6fetPoLMb8pBeqJBNGx81uuf7iljX9++yNBVRDQgD04L+SVXmXmh5ZP4/WOp4mWF0kmi06PW2tA==
-
-"@schedule-x/calendar-controls@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/calendar-controls/-/calendar-controls-2.18.0.tgz"
-  integrity sha512-wt3rX4YPBy/e1VdYDxI/nIo/f9o34j75tZ0lCkA0ehraXbnBRqUWBk+F9v29H1gE4CGFuG0/tj93hn9V1BCKbA==
-
-"@schedule-x/calendar@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/calendar/-/calendar-2.18.0.tgz"
-  integrity sha512-ZnlYFD8P9dXxCsDpEMviOK8xVK4b871s+m4mWhLsIutyFUNwxFw/kVFtrMHCZhin2SRoh+pyXBfQqsHxQDMpmA==
-
-"@schedule-x/current-time@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/current-time/-/current-time-2.18.0.tgz"
-  integrity sha512-kzlbsPyjex2Z8cMipWoEoL+3xFZBuOIXg7pANUUxZ4XChed4VdAbtAvX/LS9O6wYRyyt5qsVn3J1Sz3OsxxT0w==
-
-"@schedule-x/event-modal@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/event-modal/-/event-modal-2.18.0.tgz"
-  integrity sha512-JBnBIgl6PT9pSDZKHZeKlSSomBhiThu7MGfR4+UIzFAkmyGd0qbOcipFSEDsXyC+mRrReTpzWdOpkKeLanJ9Dw==
-
-"@schedule-x/events-service@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/events-service/-/events-service-2.18.0.tgz"
-  integrity sha512-6PhcTl/Fk9GRjHINN3u7OmpMAO5ZKthjXBVIgpsuq4yopnWlYw3WFEVSw/0ahDGCN663cPb7N1KrEP9Lxvu8QQ==
-
-"@schedule-x/theme-default@^2.7.0":
-  version "2.18.0"
-  resolved "https://registry.npmjs.org/@schedule-x/theme-default/-/theme-default-2.18.0.tgz"
-  integrity sha512-o4OzFzxxz2nSi7iaCVca5Vi6HAgnQvpZerJcd+3lqNejnB9RL7PUWxmC3DBbP5W6Y9ggUzKFywM1/6kx1LpxEQ==
-
-"@schedule-x/vue@^2.6.0":
-  version "2.16.0"
-  resolved "https://registry.npmjs.org/@schedule-x/vue/-/vue-2.16.0.tgz"
-  integrity sha512-CRhZhcTu4I1vIu9lSaJ7ESs1h3kajnCOSAdBcbj1avjNw/dk02jqOxAs3vLB2viS2sTFq68VdYQYi2bC71in0Q==
 
 "@sidebase/nuxt-auth@^0.5":
   version "0.5.0"
