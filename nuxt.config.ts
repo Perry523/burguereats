@@ -51,6 +51,7 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     // Force knex and pg to be bundled instead of externalized for Vercel
+    preset: 'vercel',
     externals: {
       inline: [
         'knex',
