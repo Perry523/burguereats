@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (event) => {
@@ -24,8 +24,22 @@ export default defineEventHandler(async (event) => {
       updateData.password = await bcrypt.hash(body.password, 10);
     }
 
-    const db = new DatabaseHelper();
-    const admin = await db.update("Admins", id, updateData);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: admin, error } = await supabase
+      .from("Admins")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return { success: true, data: admin };
   } catch (error) {

@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,17 +18,32 @@ export default defineEventHandler(async (event) => {
       companyId: string;
     };
 
-    const db = new DatabaseHelper();
-    const admin = await db.db("Admins").where("id", decoded.id).first();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!admin) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: admin, error: adminError } = await supabase
+      .from("Admins")
+      .select("*")
+      .eq("id", decoded.id)
+      .single();
+
+    if (adminError || !admin) {
       throw createError({
         statusCode: 401,
         statusMessage: "Admin not found",
       });
     }
 
-    const company = await db.findById("Company", admin.companyId);
+    const { data: company } = await supabase
+      .from("Company")
+      .select("*")
+      .eq("id", admin.companyId)
+      .single();
 
     return {
       success: true,

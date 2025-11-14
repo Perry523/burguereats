@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,8 +11,17 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    await db.delete("Admins", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.from("Admins").delete().eq("id", id);
+
+    if (error) throw error;
 
     return { success: true, message: "Admin deleted successfully" };
   } catch (error) {

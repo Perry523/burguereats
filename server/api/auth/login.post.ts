@@ -1,7 +1,6 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-// import { H3Error } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -14,10 +13,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const admin = await db.db("Admins").where("email", body.email).first();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!admin) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: admin, error: adminError } = await supabase
+      .from("Admins")
+      .select("*")
+      .eq("email", body.email)
+      .single();
+
+    if (adminError || !admin) {
       throw createError({
         statusCode: 401,
         statusMessage: "Invalid email or password",
@@ -40,7 +50,11 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const company = await db.findById("Company", admin.companyId);
+    const { data: company } = await supabase
+      .from("Company")
+      .select("*")
+      .eq("id", admin.companyId)
+      .single();
 
     const token = jwt.sign(
       {

@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,17 +11,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const admin = await db
-      .db("Admins")
-      .where("Admins.id", id)
-      .join("Company", "Admins.companyId", "Company.id")
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: admin, error } = await supabase
+      .from("Admins")
       .select(
-        "Admins.*",
-        "Company.name as company_name",
-        "Company.email as company_email"
+        `
+        *,
+        Company:companyId (
+          id,
+          name,
+          email
+        )
+      `
       )
-      .first();
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
 
     if (!admin) {
       throw createError({

@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,10 +12,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existingCategory = await db.findById("SideCategory", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingCategory) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingCategory, error: fetchError } = await supabase
+      .from("SideCategory")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingCategory) {
       throw createError({
         statusCode: 404,
         statusMessage: "Side category not found",
@@ -36,18 +47,25 @@ export default defineEventHandler(async (event) => {
     }
 
     if (typeof body.isRequired === "boolean") {
-      updateData.is_required = body.isRequired;
+      updateData.isRequired = body.isRequired;
     }
 
     if (typeof body.maxSelections === "number") {
-      updateData.max_selections = body.maxSelections;
+      updateData.maxSelections = body.maxSelections;
     }
 
     if (typeof body.order === "number") {
       updateData.order = body.order;
     }
 
-    const category = await db.update("SideCategory", id, updateData);
+    const { data: category, error } = await supabase
+      .from("SideCategory")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return {
       success: true,

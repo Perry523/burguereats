@@ -1,33 +1,36 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
     const companyId = query.companyId as string;
 
-    const db = new DatabaseHelper();
-    let admins;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    let adminsQuery = supabase.from("Admins").select(
+      `
+      *,
+      Company:companyId (
+        id,
+        name,
+        email
+      )
+    `
+    );
 
     if (companyId) {
-      admins = await db
-        .db("Admins")
-        .where("companyId", companyId)
-        .join("Company", "Admins.companyId", "Company.id")
-        .select(
-          "Admins.*",
-          "Company.name as company_name",
-          "Company.email as company_email"
-        );
-    } else {
-      admins = await db
-        .db("Admins")
-        .join("Company", "Admins.companyId", "Company.id")
-        .select(
-          "Admins.*",
-          "Company.name as company_name",
-          "Company.email as company_email"
-        );
+      adminsQuery = adminsQuery.eq("companyId", companyId);
     }
+
+    const { data: admins, error } = await adminsQuery;
+
+    if (error) throw error;
 
     return { success: true, data: admins };
   } catch (error) {

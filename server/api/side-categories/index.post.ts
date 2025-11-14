@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
 export default defineEventHandler(async (event) => {
@@ -12,17 +12,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const category = await db.create("SideCategory", {
-      id: randomUUID(),
-      name: body.name,
-      description: body.description,
-      isRequired: body.isRequired ?? false,
-      maxSelections:
-        typeof body.maxSelections === "number" ? body.maxSelections : null,
-      order: typeof body.order === "number" ? body.order : 0,
-      companyId: body.companyId,
-    });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: category, error } = await supabase
+      .from("SideCategory")
+      .insert({
+        id: randomUUID(),
+        name: body.name,
+        description: body.description,
+        isRequired: body.isRequired ?? false,
+        maxSelections:
+          typeof body.maxSelections === "number" ? body.maxSelections : null,
+        order: typeof body.order === "number" ? body.order : 0,
+        companyId: body.companyId,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return {
       success: true,

@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
 export default defineEventHandler(async (event) => {
@@ -34,34 +34,44 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const dishId = randomUUID();
 
-    // Create the dish
-    const dish = await db.create("Dish", {
-      id: dishId,
-      name,
-      description:
-        typeof body.description === "string" ? body.description : null,
-      price: parsedPrice,
-      category: "", // Keep for backward compatibility, but we'll use junction table
-      image: normalizedImage || null,
-      isAvailable:
-        typeof body.isAvailable === "boolean" ? body.isAvailable : true,
-      companyId: companyId,
-    });
+    const { data: dish, error: dishError } = await supabase
+      .from("Dish")
+      .insert({
+        id: dishId,
+        name,
+        description:
+          typeof body.description === "string" ? body.description : null,
+        price: parsedPrice,
+        category: "",
+        image: normalizedImage || null,
+        isAvailable:
+          typeof body.isAvailable === "boolean" ? body.isAvailable : true,
+        companyId: companyId,
+      })
+      .select()
+      .single();
 
-    // Create dish-category relationships
+    if (dishError) throw dishError;
+
     if (categoryIds.length > 0) {
       const dishCategories = categoryIds.map((categoryId) => ({
         id: randomUUID(),
         dishId,
         categoryId,
       }));
-      await db.db("DishCategory").insert(dishCategories);
+      await supabase.from("DishCategory").insert(dishCategories);
     }
 
-    // Create dish-side-category relationships
     if (sideCategoryIds.length > 0) {
       const dishSideCategories = sideCategoryIds.map(
         (sideCategoryId, index) => ({
@@ -71,7 +81,7 @@ export default defineEventHandler(async (event) => {
           order: index,
         })
       );
-      await db.db("DishSideCategory").insert(dishSideCategories);
+      await supabase.from("DishSideCategory").insert(dishSideCategories);
     }
 
     return { success: true, data: dish };

@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,10 +13,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existingCategory = await db.findById("Category", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingCategory) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingCategory, error: fetchError } = await supabase
+      .from("Category")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingCategory) {
       return sendError(event, {
         statusCode: 404,
         code: "CATEGORY_NOT_FOUND",
@@ -24,7 +35,9 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    await db.delete("Category", id);
+    const { error } = await supabase.from("Category").delete().eq("id", id);
+
+    if (error) throw error;
 
     return sendSuccess(event, {
       data: null,

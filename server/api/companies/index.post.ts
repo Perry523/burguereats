@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
 export default defineEventHandler(async (event) => {
@@ -12,17 +12,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const company = await db.create("Company", {
-      id: randomUUID(),
-      name: body.name,
-      email: body.email,
-      phone: body.phone,
-      address: body.address,
-      city: body.city,
-      state: body.state,
-      zipCode: body.zipCode,
-    });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: company, error } = await supabase
+      .from("Company")
+      .insert({
+        id: randomUUID(),
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        address: body.address,
+        city: body.city,
+        state: body.state,
+        zipCode: body.zipCode,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return { success: true, data: company };
   } catch (error) {

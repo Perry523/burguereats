@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/server/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,17 +11,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existingDish = await db.findById("Dish", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingDish) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingDish, error: fetchError } = await supabase
+      .from("Dish")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingDish) {
       throw createError({
         statusCode: 404,
         statusMessage: "Dish not found",
       });
     }
 
-    await db.delete("Dish", id);
+    const { error } = await supabase.from("Dish").delete().eq("id", id);
+
+    if (error) throw error;
 
     return { success: true, message: "Dish deleted successfully" };
   } catch (error) {

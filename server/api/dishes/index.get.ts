@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
       .select(
         `
         dishId,
-        order as dishOrder,
+        order,
         SideCategory:sideCategoryId (
           id,
           name,
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
       if (!sideCategoriesByDish[item.dishId]) sideCategoriesByDish[item.dishId] = [];
       sideCategoriesByDish[item.dishId].push({
         ...item.SideCategory,
-        dishOrder: item.dishOrder,
+        dishOrder: item.order,
       });
     });
 
