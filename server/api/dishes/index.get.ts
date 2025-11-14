@@ -6,12 +6,13 @@ export default defineEventHandler(async (event) => {
     const companyId = query.companyId as string | undefined;
 
     const db = new DatabaseHelper();
+    console.log("db", db);
     let knexQuery = db.db("Dish");
 
     if (companyId) {
       knexQuery = knexQuery.where("companyId", companyId);
     }
-
+    console.log("knexQuery", knexQuery);
     const dishes = await knexQuery.orderBy("createdAt", "desc").select("*");
 
     // Get all dish IDs
