@@ -1,0 +1,30 @@
+# Supabase Configuration
+SUPABASE_URL=https://wtcbcatsxgvaatuhmznl.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0Y2JjYXRzeGd2YWF0dWhtem5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwMjg0MjYsImV4cCI6MjA2NjYwNDQyNn0.hC2wg8yhlR4gTp6_aJSl1SR84BEHUqY3R2sVQIO-29w
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+
+# Database URL (Supabase PostgreSQL connection string)
+DATABASE_URL=postgresql://postgres:KWokPIl7eUHqcooD@db.wtcbcatsxgvaatuhmznl.supabase.co:5432/postgres
+
+# JWT Secret for authentication
+JWT_SECRET=your_jwt_secret_key_here
+
+# Legacy API URL (for gradual migration)
+# API_URL="https://belezura.site"
+# API_URL="http://localhost:8000"
+API_URL="http://localhost:3001"
+
+# Instagram Integration - CONFIGURE THESE FOR REAL CONNECTION
+INSTAGRAM_APP_ID=integra_central_ig_app_id_123
+INSTAGRAM_APP_SECRET=integra_central_ig_secret_456
+INSTAGRAM_REDIRECT_URI=http://localhost:3000/auth/instagram/callback
+
+# Facebook Integration - CONFIGURE THESE FOR REAL CONNECTION
+FACEBOOK_APP_ID=integra_central_fb_app_id_789
+FACEBOOK_APP_SECRET=integra_central_fb_secret_012
+FACEBOOK_REDIRECT_URI=http://localhost:3000/auth/facebook/callback
+
+# Google Gemini AI - CONFIGURE FOR AI CONTENT GENERATION
+# GEMINI_API_KEY=AIzaSyCHBcwmCWYRjCRKwhzibgX1b1-UtvpQHl0
+GEMINI_API_KEY=AIzaSyCM2ci88ri8hJZQ3sM07QGAcam5nPtS1r4
+# GEMINI_API_KEY=AIzaSyBPv9OSL-wseTH2Xr6OITBt4DrJRAmXXk8
