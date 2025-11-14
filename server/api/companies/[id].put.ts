@@ -1,28 +1,28 @@
-import { DatabaseHelper } from '~/utils/database'
+import { DatabaseHelper } from "~/server/utils/database";
 
 export default defineEventHandler(async (event) => {
   try {
-    const id = getRouterParam(event, 'id')
-    const body = await readBody(event)
+    const id = getRouterParam(event, "id");
+    const body = await readBody(event);
 
     if (!id) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Company ID is required',
-      })
+        statusMessage: "Company ID is required",
+      });
     }
 
-    const db = new DatabaseHelper()
-    const existingCompany = await db.findById('Company', id)
+    const db = new DatabaseHelper();
+    const existingCompany = await db.findById("Company", id);
 
     if (!existingCompany) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'Company not found',
-      })
+        statusMessage: "Company not found",
+      });
     }
 
-    const company = await db.update('Company', id, {
+    const company = await db.update("Company", id, {
       name: body.name,
       email: body.email,
       phone: body.phone,
@@ -30,14 +30,14 @@ export default defineEventHandler(async (event) => {
       city: body.city,
       state: body.state,
       zip_code: body.zipCode,
-    })
+    });
 
-    return { success: true, data: company }
+    return { success: true, data: company };
   } catch (error) {
-    console.error('Error updating company:', error)
+    console.error("Error updating company:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to update company',
-    })
+      statusMessage: "Failed to update company",
+    });
   }
-})
+});

@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { DatabaseHelper } from "~/utils/database";
+import { DatabaseHelper } from "~/server/utils/database";
 
 const serializeCategory = (category: {
   id: string;

@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/utils/database";
+import { DatabaseHelper } from "~/server/utils/database";
 
 export default defineEventHandler(async (event) => {
   try {
