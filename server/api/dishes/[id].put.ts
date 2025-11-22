@@ -1,4 +1,4 @@
-import { DatabaseHelper } from "~/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
 export default defineEventHandler(async (event) => {
@@ -13,10 +13,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existingDish = await db.findById("Dish", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingDish) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingDish, error: fetchError } = await supabase
+      .from("Dish")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingDish) {
       throw createError({
         statusCode: 404,
         statusMessage: "Dish not found",
@@ -67,39 +78,39 @@ export default defineEventHandler(async (event) => {
       updateData.isAvailable = body.isAvailable;
     }
 
-    // Update basic dish data
-    const dish = await db.update("Dish", id, updateData);
+    const { data: dish, error } = await supabase
+      .from("Dish")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
 
-    // Handle category relationships
+    if (error) throw error;
+
     if (Array.isArray(body.categoryIds)) {
       const categoryIds = body.categoryIds.filter(
         (id) => typeof id === "string"
       );
 
-      // Remove existing category relationships
-      await db.db("DishCategory").where("dishId", id).del();
+      await supabase.from("DishCategory").delete().eq("dishId", id);
 
-      // Add new category relationships
       if (categoryIds.length > 0) {
         const dishCategories = categoryIds.map((categoryId) => ({
           id: randomUUID(),
           dishId: id,
           categoryId,
         }));
-        await db.db("DishCategory").insert(dishCategories);
+        await supabase.from("DishCategory").insert(dishCategories);
       }
     }
 
-    // Handle side category relationships
     if (Array.isArray(body.sideCategoryIds)) {
       const sideCategoryIds = body.sideCategoryIds.filter(
         (id) => typeof id === "string"
       );
 
-      // Remove existing side category relationships
-      await db.db("DishSideCategory").where("dishId", id).del();
+      await supabase.from("DishSideCategory").delete().eq("dishId", id);
 
-      // Add new side category relationships
       if (sideCategoryIds.length > 0) {
         const dishSideCategories = sideCategoryIds.map(
           (sideCategoryId, index) => ({
@@ -109,7 +120,7 @@ export default defineEventHandler(async (event) => {
             order: index,
           })
         );
-        await db.db("DishSideCategory").insert(dishSideCategories);
+        await supabase.from("DishSideCategory").insert(dishSideCategories);
       }
     }
 

@@ -1,30 +1,43 @@
-import { DatabaseHelper } from '~/utils/database'
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
-    const query = getQuery(event)
-    const companyId = query.companyId as string
+    const query = getQuery(event);
+    const companyId = query.companyId as string;
 
-    const db = new DatabaseHelper()
-    let admins
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (companyId) {
-      admins = await db.db('Admins')
-        .where('companyId', companyId)
-        .join('Company', 'Admins.companyId', 'Company.id')
-        .select('Admins.*', 'Company.name as company_name', 'Company.email as company_email')
-    } else {
-      admins = await db.db('Admins')
-        .join('Company', 'Admins.companyId', 'Company.id')
-        .select('Admins.*', 'Company.name as company_name', 'Company.email as company_email')
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
     }
 
-    return { success: true, data: admins }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    let adminsQuery = supabase.from("Admins").select(
+      `
+      *,
+      Company:companyId (
+        id,
+        name,
+        email
+      )
+    `
+    );
+
+    if (companyId) {
+      adminsQuery = adminsQuery.eq("companyId", companyId);
+    }
+
+    const { data: admins, error } = await adminsQuery;
+
+    if (error) throw error;
+
+    return { success: true, data: admins };
   } catch (error) {
-    console.error('Error fetching admins:', error)
+    console.error("Error fetching admins:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch admins',
-    })
+      statusMessage: "Failed to fetch admins",
+    });
   }
-})
+});

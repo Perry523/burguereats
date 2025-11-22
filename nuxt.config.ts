@@ -100,6 +100,17 @@ export default defineNuxtConfig({
 
   piniaPersistedstate: {
     storage: "localStorage",
+    serializer: {
+      serialize: JSON.stringify,
+      deserialize: (value: string) => {
+        try {
+          return JSON.parse(value);
+        } catch {
+          // Return null for corrupted data, Pinia will use default state
+          return null;
+        }
+      },
+    },
   },
 
   supabase: {

@@ -1,92 +1,116 @@
-import { DatabaseHelper } from '~/utils/database'
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
-    const query = getQuery(event)
-    const companyId = query.companyId as string | undefined
+    const query = getQuery(event);
+    const companyId = query.companyId as string | undefined;
 
-    const db = new DatabaseHelper()
-    let knexQuery = db.db('Dish')
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let dishesQuery = supabase
+      .from("Dish")
+      .select("*")
+      .order("createdAt", { ascending: false });
 
     if (companyId) {
-      knexQuery = knexQuery.where('companyId', companyId)
+      dishesQuery = dishesQuery.eq("companyId", companyId);
     }
 
-    const dishes = await knexQuery
-      .orderBy('createdAt', 'desc')
-      .select('*')
+    const { data: dishes, error: dishesError } = await dishesQuery;
 
-    // Get all dish IDs
-    const dishIds = dishes.map(dish => dish.id)
+    if (dishesError) throw dishesError;
 
-    if (dishIds.length === 0) {
+    if (!dishes || dishes.length === 0) {
       return {
         success: true,
-        data: dishes,
-      }
+        data: dishes || [],
+      };
     }
 
-    // Fetch categories for all dishes
-    const dishCategories = await db.db('DishCategory')
-      .join('Category', 'DishCategory.categoryId', 'Category.id')
-      .whereIn('DishCategory.dishId', dishIds)
-      .select('DishCategory.dishId', 'Category.*')
+    const dishIds = (dishes as any[]).map((dish) => dish.id);
 
-    // Fetch side categories for all dishes
-    const dishSideCategories = await db.db('DishSideCategory')
-      .join('SideCategory', 'DishSideCategory.sideCategoryId', 'SideCategory.id')
-      .whereIn('DishSideCategory.dishId', dishIds)
-      .select('DishSideCategory.dishId', 'SideCategory.*', 'DishSideCategory.order as dishOrder')
+    const { data: dishCategories, error: categoriesError } = await supabase
+      .from("DishCategory")
+      .select(
+        `
+        dishId,
+        Category:categoryId (
+          id,
+          name,
+          slug,
+          description,
+          order,
+          companyId,
+          createdAt,
+          updatedAt
+        )
+      `
+      )
+      .in("dishId", dishIds);
 
-    // Group categories and side categories by dish ID
-    const categoriesByDish = dishCategories.reduce((acc, item) => {
-      if (!acc[item.dishId]) acc[item.dishId] = []
-      acc[item.dishId].push({
-        id: item.id,
-        name: item.name,
-        slug: item.slug,
-        description: item.description,
-        order: item.order,
-        companyId: item.companyId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt
-      })
-      return acc
-    }, {})
+    if (categoriesError) throw categoriesError;
 
-    const sideCategoriesByDish = dishSideCategories.reduce((acc, item) => {
-      if (!acc[item.dishId]) acc[item.dishId] = []
-      acc[item.dishId].push({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        isRequired: item.isRequired,
-        maxSelections: item.maxSelections,
-        order: item.order,
-        companyId: item.companyId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        dishOrder: item.dishOrder
-      })
-      return acc
-    }, {})
+    const { data: dishSideCategories, error: sideCategoriesError } = await supabase
+      .from("DishSideCategory")
+      .select(
+        `
+        dishId,
+        order,
+        SideCategory:sideCategoryId (
+          id,
+          name,
+          description,
+          isRequired,
+          maxSelections,
+          order,
+          companyId,
+          createdAt,
+          updatedAt
+        )
+      `
+      )
+      .in("dishId", dishIds);
 
-    // Add categories and sideCategories to each dish
-    const dishesWithRelations = dishes.map(dish => ({
+    if (sideCategoriesError) throw sideCategoriesError;
+
+    const categoriesByDish: Record<string, any[]> = {};
+    const sideCategoriesByDish: Record<string, any[]> = {};
+
+    (dishCategories || []).forEach((item: any) => {
+      if (!categoriesByDish[item.dishId]) categoriesByDish[item.dishId] = [];
+      categoriesByDish[item.dishId].push(item.Category);
+    });
+
+    (dishSideCategories || []).forEach((item: any) => {
+      if (!sideCategoriesByDish[item.dishId]) sideCategoriesByDish[item.dishId] = [];
+      sideCategoriesByDish[item.dishId].push({
+        ...item.SideCategory,
+        dishOrder: item.order,
+      });
+    });
+
+    const dishesWithRelations = (dishes as any[]).map((dish) => ({
       ...dish,
       categories: categoriesByDish[dish.id] || [],
-      sideCategories: sideCategoriesByDish[dish.id] || []
-    }))
+      sideCategories: sideCategoriesByDish[dish.id] || [],
+    }));
 
     return {
       success: true,
       data: dishesWithRelations,
-    }
+    };
   } catch (error) {
-    console.error('Error fetching dishes:', error)
-    return { success: true, data: [] }
+    console.error("Error fetching dishes:", error);
+    return { success: true, data: [] };
   }
-})
+});
 export const config = {
-  runtime: 'nodejs'
-}
+  runtime: "nodejs",
+};

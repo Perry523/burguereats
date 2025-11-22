@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { DatabaseHelper } from "~/utils/database";
+import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
 const toSlug = (value: string) =>
@@ -62,12 +62,20 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existing = await db
-      .db("Category")
-      .where("companyId", companyId)
-      .where("slug", slug)
-      .first();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existing } = await supabase
+      .from("Category")
+      .select("*")
+      .eq("companyId", companyId)
+      .eq("slug", slug)
+      .single();
 
     if (existing) {
       return sendError(event, {
@@ -86,7 +94,13 @@ export default defineEventHandler(async (event) => {
       order,
     };
 
-    const category = await db.create("Category", createData);
+    const { data: category, error } = await supabase
+      .from("Category")
+      .insert(createData)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return sendSuccess(event, {
       statusCode: 201,

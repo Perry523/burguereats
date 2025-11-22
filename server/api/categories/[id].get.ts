@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { DatabaseHelper } from "~/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 const serializeCategory = (category: {
   id: string;
@@ -33,10 +33,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const category = await db.findById("Category", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!category) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: category, error } = await supabase
+      .from("Category")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !category) {
       return sendError(event, {
         statusCode: 404,
         code: "CATEGORY_NOT_FOUND",

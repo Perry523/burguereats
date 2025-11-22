@@ -1,34 +1,47 @@
-import { DatabaseHelper } from '~/utils/database'
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
-    const id = getRouterParam(event, 'id')
+    const id = getRouterParam(event, "id");
 
     if (!id) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Side category ID is required',
-      })
+        statusMessage: "Side category ID is required",
+      });
     }
 
-    const db = new DatabaseHelper()
-    const existingCategory = await db.findById('SideCategory', id)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingCategory) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingCategory, error: fetchError } = await supabase
+      .from("SideCategory")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingCategory) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'Side category not found',
-      })
+        statusMessage: "Side category not found",
+      });
     }
 
-    await db.delete('SideCategory', id)
+    const { error } = await supabase.from("SideCategory").delete().eq("id", id);
 
-    return { success: true }
+    if (error) throw error;
+
+    return { success: true };
   } catch (error) {
-    console.error('Error deleting side category:', error)
+    console.error("Error deleting side category:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to delete side category',
-    })
+      statusMessage: "Failed to delete side category",
+    });
   }
-})
+});

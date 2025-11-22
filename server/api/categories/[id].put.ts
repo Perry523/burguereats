@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { DatabaseHelper } from "~/utils/database";
+import { createClient } from "@supabase/supabase-js";
 
 const toSlug = (value: string) =>
   value
@@ -44,10 +44,21 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = new DatabaseHelper();
-    const existingCategory = await db.findById("Category", id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingCategory) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingCategory, error: fetchError } = await supabase
+      .from("Category")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingCategory) {
       return sendError(event, {
         statusCode: 404,
         code: "CATEGORY_NOT_FOUND",
@@ -89,7 +100,7 @@ export default defineEventHandler(async (event) => {
       const slugInput = typeof body.slug === "string" ? body.slug.trim() : "";
       resolvedSlug = toSlug(
         slugInput ||
-          (typeof body.name === "string" ? body.name : existingCategory.name)
+          (typeof body.name === "string" ? body.name : (existingCategory as any).name)
       );
       if (!resolvedSlug) {
         return sendError(event, {
@@ -109,12 +120,13 @@ export default defineEventHandler(async (event) => {
     }
 
     if (resolvedSlug) {
-      const conflict = await db
-        .db("Category")
-        .where("companyId", existingCategory.companyId)
-        .where("slug", resolvedSlug)
-        .whereNot("id", id)
-        .first();
+      const { data: conflict } = await supabase
+        .from("Category")
+        .select("*")
+        .eq("companyId", (existingCategory as any).companyId)
+        .eq("slug", resolvedSlug)
+        .neq("id", id)
+        .single();
 
       if (conflict) {
         return sendError(event, {
@@ -129,11 +141,18 @@ export default defineEventHandler(async (event) => {
 
     if (Object.keys(data).length === 0) {
       return sendSuccess(event, {
-        data: serializeCategory(existingCategory),
+        data: serializeCategory(existingCategory as any),
       });
     }
 
-    const category = await db.update("Category", id, data);
+    const { data: category, error } = await supabase
+      .from("Category")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return sendSuccess(event, {
       data: serializeCategory(category),

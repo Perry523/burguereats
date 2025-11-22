@@ -1,34 +1,47 @@
-import { DatabaseHelper } from '~/utils/database'
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
-    const id = getRouterParam(event, 'id')
+    const id = getRouterParam(event, "id");
 
     if (!id) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Company ID is required',
-      })
+        statusMessage: "Company ID is required",
+      });
     }
 
-    const db = new DatabaseHelper()
-    const existingCompany = await db.findById('Company', id)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!existingCompany) {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: existingCompany, error: fetchError } = await supabase
+      .from("Company")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingCompany) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'Company not found',
-      })
+        statusMessage: "Company not found",
+      });
     }
 
-    await db.delete('Company', id)
+    const { error } = await supabase.from("Company").delete().eq("id", id);
 
-    return { success: true, message: 'Company deleted successfully' }
+    if (error) throw error;
+
+    return { success: true, message: "Company deleted successfully" };
   } catch (error) {
-    console.error('Error deleting company:', error)
+    console.error("Error deleting company:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to delete company',
-    })
+      statusMessage: "Failed to delete company",
+    });
   }
-})
+});

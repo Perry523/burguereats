@@ -6,7 +6,7 @@ node_modules
 package-lock.json
 dist
 .output
-.env
+# .env
 .DS_Store
 yarn.lock
 yarn-error.log
