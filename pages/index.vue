@@ -779,6 +779,93 @@ const { data: fetchedDishes, pending } = await useAsyncData<Dish[]>(
   }
 );
 
+const { data: fetchedProducts } = await useAsyncData<any[]>(
+  "landing-products",
+  async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data?: any[] }>(
+        "/api/products?activeOnly=true"
+      );
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+);
+
+const { data: fetchedCategories } = await useAsyncData<any[]>(
+  "landing-categories",
+  async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data?: any[] }>(
+        "/api/categories"
+      );
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+);
+
+const getCategoryName = (id: string) => {
+  const category = fetchedCategories.value?.find((c) => c.id === id);
+  return category ? category.name : "Outros";
+};
+
+const getCategorySlug = (id: string) => {
+  const category = fetchedCategories.value?.find((c) => c.id === id);
+  return category ? category.slug : "outros";
+};
+
+const normalizeProduct = (product: any): Dish => {
+  const categoryName = getCategoryName(product.category_id);
+  const categorySlug = getCategorySlug(product.category_id);
+
+  let sideCategories: any[] = [];
+  if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+    sideCategories.push({
+      id: `variants-${product.id}`,
+      name: "Variantes",
+      description: "Escolha uma opção",
+      isRequired: false, // Or true if variants are mandatory? Let's assume optional for now or check logic.
+      maxSelections: 1, // Usually variants are mutually exclusive like size? Or multiple? Form allows multiple. Let's assume 1 for now.
+      order: 0,
+      sides: product.variants.map((v: any, index: number) => ({
+        id: `variant-${product.id}-${index}`,
+        name: v.name,
+        description: null,
+        priceIncrement: Number(v.additional_price) || 0,
+        image: null,
+        isAvailable: v.is_active !== false
+      }))
+    });
+  }
+
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.sell_price,
+    category: categorySlug,
+    image: product.image,
+    sideCategories: sideCategories,
+    categories: [
+      {
+        id: categorySlug,
+        slug: categorySlug,
+        name: categoryName,
+        description: null,
+      },
+    ],
+  };
+};
+
 const normalizeDish = (dish: Dish): Dish => {
   const normalizedCategories =
     Array.isArray(dish.categories) && dish.categories.length
@@ -800,10 +887,19 @@ const normalizeDish = (dish: Dish): Dish => {
 };
 
 const dishes = computed<Dish[]>(() => {
+  let allItems: Dish[] = [];
+  
   if (fetchedDishes.value && fetchedDishes.value.length) {
-    return fetchedDishes.value.map(normalizeDish);
+    allItems = [...allItems, ...fetchedDishes.value.map(normalizeDish)];
+  } else {
+    allItems = [...allItems, ...defaultDishes.map(normalizeDish)];
   }
-  return defaultDishes.map(normalizeDish);
+
+  if (fetchedProducts.value && fetchedProducts.value.length) {
+    allItems = [...allItems, ...fetchedProducts.value.map(normalizeProduct)];
+  }
+
+  return allItems;
 });
 
 const categoriesState = useState<{ id: string; name: string }[]>(
