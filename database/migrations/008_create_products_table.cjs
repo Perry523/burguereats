@@ -1,56 +1,26 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
-exports.up = async function (knex) {
-  await knex.schema.createTable("products", function (table) {
-    // Primary key
-    table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
-
-    // Foreign key to Company (text type to match Company.id)
-    table.text("company_id").notNullable();
-    table
-      .foreign("company_id")
-      .references("id")
-      .inTable("Company")
-      .onDelete("CASCADE");
-
-    // Product details
-    table.string("name").notNullable();
-    table.string("category").notNullable();
-    table.decimal("sell_price", 10, 2).notNullable();
-    table.decimal("buy_price", 10, 2).notNullable();
-    table.decimal("stock", 10, 2).notNullable().defaultTo(0);
-    table.text("image").nullable();
-
-    // Timestamps
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
+exports.up = async function(knex) {
+  return knex.schema.createTable('products', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'))
+    table.uuid('company_id').notNullable().references('id').inTable('companies').onDelete('CASCADE')
+    // Note: 'Category' table name is capitalized in existing API code
+    table.uuid('category_id').nullable().references('id').inTable('Category').onDelete('SET NULL')
+    table.string('name').notNullable()
+    table.text('description').nullable()
+    table.decimal('buy_price', 10, 2).defaultTo(0)
+    table.decimal('sell_price', 10, 2).notNullable().defaultTo(0)
+    table.integer('quantity').defaultTo(0)
+    table.string('image').nullable()
+    table.boolean('is_active').defaultTo(true)
+    table.jsonb('variants').defaultTo('[]')
+    table.timestamps(true, true)
 
     // Indexes
-    table.index("company_id", "idx_products_company_id");
-  });
+    table.index('company_id')
+    table.index('category_id')
+    table.index('is_active')
+  })
+}
 
-  // Enable RLS
-  await knex.raw("ALTER TABLE products ENABLE ROW LEVEL SECURITY");
-
-  // Create policies - simplified for now
-  await knex.raw(`
-    CREATE POLICY "Enable read access for all users" ON products
-      FOR SELECT USING (true);
-  `);
-
-  await knex.raw(`
-    CREATE POLICY "Enable all for authenticated users" ON products
-      FOR ALL USING (auth.role() = 'authenticated')
-      WITH CHECK (auth.role() = 'authenticated');
-  `);
-};
-
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
-exports.down = function (knex) {
-  return knex.schema.dropTableIfExists("products");
-};
+exports.down = async function(knex) {
+  return knex.schema.dropTable('products')
+}

@@ -3,17 +3,26 @@
     <input-base v-model="name" :error="errors['name']" label="Nome" />
 
     <div v-if="!hasVariants" class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start">
-      <input-base is-currency :error="errors['base_price']" v-model="base_price" label="Preço Base (Unidade)" />
+      <input-base is-currency :error="errors['buy_price']" v-model="buy_price" label="Preço de Compra" />
+      <input-base is-currency :error="errors['sell_price']" v-model="sell_price" label="Preço de Venda" />
       <input-base type="number" :disabled="!props.product" :readonly="!!props.product" v-model="quantity"
         :error="errors['quantity']" label="Quantidade no estoque">
         <template #append>
           <PencilSquareIcon v-if="!!props.product" @click="emit('editQuantity')"
             class="!h-[39px] p-2 !w-[39px] min-h-0 btn btn-primary absolute inset-y-0 right-0" />
         </template>
-
-
       </input-base>
+    </div>
 
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium text-gray-700">Categoria</label>
+      <select v-model="category_id" class="select select-bordered w-full" :class="{ 'select-error': errors['category_id'] }">
+        <option :value="null">Selecione uma categoria</option>
+        <option v-for="category in categories" :key="category.id" :value="category.id">
+          {{ category.name }}
+        </option>
+      </select>
+      <span v-if="errors['category_id']" class="text-error text-xs">{{ errors['category_id'] }}</span>
     </div>
 
     <input-base v-model="description" type="textarea" rows="2" :error="errors['description']" label="Descrição"
@@ -79,13 +88,24 @@ const props = defineProps({
   }
 });
 
-// interface Variant {
-//   name: string;
-//   additional_price: number;
-//   base_price: number;
-//   quantity: number;
-//   is_active: boolean;
-// }
+interface Variant {
+  name: string;
+  additional_price: number;
+  base_price: number;
+  quantity: number;
+  is_active: boolean;
+}
+
+interface ProductForm {
+  name: string;
+  buy_price: number;
+  sell_price: number;
+  category_id: string | null;
+  quantity: number;
+  description: string;
+  variants: Variant[];
+  hasVariants: boolean;
+}
 
 const emit = defineEmits(["submit", "editQuantity"]);
 
@@ -105,12 +125,14 @@ function removeVariant(index: number) {
 
 const validationSchema = yup.object().shape({
   name: yup.string().required("O nome do produto é obrigatório"),
-  base_price: yup.number().when("hasVariants", {
+  buy_price: yup.number().min(0, "O preço deve ser maior ou igual a zero"),
+  sell_price: yup.number().when("hasVariants", {
     is: false,
-    then: (schema) => schema.required("O preço base é obrigatório"),
+    then: (schema) => schema.required("O preço de venda é obrigatório"),
     otherwise: (schema) =>
       schema.min(0, "O preço deve ser maior ou igual a zero"),
   }),
+  category_id: yup.string().nullable(),
   quantity: yup.number().when("hasVariants", {
     is: false,
     then: (schema) => schema.required("O preço base é obrigatório"),
@@ -139,18 +161,24 @@ const validationSchema = yup.object().shape({
   ),
 });
 
-const { handleSubmit, defineField, errors } = useForm({
+const { handleSubmit, defineField, errors } = useForm<ProductForm>({
   validationSchema,
   initialValues: {
     variants: [] as Variant[],
-    ...props.product,
+    name: props.product?.name || "",
+    buy_price: props.product?.buy_price || 0,
+    sell_price: props.product?.sell_price || 0,
+    category_id: props.product?.category_id || null,
+    description: props.product?.description || "",
     hasVariants: !!props.product?.variants?.length,
     quantity: props.product?.quantity || 0,
   },
 });
 
 const [name] = defineField("name");
-const [base_price] = defineField("base_price");
+const [buy_price] = defineField("buy_price");
+const [sell_price] = defineField("sell_price");
+const [category_id] = defineField("category_id");
 const [quantity] = defineField("quantity");
 const [description] = defineField("description");
 const [variants] = defineField("variants");
@@ -166,6 +194,22 @@ watch(hasVariants, (val) => {
     addVariant();
   } else {
     variants.value = [];
+  }
+});
+
+const categories = ref([]);
+const { user } = useAuthStore();
+
+onMounted(async () => {
+  if (user?.company?.id) {
+    try {
+      const { data } = await useFetch<any>(`/api/categories?companyId=${user.company.id}`);
+      if (data.value?.data) {
+        categories.value = data.value.data;
+      }
+    } catch (e) {
+      console.error("Failed to fetch categories", e);
+    }
   }
 });
 </script>

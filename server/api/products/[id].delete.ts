@@ -1,32 +1,30 @@
-import { createClient } from "@supabase/supabase-js";
+import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
+import { ProductModel } from "~/models/ProductModel";
 
 export default defineEventHandler(async (event) => {
   try {
     const id = event.context.params?.id;
 
     if (!id) {
-      throw new Error("Missing product ID");
+      return sendError(event, {
+        statusCode: 400,
+        code: "PRODUCT_ID_REQUIRED",
+        message: "Product ID is required",
+      });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const productModel = new ProductModel();
+    await productModel.delete(id);
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase configuration");
-    }
-
-    // Use service key to bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { error } = await supabase.from("products").delete().eq("id", id);
-
-    if (error) throw error;
-
-    return {
-      success: true,
-    };
-  } catch (error: any) {
-    console.error("Error deleting product:", error);
-    return { success: false, error: error.message };
+    return sendSuccess(event, {
+      statusCode: 204,
+      data: null,
+    });
+  } catch (error) {
+    return handleServerError(event, error, {
+      statusCode: 500,
+      code: "PRODUCT_DELETE_FAILED",
+      message: "Failed to delete product",
+    });
   }
 });

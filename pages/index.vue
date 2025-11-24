@@ -444,6 +444,8 @@ interface Dish {
   image: string | null;
   sideCategories: SideCategory[];
   categories: DishCategoryTag[];
+  stock?: number;
+  isProduct?: boolean;
 }
 
 const placeholderImage =
@@ -831,9 +833,9 @@ const { data: fetchedProducts } = await useAsyncData<any[]>(
   async () => {
     try {
       const response = await $fetch<{ success: boolean; data?: any[] }>(
-        "/api/products"
+        "/api/products?activeOnly=true"
       );
-      if (Array.isArray(response?.data) && response.data.length) {
+      if (Array.isArray(response?.data)) {
         return response.data;
       }
       return [];
@@ -842,6 +844,78 @@ const { data: fetchedProducts } = await useAsyncData<any[]>(
     }
   }
 );
+
+const { data: fetchedCategories } = await useAsyncData<any[]>(
+  "landing-categories",
+  async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data?: any[] }>(
+        "/api/categories"
+      );
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+);
+
+const getCategoryName = (id: string) => {
+  const category = fetchedCategories.value?.find((c) => c.id === id);
+  return category ? category.name : "Outros";
+};
+
+const getCategorySlug = (id: string) => {
+  const category = fetchedCategories.value?.find((c) => c.id === id);
+  return category ? category.slug : "outros";
+};
+
+const normalizeProduct = (product: any): Dish => {
+  const categoryName = getCategoryName(product.category_id);
+  const categorySlug = getCategorySlug(product.category_id);
+
+  let sideCategories: any[] = [];
+  if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+    sideCategories.push({
+      id: `variants-${product.id}`,
+      name: "Variantes",
+      description: "Escolha uma opção",
+      isRequired: false,
+      maxSelections: 1,
+      order: 0,
+      sides: product.variants.map((v: any, index: number) => ({
+        id: `variant-${product.id}-${index}`,
+        name: v.name,
+        description: null,
+        priceIncrement: Number(v.additional_price) || 0,
+        image: null,
+        isAvailable: v.is_active !== false
+      }))
+    });
+  }
+
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.sell_price,
+    category: categorySlug,
+    image: product.image,
+    sideCategories: sideCategories,
+    categories: [
+      {
+        id: categorySlug,
+        slug: categorySlug,
+        name: categoryName,
+        description: null,
+      },
+    ],
+    stock: product.quantity,
+    isProduct: true,
+  } as Dish;
+};
 
 const normalizeDish = (dish: Dish): Dish => {
   const normalizedCategories =
@@ -866,33 +940,15 @@ const normalizeDish = (dish: Dish): Dish => {
 const dishes = computed<Dish[]>(() => {
   let allItems: Dish[] = [];
 
-  // Add dishes
   if (fetchedDishes.value && fetchedDishes.value.length) {
-    allItems = [...fetchedDishes.value.map(normalizeDish)];
+    allItems = [...allItems, ...fetchedDishes.value.map(normalizeDish)];
   } else {
-    allItems = [...defaultDishes.map(normalizeDish)];
+    allItems = [...allItems, ...defaultDishes.map(normalizeDish)];
   }
 
-  // Add products as dishes (without side categories)
   if (fetchedProducts.value && fetchedProducts.value.length) {
-    const productDishes: Dish[] = fetchedProducts.value.map((product) => ({
-      id: product.id,
-      name: product.name,
-      description:
-        product.stock > 0
-          ? product.description || null
-          : "Produto fora de estoque",
-      price: product.sell_price,
-      category: product.category.toLowerCase().replace(/\s+/g, "-"),
-      image: product.image || null,
-      sideCategories: [], // Products have no side categories
-      categories: buildDishCategories([
-        product.category.toLowerCase().replace(/\s+/g, "-"),
-      ]),
-      isProduct: true, // Mark as product for special handling
-      stock: product.stock,
-    }));
-    allItems = [...allItems, ...productDishes];
+    allItems = [...allItems, ...fetchedProducts.value.map(normalizeProduct)];
+  }
   }
 
   return allItems;

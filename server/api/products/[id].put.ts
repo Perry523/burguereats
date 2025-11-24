@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
+import { ProductModel } from "~/models/ProductModel";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -6,34 +7,37 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event);
 
     if (!id) {
-      throw new Error("Missing product ID");
+      return sendError(event, {
+        statusCode: 400,
+        code: "PRODUCT_ID_REQUIRED",
+        message: "Product ID is required",
+      });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const productModel = new ProductModel();
+    
+    // Prepare update data
+    const updateData: any = {};
+    if (body.name) updateData.name = body.name;
+    if (body.category_id !== undefined) updateData.category_id = body.category_id;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.buy_price !== undefined) updateData.buy_price = Number(body.buy_price);
+    if (body.sell_price !== undefined) updateData.sell_price = Number(body.sell_price);
+    if (body.quantity !== undefined) updateData.quantity = Number(body.quantity);
+    if (body.image !== undefined) updateData.image = body.image;
+    if (body.is_active !== undefined) updateData.is_active = body.is_active;
+    if (body.variants) updateData.variants = JSON.stringify(body.variants);
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase configuration");
-    }
+    const product = await productModel.update(id, updateData);
 
-    // Use service key to bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { data, error } = await supabase
-      .from("products")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      success: true,
-      data,
-    };
-  } catch (error: any) {
-    console.error("Error updating product:", error);
-    return { success: false, error: error.message };
+    return sendSuccess(event, {
+      data: product,
+    });
+  } catch (error) {
+    return handleServerError(event, error, {
+      statusCode: 500,
+      code: "PRODUCT_UPDATE_FAILED",
+      message: "Failed to update product",
+    });
   }
 });

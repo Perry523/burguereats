@@ -1,38 +1,36 @@
-import { createClient } from "@supabase/supabase-js";
+import { handleServerError, sendSuccess } from "~/server/utils/http";
+import { ProductModel } from "~/models/ProductModel";
 
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const companyId = query.companyId as string | undefined;
+    const companyId = typeof query.companyId === "string" ? query.companyId : undefined;
+    const activeOnly = query.activeOnly === 'true';
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase configuration");
+    if (!companyId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Company ID is required",
+      });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const productModel = new ProductModel();
+    let products;
 
-    let productsQuery = supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (companyId) {
-      productsQuery = productsQuery.eq("company_id", companyId);
+    if (activeOnly) {
+      products = await productModel.findActiveByCompany(companyId);
+    } else {
+      products = await productModel.findByCompany(companyId);
     }
 
-    const { data: products, error } = await productsQuery;
-
-    if (error) throw error;
-
-    return {
-      success: true,
-      data: products || [],
-    };
+    return sendSuccess(event, {
+      data: products,
+    });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    return { success: false, data: [] };
+    return handleServerError(event, error, {
+      statusCode: 500,
+      code: "PRODUCTS_FETCH_FAILED",
+      message: "Failed to fetch products",
+    });
   }
 });

@@ -1,56 +1,47 @@
-import { createClient } from "@supabase/supabase-js";
+import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
+import { ProductModel } from "~/models/ProductModel";
+import { randomUUID } from "crypto";
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const { company_id, name, category, sell_price, buy_price, stock, image } =
-      body;
 
-    if (
-      !company_id ||
-      !name ||
-      !category ||
-      sell_price === undefined ||
-      buy_price === undefined ||
-      stock === undefined
-    ) {
-      throw new Error("Missing required fields");
+    // Validation
+    if (!body.name || !body.company_id || !body.sell_price) {
+      return sendError(event, {
+        statusCode: 400,
+        code: "PRODUCT_VALIDATION_FAILED",
+        message: "Name, company_id and sell_price are required",
+      });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const productModel = new ProductModel();
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase configuration");
-    }
-
-    // Use service key to bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { data, error } = await supabase
-      .from("products")
-      .insert([
-        {
-          company_id,
-          name,
-          category,
-          sell_price,
-          buy_price,
-          stock,
-          image,
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      success: true,
-      data,
+    const createData = {
+      id: randomUUID(),
+      company_id: body.company_id,
+      category_id: body.category_id || null,
+      name: body.name,
+      description: body.description || null,
+      buy_price: Number(body.buy_price) || 0,
+      sell_price: Number(body.sell_price),
+      quantity: Number(body.quantity) || 0,
+      image: body.image || null,
+      is_active: body.is_active !== undefined ? body.is_active : true,
+      variants: body.variants ? JSON.stringify(body.variants) : '[]'
     };
-  } catch (error: any) {
-    console.error("Error creating product:", error);
-    return { success: false, error: error.message };
+
+    const product = await productModel.create(createData);
+
+    return sendSuccess(event, {
+      statusCode: 201,
+      data: product,
+    });
+  } catch (error) {
+    return handleServerError(event, error, {
+      statusCode: 500,
+      code: "PRODUCT_CREATE_FAILED",
+      message: "Failed to create product",
+    });
   }
 });
