@@ -1,6 +1,6 @@
 name: Build and Deploy
 
-# Dispara o workflow ao fazer push na branch main (ou outra branch que desejar)
+# Dispara o workflow ao fazer push na branch main ou outra branch que desejar
 on:
   push:
     branches:
