@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
             buy_price DECIMAL(10, 2) NOT NULL,
             stock INTEGER NOT NULL DEFAULT 0,
             image TEXT,
+            is_active BOOLEAN DEFAULT true,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );

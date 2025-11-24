@@ -63,6 +63,7 @@ create table public.products (
   buy_price numeric not null,
   stock numeric not null default 0,
   image text null,
+  is_active boolean default true,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone null,
   constraint products_pkey primary key (id),

@@ -873,8 +873,13 @@ const getCategorySlug = (id: string) => {
 };
 
 const normalizeProduct = (product: any): Dish => {
-  const categoryName = getCategoryName(product.category_id);
-  const categorySlug = getCategorySlug(product.category_id);
+  // Find category by name since product.category stores the name
+  const categoryObj = fetchedCategories.value?.find(
+    (c) => c.name === product.category || c.slug === product.category
+  );
+  
+  const categoryName = categoryObj ? categoryObj.name : (product.category || "Outros");
+  const categorySlug = categoryObj ? categoryObj.slug : (product.category?.toLowerCase() || "outros");
 
   let sideCategories: any[] = [];
   if (

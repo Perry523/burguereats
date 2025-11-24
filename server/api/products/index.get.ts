@@ -4,7 +4,12 @@ import { ProductModel } from "~/models/ProductModel";
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const companyId = typeof query.companyId === "string" ? query.companyId : undefined;
+    let companyId = typeof query.companyId === "string" ? query.companyId : undefined;
+
+    // TODO: Remove this hardcoded fallback once subdomain logic is implemented
+    if (!companyId) {
+      companyId = 'cmhp2pzdq0000gjpvfdsaumu0';
+    }
     const activeOnly = query.activeOnly === 'true';
 
     if (!companyId) {

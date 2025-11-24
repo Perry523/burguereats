@@ -3,7 +3,7 @@ import { BaseModel } from './BaseModel'
 export interface Product {
   id: string
   company_id: string
-  category_id: string | null
+  category: string
   name: string
   description: string | null
   buy_price: number
