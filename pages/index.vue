@@ -877,7 +877,11 @@ const normalizeProduct = (product: any): Dish => {
   const categorySlug = getCategorySlug(product.category_id);
 
   let sideCategories: any[] = [];
-  if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+  if (
+    product.variants &&
+    Array.isArray(product.variants) &&
+    product.variants.length > 0
+  ) {
     sideCategories.push({
       id: `variants-${product.id}`,
       name: "Variantes",
@@ -891,8 +895,8 @@ const normalizeProduct = (product: any): Dish => {
         description: null,
         priceIncrement: Number(v.additional_price) || 0,
         image: null,
-        isAvailable: v.is_active !== false
-      }))
+        isAvailable: v.is_active !== false,
+      })),
     });
   }
 
@@ -948,7 +952,6 @@ const dishes = computed<Dish[]>(() => {
 
   if (fetchedProducts.value && fetchedProducts.value.length) {
     allItems = [...allItems, ...fetchedProducts.value.map(normalizeProduct)];
-  }
   }
 
   return allItems;
