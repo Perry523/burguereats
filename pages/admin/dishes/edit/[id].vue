@@ -13,7 +13,10 @@
         </div>
         <div class="flex items-center gap-3">
           <NuxtLink to="/admin/dishes">
-            <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button
+              type="button"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
               Cancelar
             </button>
           </NuxtLink>
@@ -28,20 +31,42 @@
         </div>
       </div>
 
-      <form id="edit-dish-form" @submit.prevent="saveDish" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <form
+        id="edit-dish-form"
+        @submit.prevent="saveDish"
+        class="grid grid-cols-1 gap-6 lg:grid-cols-3"
+      >
         <div class="space-y-6 lg:col-span-1">
           <div class="rounded-lg border border-gray-200 bg-white p-6">
-            <h2 class="mb-4 text-lg font-semibold text-gray-800">Imagem do prato</h2>
+            <h2 class="mb-4 text-lg font-semibold text-gray-800">
+              Imagem do prato
+            </h2>
             <div v-if="imagePreview" class="space-y-4">
-              <div class="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                <img :src="imagePreview" alt="Pré-visualização" class="h-full w-full object-cover" />
+              <div
+                class="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
+              >
+                <img
+                  :src="imagePreview"
+                  alt="Pré-visualização"
+                  class="h-full w-full object-cover"
+                />
                 <button
                   type="button"
                   @click="removeImage"
                   class="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-600"
                 >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -60,11 +85,25 @@
                   @change="handleFileSelect"
                   class="hidden"
                 />
-                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <svg class="mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <div
+                  class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+                >
+                  <svg
+                    class="mb-3 h-12 w-12 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
                   </svg>
-                  <p class="mb-1 text-sm font-medium text-gray-700">Arraste uma imagem ou clique</p>
+                  <p class="mb-1 text-sm font-medium text-gray-700">
+                    Arraste uma imagem ou clique
+                  </p>
                   <p class="text-xs text-gray-500">PNG, JPG, WEBP até 5MB</p>
                 </div>
               </label>
@@ -78,7 +117,10 @@
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
               />
             </div> -->
-            <div v-if="imageError" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+            <div
+              v-if="imageError"
+              class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3"
+            >
               <p class="text-sm text-red-600">{{ imageError }}</p>
             </div>
           </div>
@@ -86,7 +128,9 @@
 
         <div class="space-y-6 lg:col-span-2">
           <div class="rounded-lg border border-gray-200 bg-white p-6">
-            <h2 class="mb-4 text-lg font-semibold text-gray-800">Informações principais</h2>
+            <h2 class="mb-4 text-lg font-semibold text-gray-800">
+              Informações principais
+            </h2>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div class="md:col-span-2">
                 <label class="mb-2 block text-sm font-medium text-gray-700">
@@ -119,7 +163,9 @@
               </div>
             </div>
             <div class="mt-4">
-              <label class="mb-2 block text-sm font-medium text-gray-700">Descrição</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700"
+                >Descrição</label
+              >
               <textarea
                 v-model="form.description"
                 rows="3"
@@ -141,7 +187,7 @@
                 />
               </button>
               <span class="text-sm font-medium text-gray-700">
-                {{ form.isAvailable ? 'Disponível' : 'Indisponível' }}
+                {{ form.isAvailable ? "Disponível" : "Indisponível" }}
               </span>
             </div>
           </div>
@@ -160,22 +206,35 @@
                   class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
                 >
                   <option value="" disabled>Selecione uma categoria</option>
-                  <option v-for="option in availableCategoryOptions" :key="option.value" :value="option.value">
+                  <option
+                    v-for="option in availableCategoryOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
                     {{ option.label }}
                   </option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500">
-                  {{ availableCategoryOptions.length ? 'Escolha uma categoria para adicionar' : 'Todas as categorias foram adicionadas' }}
+                  {{
+                    availableCategoryOptions.length
+                      ? "Escolha uma categoria para adicionar"
+                      : "Todas as categorias foram adicionadas"
+                  }}
                 </p>
               </div>
 
-              <div v-if="selectedCategoryOptions.length" class="grid gap-3 sm:grid-cols-2">
+              <div
+                v-if="selectedCategoryOptions.length"
+                class="grid gap-3 sm:grid-cols-2"
+              >
                 <div
                   v-for="category in selectedCategoryOptions"
                   :key="`edit-selected-category-${category.value}`"
                   class="flex items-center justify-between gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3"
                 >
-                  <span class="text-sm font-semibold text-orange-700">{{ category.label }}</span>
+                  <span class="text-sm font-semibold text-orange-700">{{
+                    category.label
+                  }}</span>
                   <button
                     type="button"
                     @click="removeCategory(category.value)"
@@ -199,7 +258,10 @@
     <div v-else class="py-12 text-center">
       <p class="text-gray-500">Prato não encontrado</p>
       <NuxtLink to="/admin/dishes">
-        <button type="button" class="mt-4 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <button
+          type="button"
+          class="mt-4 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
           Voltar para lista
         </button>
       </NuxtLink>
@@ -208,7 +270,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import type { FetchError } from "ofetch";
 
 definePageMeta({
@@ -295,7 +364,9 @@ const selectedCategoryOptions = computed(() =>
     .filter((option): option is CategoryOption => Boolean(option))
 );
 const availableCategoryOptions = computed(() =>
-  categoryOptions.value.filter((option) => !form.categoryIds.includes(option.value))
+  categoryOptions.value.filter(
+    (option) => !form.categoryIds.includes(option.value)
+  )
 );
 
 const removeCategory = (value: string) => {
@@ -311,17 +382,10 @@ const handleCategorySelection = () => {
   categoryToAdd.value = "";
 };
 
-const uniqueArray = (values: string[]) => Array.from(new Set(values.filter((value) => typeof value === "string" && value)));
-
-const toSlug = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+const uniqueArray = (values: string[]) =>
+  Array.from(
+    new Set(values.filter((value) => typeof value === "string" && value))
+  );
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -395,9 +459,15 @@ const formatCategoryLabel = (slug: string) =>
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
 
-const loadCategories = async (companyId: string, fallback?: DishRecord | null) => {
+const loadCategories = async (
+  companyId: string,
+  fallback?: DishRecord | null
+) => {
   try {
-    const response = await $fetch<{ success: boolean; data?: CategoryRecord[] }>(`/api/categories?companyId=${companyId}`);
+    const response = await $fetch<{
+      success: boolean;
+      data?: CategoryRecord[];
+    }>(`/api/categories?companyId=${companyId}`);
     const fetched = Array.isArray(response?.data) ? response.data : [];
 
     const optionMap = new Map<string, CategoryOption>();
@@ -430,10 +500,14 @@ const loadCategories = async (companyId: string, fallback?: DishRecord | null) =
       }
     }
 
-    const options = Array.from(optionMap.values()).sort((a, b) => (a.order - b.order) || a.label.localeCompare(b.label));
+    const options = Array.from(optionMap.values()).sort(
+      (a, b) => a.order - b.order || a.label.localeCompare(b.label)
+    );
     categoryOptions.value = options;
 
-    const validSelection = uniqueArray(form.categoryIds.filter((id) => optionMap.has(id)));
+    const validSelection = uniqueArray(
+      form.categoryIds.filter((id) => optionMap.has(id))
+    );
     if (validSelection.length !== form.categoryIds.length) {
       form.categoryIds = validSelection;
     }
@@ -446,7 +520,9 @@ const loadCategories = async (companyId: string, fallback?: DishRecord | null) =
 
 const fetchDish = async () => {
   try {
-    const response = await $fetch<{ success: boolean; data?: DishRecord }>(`/api/dishes/${dishId}`);
+    const response = await $fetch<{ success: boolean; data?: DishRecord }>(
+      `/api/dishes/${dishId}`
+    );
     if (response.success && response.data) {
       dish.value = response.data;
       form.name = response.data.name;
@@ -491,7 +567,10 @@ const uploadDishImage = async (companyId: string) => {
     formData.append("file", imageFile.value);
     formData.append("companyId", companyId);
     formData.append("name", form.name.trim() || "prato");
-    const response = await $fetch<{ success?: boolean; data?: { url?: string } }>("/api/uploads/dish-image", {
+    const response = await $fetch<{
+      success?: boolean;
+      data?: { url?: string };
+    }>("/api/uploads/dish-image", {
       method: "POST",
       body: formData,
     });
@@ -502,7 +581,10 @@ const uploadDishImage = async (companyId: string) => {
     return imageUrl;
   } catch (error) {
     const fetchError = error as FetchError<{ message?: string }>;
-    imageError.value = fetchError?.data?.message || fetchError?.message || "Não foi possível enviar a imagem.";
+    imageError.value =
+      fetchError?.data?.message ||
+      fetchError?.message ||
+      "Não foi possível enviar a imagem.";
     throw error;
   }
 };
@@ -530,7 +612,10 @@ const saveDish = async () => {
     return;
   }
   if (!form.categoryIds.length) {
-    toast.add({ color: "warning", title: "Selecione pelo menos uma categoria" });
+    toast.add({
+      color: "warning",
+      title: "Selecione pelo menos uma categoria",
+    });
     return;
   }
   const companyId = dish.value?.companyId ?? user.value?.company?.id;
@@ -543,7 +628,10 @@ const saveDish = async () => {
     const resolvedCategoryIds = uniqueArray(form.categoryIds);
     const primarySlug = resolveCategorySlug(resolvedCategoryIds[0]);
     if (!primarySlug) {
-      toast.add({ color: "error", title: "Não foi possível identificar a categoria selecionada" });
+      toast.add({
+        color: "error",
+        title: "Não foi possível identificar a categoria selecionada",
+      });
       isSaving.value = false;
       return;
     }
@@ -568,7 +656,11 @@ const saveDish = async () => {
     await navigateTo("/admin/dishes");
   } catch (error) {
     console.error("Error saving dish:", error);
-    toast.add({ color: "error", title: "Erro ao atualizar prato", description: "Tente novamente em instantes" });
+    toast.add({
+      color: "error",
+      title: "Erro ao atualizar prato",
+      description: "Tente novamente em instantes",
+    });
   } finally {
     isSaving.value = false;
   }

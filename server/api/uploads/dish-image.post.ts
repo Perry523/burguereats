@@ -1,5 +1,5 @@
 import { H3Error } from 'h3'
-import { supabase } from '../../utils/supabase'
+import { serverSupabaseServiceRole } from '#supabase/server'
 
 const BUCKET_NAME = 'dishes'
 
@@ -15,6 +15,7 @@ const toSlug = (value: string) =>
 
 export default defineEventHandler(async (event) => {
   try {
+    const supabase = await serverSupabaseServiceRole(event)
     const formData = await readMultipartFormData(event)
 
     if (!formData || !formData.length) {
@@ -67,21 +68,14 @@ export default defineEventHandler(async (event) => {
     })
 
     if (uploadError) {
+      const statusCode = (uploadError as any).statusCode || (uploadError as any).status || 500
       throw createError({
-        statusCode: typeof uploadError.statusCode === 'number' ? uploadError.statusCode : 500,
+        statusCode,
         statusMessage: uploadError.message || 'Falha ao enviar imagem',
       })
     }
 
-    const { data: publicData, error: publicError } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath)
-
-    if (publicError) {
-      throw createError({
-        statusCode: typeof publicError.statusCode === 'number' ? publicError.statusCode : 500,
-        statusMessage: publicError.message || 'Não foi possível gerar a URL pública da imagem',
-      })
-    }
-
+    const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath)
     const publicUrl = publicData?.publicUrl?.trim()
 
     if (!publicUrl) {

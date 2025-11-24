@@ -19,9 +19,16 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch category with its side options
     const { data: category, error } = await supabase
       .from("SideCategory")
-      .select("*")
+      .select(
+        `
+        *,
+        sides:SideOption(*)
+      `
+      )
       .eq("id", id)
       .single();
 

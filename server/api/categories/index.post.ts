@@ -85,6 +85,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const now = new Date();
     const createData = {
       id: randomUUID(),
       name,
@@ -92,6 +93,8 @@ export default defineEventHandler(async (event) => {
       description: descriptionInput ? descriptionInput : null,
       companyId: companyId,
       order,
+      createdAt: now,
+      updatedAt: now,
     };
 
     const { data: category, error } = await supabase

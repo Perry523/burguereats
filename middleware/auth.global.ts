@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     if (to.path === "/") {
       return true;
     }
-    if (loginRoutes.includes(to.path) ) {
+    if (loginRoutes.includes(to.path)) {
       if (user) {
         return navigateTo("/admin");
       } else {

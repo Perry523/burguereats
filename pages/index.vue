@@ -11,11 +11,7 @@
 
         <div v-else>
           <div v-if="activeCategory === 'todos'">
-            <div
-              v-for="group in groupedDishes"
-              :key="group.slug"
-              class="mb-8"
-            >
+            <div v-for="group in groupedDishes" :key="group.slug" class="mb-8">
               <h2 class="text-2xl font-bold mb-4">{{ group.name }}</h2>
               <div class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                 <UCard
@@ -23,52 +19,63 @@
                   :key="dish.id"
                   class="group flex flex-row lg:flex-col overflow-hidden border-0 shadow-lg shadow-gray-200/60 transition hover:-translate-y-1 hover:shadow-orange-200/60"
                 >
-              <div class="flex flex-row lg:flex-col">
-                <div class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none">
-                  <nuxt-img
-                    :src="formatImage(dish.image)"
-                    :alt="dish.name"
-                    class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <!-- <span
+                  <div class="flex flex-row lg:flex-col">
+                    <div
+                      class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none"
+                    >
+                      <nuxt-img
+                        :src="formatImage(dish.image)"
+                        :alt="dish.name"
+                        class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <!-- <span
                     class="absolute left-1 top-1 lg:left-4 lg:top-4 rounded-full bg-white/90 px-1.5 py-0.5 lg:px-3 lg:py-1 text-xs font-semibold text-gray-700"
                   >
                     {{ primaryCategoryLabel(dish) }}
                   </span> -->
-                </div>
-                <div class="flex flex-1 flex-col gap-2 p-3 lg:py-3">
-                  <div class="flex items-start justify-between gap-4">
-                    <h3 class="text-base lg:text-lg font-semibold text-gray-900">
-                      {{ dish.name }}
-                    </h3>
+                    </div>
+                    <div class="flex flex-1 flex-col gap-2 p-3 lg:py-3">
+                      <div class="flex items-start justify-between gap-4">
+                        <h3
+                          class="text-base lg:text-lg font-semibold text-gray-900"
+                        >
+                          {{ dish.name }}
+                        </h3>
+                      </div>
+                      <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">
+                        {{ dish.description }}
+                      </p>
+                      <span class="text-sm lg:text-lg font-bold text-primary">{{
+                        currencyFormatter.format(dish.price)
+                      }}</span>
+                      <UButton
+                        size="sm"
+                        icon="i-heroicons-plus"
+                        class="mt-auto w-full lg:w-max"
+                        @click="openDishModal(dish)"
+                      >
+                        Adicionar a sacola
+                      </UButton>
+                    </div>
                   </div>
-                  <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">{{ dish.description }}</p>
-                  <span class="text-sm lg:text-lg font-bold text-primary">{{
-                      currencyFormatter.format(dish.price)
-                    }}</span>
-                  <UButton
-                    size="sm"
-                    icon="i-heroicons-plus"
-                    class="mt-auto w-full lg:w-max"
-                    @click="openDishModal(dish)"
-                  >
-                    Adicionar a sacola
-                  </UButton>
-                </div>
+                </UCard>
               </div>
-            </UCard>
-          </div>
             </div>
           </div>
 
-          <div v-else-if="filteredDishes.length" class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+          <div
+            v-else-if="filteredDishes.length"
+            class="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+          >
             <UCard
               v-for="dish in filteredDishes"
               :key="dish.id"
               class="group flex flex-row lg:flex-col overflow-hidden border-0 shadow-lg shadow-gray-200/60 transition hover:-translate-y-1 hover:shadow-orange-200/60"
             >
               <div class="flex flex-row lg:flex-col">
-                <div class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none">
+                <div
+                  class="relative w-20 lg:w-full lg:h-40 overflow-hidden rounded-lg lg:rounded-none"
+                >
                   <nuxt-img
                     :src="formatImage(dish.image)"
                     :alt="dish.name"
@@ -82,19 +89,23 @@
                 </div>
                 <div class="flex flex-1 flex-col gap-2 p-3 lg:py-3">
                   <div class="flex items-start justify-between gap-4">
-                    <h3 class="text-base lg:text-lg font-semibold text-gray-900">
+                    <h3
+                      class="text-base lg:text-lg font-semibold text-gray-900"
+                    >
                       {{ dish.name }}
                     </h3>
                   </div>
-                  <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">{{ dish.description }}</p>
+                  <p class="text-xs lg:text-sm text-gray-500 line-clamp-2">
+                    {{ dish.description }}
+                  </p>
                   <span class="text-sm lg:text-lg font-bold text-primary">{{
-                      currencyFormatter.format(dish.price)
-                    }}</span>
+                    currencyFormatter.format(dish.price)
+                  }}</span>
                   <UButton
                     size="sm"
                     icon="i-heroicons-plus"
                     class="mt-auto w-full lg:w-max"
-                    @click="openDishModal(dish)"
+                    @click="handleDishClick(dish)"
                   >
                     Adicionar a sacola
                   </UButton>
@@ -147,7 +158,7 @@
                     variant="soft"
                     icon="i-heroicons-plus"
                     class="mt-auto w-max"
-                    @click="openDishModal(dish)"
+                    @click="handleDishClick(dish)"
                   >
                     Escolher prato
                   </UButton>
@@ -175,180 +186,215 @@
           tabindex="-1"
           @keydown.esc="closeDishModal"
         >
-          <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" @click="closeDishModal"></div>
-          <div class="relative z-10 w-full max-w-3xl">
-            <div class="flex h-full max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl md:flex-row">
-              <div class="flex flex-1 items-center justify-center bg-slate-100 p-5 md:max-w-sm">
-                <div class="relative overflow-hidden rounded-2xl md:w-80 lg:w-88 xl:w-96">
+          <div
+            class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            @click="closeDishModal"
+          ></div>
+
+          <div class="relative z-10 w-full max-w-2xl">
+            <div
+              class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[calc(100vh-3rem)]"
+            >
+              <!-- Close Button - Top Right -->
+              <button
+                type="button"
+                class="absolute cursor-pointer right-4 top-4 inline-flex h-9 w-9 text-white items-center justify-center rounded-full bg-primary z-[300] shadow-lg"
+                @click="closeDishModal"
+              >
+                <UIcon name="i-heroicons-x-mark" class="h-5 w-5" />
+              </button>
+
+              <!-- Header: Image + Title Row -->
+              <div class="flex gap-4 p-6 pb-4 border-b border-slate-200">
+                <!-- Image -->
+                <div
+                  class="flex-shrink-0 w-24 h-24 overflow-hidden rounded-lg bg-slate-100"
+                >
                   <nuxt-img
                     :src="formatImage(activeDish.image)"
                     :alt="activeDish.name"
-                    class="h-full w-full object-contain"
+                    class="h-full w-full object-cover"
                   />
                 </div>
-              </div>
-              <div class="w-full relative flex min-h-full w-full flex-col border-t border-slate-100 md:border-l md:border-t-0">
-                <button
-                  type="button"
-                  class="absolute cursor-pointer right-4 top-4 inline-flex h-9 w-9 text-white items-center justify-center rounded-full bg-primary z-[300]"
-                  @click="closeDishModal"
-                >
-                  <UIcon name="i-heroicons-x-mark" class="h-5 w-5" />
-                </button>
-                <div class="flex flex-1 flex-col overflow-hidden">
-                  <div class="overflow-y-auto thin-scrollbar">
-                    <div class="sticky top-0 z-20 space-y-3 border-b border-slate-100 bg-white px-6 pb-4 pt-6 shadow-sm">
-                      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
-                        <span>Detalhes do produto</span>
-                      </div>
-                      <div class="space-y-2">
-                        <h3 class="text-lg font-semibold text-slate-900 sm:text-xl">{{ activeDish.name }}</h3>
-                        <p class="text-sm text-slate-500">{{ activeDish.description }}</p>
-                      </div>
-                      <!-- <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                          Detalhes do produto
-                        </span>
-                        <div class="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">
-                          {{ currencyFormatter.format(activeDish.price) }}
-                        </div>
-                      </div> -->
-                      <p class="text-sm font-medium text-slate-900">
-                        A partir de {{ currencyFormatter.format(activeDish.price) }}
-                      </p>
-                    </div>
-                    <div class="space-y-6 pb-6">
-                      <section
-                        v-for="category in activeDishCategories"
-                        :key="category.id"
-                        class="overflow-hidden"
-                      >
-                        <div class="flex bg-gray-200 items-start justify-between gap-3 px-4 py-3">
-                          <div class="space-y-1 text-sm">
-                            <p class="text-sm font-semibold text-slate-900">{{ category.name }}</p>
-                            <!-- <p class="text-xs text-slate-500">
-                              {{ category.description || 'Selecione as opções disponíveis.' }}
-                            </p> -->
-                            <template v-if="category.maxSelections">
-                              <span>{{ selectionCount(category.id) }} / {{ category.maxSelections }}</span>
-                            </template>
-                            <template v-else>
-                              <span>Escolha livre</span>
-                            </template>
-                          </div>
-                          <div class="flex flex-col items-end gap-1 text-xs font-medium text-slate-500">
-              
-                            <span
-                              v-if="category.isRequired"
-                              class="inline-flex items-center rounded bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-600"
-                            >
-                              Obrigatório
-                            </span>
-                            <span
-                              v-else
-                              class="inline-flex items-center rounded border border-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-                            >
-                              Opcional
-                            </span>
-                          </div>
-                        </div>
-                        <ul class="divide-y divide-slate-200">
-                          <li
-                            v-for="option in category.sides"
-                            :key="option.id"
-                          >
-                            <button
-                              type="button"
-                              :disabled="isOptionDisabled(category, option)"
-                              :class="[
-                                'flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition',
-                                isOptionSelected(category, option) ? 'bg-orange-50' : 'bg-white',
-                                option.isAvailable ? 'hover:bg-orange-50/60' : '',
-                                !option.isAvailable ? 'cursor-not-allowed opacity-50' : '',
-                                isOptionDisabled(category, option) && !isOptionSelected(category, option) ? 'cursor-not-allowed opacity-60' : ''
-                              ]"
-                              @click="toggleSideSelection(category, option)"
-                            >
-                              <div class="flex items-center gap-3">
-                                <div class="h-14 w-14 overflow-hidden rounded-lg bg-slate-100">
-                                  <nuxt-img
-                                    v-if="option.image"
-                                    :src="formatImage(option.image)"
-                                    :alt="option.name"
-                                    class="h-full w-full object-cover"
-                                  />
-                                  <div
-                                    v-else
-                                    class="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400"
-                                  >
-                                    {{ option.name.charAt(0) }}
-                                  </div>
-                                </div>
-                                <div class="space-y-1">
-                                  <p class="text-sm font-medium text-slate-900">
-                                    {{ option.name }}
-                                  </p>
-                                  <p v-if="option.description" class="text-xs text-slate-500">
-                                    {{ option.description }}
-                                  </p>
-                                </div>
-                              </div>
-                              <div class="flex flex-col items-end gap-1">
-                                <span class="text-xs font-semibold text-slate-900">
-                                  {{ formatSideIncrement(option.priceIncrement) }}
-                                </span>
-                                <div
-                                  :class="[
-                                    'flex h-5 w-5 items-center justify-center border-2',
-                                    category.maxSelections === 1 ? 'rounded-full' : 'rounded-md',
-                                    isOptionSelected(category, option)
-                                      ? 'border-orange-500 bg-orange-500 text-white'
-                                      : 'border-slate-300 bg-white text-transparent'
-                                  ]"
-                                >
-                                  <span
-                                    v-if="category.maxSelections === 1 && isOptionSelected(category, option)"
-                                    class="h-2.5 w-2.5 rounded-full bg-white"
-                                  ></span>
-                                  <UIcon
-                                    v-else-if="isOptionSelected(category, option)"
-                                    name="i-heroicons-check-20-solid"
-                                    class="h-3.5 w-3.5"
-                                  />
-                                </div>
-                              </div>
-                            </button>
-                          </li>
-                        </ul>
-                        <p
-                          v-if="category.isRequired && selectionCount(category.id) === 0"
-                          class="px-4 pb-4 text-xs font-semibold text-red-500"
-                        >
-                          Selecione ao menos uma opção.
-                        </p>
-                      </section>
-                    </div>
-                  </div>
+
+                <!-- Title & Price -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-xl font-bold text-slate-900 mb-1">
+                    {{ activeDish.name }}
+                  </h3>
+                  <p
+                    v-if="activeDish.description"
+                    class="text-sm text-slate-500 mb-2 line-clamp-2"
+                  >
+                    {{ activeDish.description }}
+                  </p>
+                  <p class="text-base font-semibold text-primary">
+                    A partir de {{ currencyFormatter.format(activeDish.price) }}
+                  </p>
                 </div>
-                <div class="border-t border-slate-100 px-6 py-5">
-                  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="space-y-1">
-                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Total estimado
-                      </p>
-                      <p class="text-2xl font-semibold text-slate-900">
-                        {{ currencyFormatter.format(dishTotalPrice) }}
-                      </p>
-                    </div>
-                    <UButton
-                      size="lg"
-                      class="flex-1 sm:flex-none"
-                      :disabled="!canConfirmSelection"
-                      @click="addDishToCart"
+              </div>
+
+              <!-- Scrollable Content: Sides -->
+              <div
+                v-if="!activeDish.stock"
+                class="flex-1 overflow-y-auto thin-scrollbar"
+              >
+                <div
+                  v-if="activeDishCategories.length > 0"
+                  class="space-y-4 p-6"
+                >
+                  <section
+                    v-for="category in activeDishCategories"
+                    :key="category.id"
+                    class="overflow-hidden"
+                  >
+                    <div
+                      class="flex bg-gray-100 items-start justify-between gap-3 px-4 py-3 rounded-t-lg"
                     >
-                      Adicionar a sacola
-                    </UButton>
+                      <div class="space-y-1 text-sm">
+                        <p class="text-sm font-semibold text-slate-900">
+                          {{ category.name }}
+                        </p>
+                        <template v-if="category.maxSelections">
+                          <span
+                            >{{ selectionCount(category.id) }} /
+                            {{ category.maxSelections }}</span
+                          >
+                        </template>
+                        <template v-else>
+                          <span>Escolha livre</span>
+                        </template>
+                      </div>
+                      <div
+                        class="flex flex-col items-end gap-1 text-xs font-medium text-slate-500"
+                      >
+                        <span
+                          v-if="category.isRequired"
+                          class="rounded-full bg-orange-100 px-2 py-0.5 text-orange-700"
+                        >
+                          OBRIGATÓRIO
+                        </span>
+                        <span
+                          v-else
+                          class="rounded-full bg-slate-100 px-2 py-0.5"
+                        >
+                          OPCIONAL
+                        </span>
+                      </div>
+                    </div>
+                    <ul
+                      class="divide-y divide-slate-200 border border-gray-100 rounded-b-lg"
+                    >
+                      <li v-for="option in category.sides" :key="option.id">
+                        <button
+                          type="button"
+                          :disabled="isOptionDisabled(category, option)"
+                          :class="[
+                            'flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition',
+                            isOptionSelected(category, option)
+                              ? 'bg-orange-50'
+                              : 'bg-white',
+                            option.isAvailable ? 'hover:bg-orange-50/60' : '',
+                            !option.isAvailable
+                              ? 'cursor-not-allowed opacity-50'
+                              : '',
+                            isOptionDisabled(category, option) &&
+                            !isOptionSelected(category, option)
+                              ? 'cursor-not-allowed opacity-60'
+                              : '',
+                          ]"
+                          @click="toggleSideSelection(category, option)"
+                        >
+                          <div class="flex items-center gap-3">
+                            <div
+                              class="h-12 w-12 overflow-hidden rounded-lg bg-slate-100"
+                            >
+                              <nuxt-img
+                                v-if="option.image"
+                                :src="formatImage(option.image)"
+                                :alt="option.name"
+                                class="h-full w-full object-cover"
+                              />
+                              <div
+                                v-else
+                                class="flex h-full w-full items-center justify-center"
+                              >
+                                <UIcon
+                                  name="i-heroicons-photo"
+                                  class="h-6 w-6 text-slate-400"
+                                />
+                              </div>
+                            </div>
+                            <div class="space-y-1">
+                              <p class="text-sm font-medium text-slate-900">
+                                {{ option.name }}
+                              </p>
+                              <p
+                                v-if="option.description"
+                                class="text-xs text-slate-500"
+                              >
+                                {{ option.description }}
+                              </p>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-3">
+                            <span
+                              v-if="option.priceIncrement"
+                              class="text-sm font-semibold text-slate-700"
+                            >
+                              {{ formatSideIncrement(option.priceIncrement) }}
+                            </span>
+                            <div
+                              :class="[
+                                'flex h-5 w-5 items-center justify-center rounded-full border-2 transition',
+                                isOptionSelected(category, option)
+                                  ? 'border-primary bg-primary'
+                                  : 'border-slate-300',
+                              ]"
+                            >
+                              <UIcon
+                                v-if="isOptionSelected(category, option)"
+                                name="i-heroicons-check"
+                                class="h-3 w-3 text-white"
+                              />
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    </ul>
+                    <p
+                      v-if="
+                        category.isRequired && selectionCount(category.id) === 0
+                      "
+                      class="px-4 pt-2 text-xs font-semibold text-red-500"
+                    >
+                      Selecione ao menos uma opção.
+                    </p>
+                  </section>
+                </div>
+              </div>
+
+              <!-- Footer: Total & Add Button -->
+              <div class="border-t border-slate-200 px-6 py-4 bg-slate-50">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="space-y-1">
+                    <p
+                      class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Total estimado
+                    </p>
+                    <p class="text-2xl font-bold text-slate-900">
+                      {{ currencyFormatter.format(dishTotalPrice) }}
+                    </p>
                   </div>
+                  <UButton
+                    size="lg"
+                    class="flex-shrink-0"
+                    :disabled="!canConfirmSelection"
+                    @click="addDishToCart"
+                  >
+                    Adicionar a sacola
+                  </UButton>
                 </div>
               </div>
             </div>
@@ -499,7 +545,9 @@ const baseSideCategories: SideCategory[] = [
   },
 ];
 
-const cloneSideCategories = (categories: SideCategory[] = baseSideCategories): SideCategory[] =>
+const cloneSideCategories = (
+  categories: SideCategory[] = baseSideCategories
+): SideCategory[] =>
   categories.map((category) => ({
     ...category,
     sides: category.sides.map((side) => ({ ...side })),
@@ -663,8 +711,9 @@ const highlightCards = [
 const normalizeSideOptions = (options: unknown[]): SideOption[] =>
   Array.isArray(options)
     ? options
-        .filter((option): option is Record<string, unknown> =>
-          option !== null && typeof option === "object"
+        .filter(
+          (option): option is Record<string, unknown> =>
+            option !== null && typeof option === "object"
         )
         .map((option) => ({
           id: String(option.id ?? ""),
@@ -680,17 +729,16 @@ const normalizeSideOptions = (options: unknown[]): SideOption[] =>
               ? option.image
               : null,
           isAvailable:
-            typeof option.isAvailable === "boolean"
-              ? option.isAvailable
-              : true,
+            typeof option.isAvailable === "boolean" ? option.isAvailable : true,
         }))
     : [];
 
 const normalizeSideCategories = (categories: unknown[]): SideCategory[] =>
   Array.isArray(categories)
     ? categories
-        .filter((category): category is Record<string, unknown> =>
-          category !== null && typeof category === "object"
+        .filter(
+          (category): category is Record<string, unknown> =>
+            category !== null && typeof category === "object"
         )
         .map((category, index) => {
           const rawOrder = category.order;
@@ -708,37 +756,35 @@ const normalizeSideCategories = (categories: unknown[]): SideCategory[] =>
               typeof rawMax === "number"
                 ? rawMax
                 : rawMax === null
-                ? null
-                : null,
+                  ? null
+                  : null,
             order:
               typeof rawOrder === "number"
                 ? rawOrder
                 : typeof rawOrder === "string" && rawOrder.trim().length
-                ? Number(rawOrder)
-                : index,
+                  ? Number(rawOrder)
+                  : index,
             sides: normalizeSideOptions(category.sides),
           } as SideCategory;
         })
         .sort((a, b) => a.order - b.order)
     : [];
 
-const {
-  data: fetchedSideCategories,
-  refresh: refreshSideCategories,
-} = await useAsyncData<SideCategory[]>("landing-side-categories", async () => {
-  try {
-    const response = await $fetch<{ success: boolean; data?: unknown[] }>(
-      "/api/side-categories"
-    );
-    if (Array.isArray(response?.data)) {
-      return normalizeSideCategories(response.data);
+const { data: fetchedSideCategories, refresh: refreshSideCategories } =
+  await useAsyncData<SideCategory[]>("landing-side-categories", async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data?: unknown[] }>(
+        "/api/side-categories"
+      );
+      if (Array.isArray(response?.data)) {
+        return normalizeSideCategories(response.data);
+      }
+      return [];
+    } catch (error) {
+      console.error("Failed to fetch side categories:", error);
+      return [];
     }
-    return [];
-  } catch (error) {
-    console.error("Failed to fetch side categories:", error);
-    return [];
-  }
-});
+  });
 
 const sharedSideCategories = computed<SideCategory[]>(() => {
   if (fetchedSideCategories.value && fetchedSideCategories.value.length) {
@@ -779,6 +825,24 @@ const { data: fetchedDishes, pending } = await useAsyncData<Dish[]>(
   }
 );
 
+// Fetch products
+const { data: fetchedProducts } = await useAsyncData<any[]>(
+  "landing-products",
+  async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data?: any[] }>(
+        "/api/products"
+      );
+      if (Array.isArray(response?.data) && response.data.length) {
+        return response.data;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+);
+
 const normalizeDish = (dish: Dish): Dish => {
   const normalizedCategories =
     Array.isArray(dish.categories) && dish.categories.length
@@ -800,10 +864,38 @@ const normalizeDish = (dish: Dish): Dish => {
 };
 
 const dishes = computed<Dish[]>(() => {
+  let allItems: Dish[] = [];
+
+  // Add dishes
   if (fetchedDishes.value && fetchedDishes.value.length) {
-    return fetchedDishes.value.map(normalizeDish);
+    allItems = [...fetchedDishes.value.map(normalizeDish)];
+  } else {
+    allItems = [...defaultDishes.map(normalizeDish)];
   }
-  return defaultDishes.map(normalizeDish);
+
+  // Add products as dishes (without side categories)
+  if (fetchedProducts.value && fetchedProducts.value.length) {
+    const productDishes: Dish[] = fetchedProducts.value.map((product) => ({
+      id: product.id,
+      name: product.name,
+      description:
+        product.stock > 0
+          ? product.description || null
+          : "Produto fora de estoque",
+      price: product.sell_price,
+      category: product.category.toLowerCase().replace(/\s+/g, "-"),
+      image: product.image || null,
+      sideCategories: [], // Products have no side categories
+      categories: buildDishCategories([
+        product.category.toLowerCase().replace(/\s+/g, "-"),
+      ]),
+      isProduct: true, // Mark as product for special handling
+      stock: product.stock,
+    }));
+    allItems = [...allItems, ...productDishes];
+  }
+
+  return allItems;
 });
 
 const categoriesState = useState<{ id: string; name: string }[]>(
@@ -857,17 +949,24 @@ const filteredDishes = computed<Dish[]>(() => {
   );
 });
 
-const groupedDishes = computed<{slug: string, name: string, dishes: Dish[]}[]>(() => {
-  const groups = new Map<string, {slug: string, name: string, dishes: Dish[]}>();
+const groupedDishes = computed<
+  { slug: string; name: string; dishes: Dish[] }[]
+>(() => {
+  const groups = new Map<
+    string,
+    { slug: string; name: string; dishes: Dish[] }
+  >();
   for (const dish of searchFilteredDishes.value) {
     const catSlug = dish.categories[0]?.slug || dish.category;
     const catName = dish.categories[0]?.name || formatCategoryLabel(catSlug);
     if (!groups.has(catSlug)) {
-      groups.set(catSlug, {slug: catSlug, name: catName, dishes: []});
+      groups.set(catSlug, { slug: catSlug, name: catName, dishes: [] });
     }
     groups.get(catSlug)!.dishes.push(dish);
   }
-  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+  return Array.from(groups.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 });
 
 const suggestionDishes = computed<Dish[]>(() => {
@@ -936,7 +1035,9 @@ const ensureDishHasSideCategories = async (dish: Dish) => {
 
 const initializeSideSelections = (dish: Dish) => {
   const initialSelections: Record<string, string[]> = {};
-  const categories = Array.isArray(dish.sideCategories) ? dish.sideCategories : [];
+  const categories = Array.isArray(dish.sideCategories)
+    ? dish.sideCategories
+    : [];
   for (const category of categories) {
     const available = category.sides.filter((side) => side.isAvailable);
     if (category.isRequired && available.length) {
@@ -948,11 +1049,18 @@ const initializeSideSelections = (dish: Dish) => {
   sideSelections.value = initialSelections;
 };
 
-const applySelectionsFromRecord = (dish: Dish, selections: Record<string, string[]>) => {
+const applySelectionsFromRecord = (
+  dish: Dish,
+  selections: Record<string, string[]>
+) => {
   const resolvedSelections: Record<string, string[]> = {};
-  const categories = Array.isArray(dish.sideCategories) ? dish.sideCategories : [];
+  const categories = Array.isArray(dish.sideCategories)
+    ? dish.sideCategories
+    : [];
   for (const category of categories) {
-    const requested = Array.isArray(selections[category.id]) ? selections[category.id] : [];
+    const requested = Array.isArray(selections[category.id])
+      ? selections[category.id]
+      : [];
     const availableIds = new Set(category.sides.map((side) => side.id));
     const filtered = requested.filter((id) => availableIds.has(id));
     if (!filtered.length && category.isRequired) {
@@ -965,9 +1073,35 @@ const applySelectionsFromRecord = (dish: Dish, selections: Record<string, string
   sideSelections.value = resolvedSelections;
 };
 
+const handleDishClick = (dish: Dish) => {
+  // Check if it's a product (no side categories)
+  if ((dish as any).isProduct || dish.sideCategories.length === 0) {
+    // Add product directly to cart without modal
+    const payload = {
+      dish: {
+        id: dish.id,
+        name: dish.name,
+        price: dish.price,
+        image: dish.image,
+        sideCategories: [],
+      },
+      selections: {},
+      quantity: 1,
+    };
+    cartStore.addItem(payload);
+  } else {
+    // Open modal for dishes with side categories
+    openDishModal(dish);
+  }
+};
+
 const openDishModal = async (
   dish: Dish,
-  options?: { selections?: Record<string, string[]>; cartItemId?: string | null; quantity?: number }
+  options?: {
+    selections?: Record<string, string[]>;
+    cartItemId?: string | null;
+    quantity?: number;
+  }
 ) => {
   const resolvedDish = await ensureDishHasSideCategories(dish);
   activeDish.value = resolvedDish;
@@ -989,10 +1123,14 @@ const closeDishModal = () => {
   editingCartItemQuantity.value = 1;
 };
 
-const activeDishCategories = computed(() => activeDish.value?.sideCategories ?? []);
+const activeDishCategories = computed(
+  () => activeDish.value?.sideCategories ?? []
+);
 
-const getCategorySelection = (categoryId: string) => sideSelections.value[categoryId] ?? [];
-const selectionCount = (categoryId: string) => getCategorySelection(categoryId).length;
+const getCategorySelection = (categoryId: string) =>
+  sideSelections.value[categoryId] ?? [];
+const selectionCount = (categoryId: string) =>
+  getCategorySelection(categoryId).length;
 const isOptionSelected = (category: SideCategory, option: SideOption) =>
   getCategorySelection(category.id).includes(option.id);
 const isOptionDisabled = (category: SideCategory, option: SideOption) => {
@@ -1160,17 +1298,16 @@ watch(cartEditRequest, async (itemId) => {
   if (!target) {
     return;
   }
-  const dishRecord =
-    dishes.value.find((dish) => dish.id === target.dishId) ?? {
-      id: target.dishId,
-      name: target.name,
-      description: null,
-      price: target.basePrice,
-      category: "todos",
-      image: target.image ?? null,
-      sideCategories: [],
-      categories: buildDishCategories(["todos"]),
-    };
+  const dishRecord = dishes.value.find((dish) => dish.id === target.dishId) ?? {
+    id: target.dishId,
+    name: target.name,
+    description: null,
+    price: target.basePrice,
+    category: "todos",
+    image: target.image ?? null,
+    sideCategories: [],
+    categories: buildDishCategories(["todos"]),
+  };
   const selectionRecord = selectionRecordFromCartItem(target);
   await openDishModal(dishRecord, {
     selections: selectionRecord,
