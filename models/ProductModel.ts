@@ -5,13 +5,13 @@ export interface Product {
   company_id: string
   category: string
   name: string
-  description: string | null
+  description?: string | null
   buy_price: number
   sell_price: number
-  quantity: number
+  stock: number  // Production uses 'stock' not 'quantity'
   image: string | null
   is_active: boolean
-  variants: any[]
+  variants?: any[]  // Optional, not always present
   created_at: Date
   updated_at: Date
 }
@@ -34,8 +34,8 @@ export class ProductModel extends BaseModel {
       .orderBy('created_at', 'desc')
   }
 
-  async updateStock(id: string, quantity: number) {
-    return await this.update(id, { quantity })
+  async updateStock(id: string, stock: number) {
+    return await this.update(id, { stock })
   }
 
   async toggleActive(id: string, isActive: boolean) {

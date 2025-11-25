@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     if (body.description !== undefined) updateData.description = body.description;
     if (body.buy_price !== undefined) updateData.buy_price = Number(body.buy_price);
     if (body.sell_price !== undefined) updateData.sell_price = Number(body.sell_price);
-    if (body.quantity !== undefined) updateData.quantity = Number(body.quantity);
+    if (body.stock !== undefined) updateData.stock = Number(body.stock);
     if (body.image !== undefined) updateData.image = body.image;
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
     if (body.variants) updateData.variants = JSON.stringify(body.variants);
