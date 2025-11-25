@@ -1,5 +1,5 @@
 import { handleServerError, sendError, sendSuccess } from "~/server/utils/http";
-import { ProductModel } from "~/models/ProductModel";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,12 +13,24 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const productModel = new ProductModel();
-    await productModel.delete(id);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return sendSuccess(event, {
-      statusCode: 204,
-      data: null,
+      data: { message: "Product deleted successfully" },
     });
   } catch (error) {
     return handleServerError(event, error, {

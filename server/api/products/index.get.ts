@@ -1,5 +1,5 @@
 import { handleServerError, sendSuccess } from "~/server/utils/http";
-import { ProductModel } from "~/models/ProductModel";
+import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -19,14 +19,27 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const productModel = new ProductModel();
-    let products;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let query_builder = supabase
+      .from('products')
+      .select('*')
+      .eq('company_id', companyId);
 
     if (activeOnly) {
-      products = await productModel.findActiveByCompany(companyId);
-    } else {
-      products = await productModel.findByCompany(companyId);
+      query_builder = query_builder.eq('is_active', true);
     }
+
+    const { data: products, error } = await query_builder.order('created_at', { ascending: false });
+
+    if (error) throw error;
 
     return sendSuccess(event, {
       data: products,
