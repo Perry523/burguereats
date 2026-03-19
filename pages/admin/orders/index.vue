@@ -311,6 +311,10 @@
                 <p class="text-sm text-gray-500">Telefone</p>
                 <p class="font-medium">{{ selectedOrder.customer_phone }}</p>
               </div>
+              <div v-if="selectedOrder.customer_email">
+                <p class="text-sm text-gray-500">Email</p>
+                <p class="font-medium">{{ selectedOrder.customer_email }}</p>
+              </div>
               <div v-if="selectedOrder.customer_address && selectedOrder.customer_address !== 'Retirada no local'">
                 <p class="text-sm text-gray-500">Endereço</p>
                 <p class="font-medium whitespace-pre-line">{{ selectedOrder.customer_address }}</p>

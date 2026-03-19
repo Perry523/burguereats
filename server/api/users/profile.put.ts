@@ -21,8 +21,26 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // If email has changed, update Supabase Auth first
+    const { data: currentUser } = await supabase
+      .from(decoded.role === "biker" ? "users" : "Admins")
+      .select("email")
+      .eq("id", decoded.id)
+      .single();
+
+    if (currentUser && currentUser.email !== email.trim().toLowerCase()) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(decoded.id, {
+        email: email.trim().toLowerCase(),
+        email_confirm: true // Set to true to avoid verification email if possible (depends on Supabase settings)
+      });
+      if (authError) {
+        console.error("Auth update error:", authError);
+        // We continue anyway, or we could throw. Ideally we want them in sync.
+      }
+    }
 
     const updateData: Record<string, any> = {
       name: name.trim(),

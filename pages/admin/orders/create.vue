@@ -92,11 +92,20 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Telefone (Opcional)</label>
               <input
                 v-model="newClient.phone"
                 type="text"
                 placeholder="(00) 00000-0000"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
+              <input
+                v-model="newClient.email"
+                type="email"
+                placeholder="cliente@email.com"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
@@ -415,6 +424,7 @@ interface Client {
   id: string;
   name: string;
   phone: string | null;
+  email: string | null;
 }
 
 interface Biker {
@@ -458,7 +468,7 @@ const productToAdd = ref<string>("");
 const items = ref<OrderItem[]>([]);
 const productItems = ref<ProductItem[]>([]);
 
-const newClient = reactive({ name: "", phone: "" });
+const newClient = reactive({ name: "", phone: "", email: "" });
 
 const form = reactive({
   client_id: "",
@@ -578,13 +588,19 @@ const createNewClient = async () => {
   try {
     const response = await $fetch<{ success: boolean; data?: Client }>("/api/clients", {
       method: "POST",
-      body: { company_id: companyId, name: newClient.name.trim(), phone: newClient.phone.trim() || null },
+      body: { 
+        company_id: companyId, 
+        name: newClient.name.trim(), 
+        phone: newClient.phone.trim() || null,
+        email: newClient.email.trim() || null
+      },
     });
     if (response.success && response.data) {
       availableClients.value.push(response.data);
       form.client_id = response.data.id;
       newClient.name = "";
       newClient.phone = "";
+      newClient.email = "";
       showNewClientForm.value = false;
       toast.add({ color: "success", title: "Cliente criado com sucesso" });
     }
@@ -704,8 +720,9 @@ const saveOrder = async () => {
     const payload = {
       companyId,
       client_id: form.client_id,
-      customer_name: client?.name || "",
-      customer_phone: client?.phone || "",
+      customer_name: selectedClient.value?.name,
+      customer_phone: selectedClient.value?.phone,
+      customer_email: selectedClient.value?.email,
       customer_address: fullAddress,
       status: form.status,
       notes: form.notes,

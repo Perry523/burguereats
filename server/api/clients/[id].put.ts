@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
     const updateData: any = {};
     if (body.name !== undefined) updateData.name = body.name.trim();
     if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
+    if (body.email !== undefined) updateData.email = body.email?.trim()?.toLowerCase() || null;
 
     if (Object.keys(updateData).length === 0) {
       throw createError({

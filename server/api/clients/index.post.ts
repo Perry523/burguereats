@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const { company_id, name, phone } = body;
+    const { company_id, name, phone, email } = body;
 
     if (!company_id || !name) {
       throw createError({
@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
           company_id,
           name: name.trim(),
           phone: phone?.trim() || null,
+          email: email?.trim()?.toLowerCase() || null,
         },
       ])
       .select()
