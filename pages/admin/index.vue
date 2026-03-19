@@ -1,9 +1,15 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col pt-6 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-auto">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+  <div
+    class="h-[calc(100vh-140px)] flex flex-col pt-6 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-auto"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4"
+    >
       <div>
         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
-        <p class="text-sm text-gray-500 mt-1">Acompanhe métricas, lucro e informações dos entregadores</p>
+        <p class="text-sm text-gray-500 mt-1">
+          Acompanhe métricas, lucro e informações dos entregadores
+        </p>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3">
@@ -23,7 +29,11 @@
           class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[180px]"
           :disabled="isLoading"
         >
-          <option v-for="opt in dateRangeOptions" :key="opt.value" :value="opt.value">
+          <option
+            v-for="opt in dateRangeOptions"
+            :key="opt.value"
+            :value="opt.value"
+          >
             {{ opt.label }}
           </option>
         </select>
@@ -31,47 +41,76 @@
     </div>
 
     <div v-if="isLoading" class="flex justify-center items-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 animate-spin text-primary" />
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-10 h-10 animate-spin text-primary"
+      />
     </div>
 
     <div v-else class="space-y-6">
       <!-- Biker Profile Info (if a specific biker is selected) -->
-      <UCard v-if="selectedBikerData" class="bg-primary/5 border border-primary/20 shadow-sm mb-6">
+      <UCard
+        v-if="selectedBikerData"
+        class="bg-primary/5 border border-primary/20 shadow-sm mb-6"
+      >
         <div class="flex flex-col sm:flex-row items-center gap-6">
-          <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+          <div
+            class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-bold shrink-0"
+          >
             {{ selectedBikerData.name.charAt(0).toUpperCase() }}
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full"
+          >
             <div>
-              <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Nome</p>
-              <p class="font-medium text-gray-900">{{ selectedBikerData.name }}</p>
+              <p
+                class="text-xs text-gray-500 uppercase font-semibold tracking-wider"
+              >
+                Nome
+              </p>
+              <p class="font-medium text-gray-900">
+                {{ selectedBikerData.name }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Telefone</p>
-              <p class="font-medium text-gray-900">{{ selectedBikerData.phone || 'Não informado' }}</p>
+              <p
+                class="text-xs text-gray-500 uppercase font-semibold tracking-wider"
+              >
+                Telefone
+              </p>
+              <p class="font-medium text-gray-900">
+                {{ selectedBikerData.phone || "Não informado" }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Email</p>
-              <p class="font-medium text-gray-900">{{ selectedBikerData.email || 'Não informado' }}</p>
+              <p
+                class="text-xs text-gray-500 uppercase font-semibold tracking-wider"
+              >
+                Email
+              </p>
+              <p class="font-medium text-gray-900">
+                {{ selectedBikerData.email || "Não informado" }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Status</p>
-              <span 
+              <p
+                class="text-xs text-gray-500 uppercase font-semibold tracking-wider"
+              >
+                Status
+              </p>
+              <span
                 :class="[
                   'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1',
-                  selectedBikerData.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  selectedBikerData.isActive
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800',
                 ]"
               >
-                {{ selectedBikerData.isActive ? 'Ativo' : 'Inativo' }}
+                {{ selectedBikerData.isActive ? "Ativo" : "Inativo" }}
               </span>
             </div>
           </div>
         </div>
-      </UCard>
-      
-      <!-- General Text if Everyone Selected -->
-      <UCard v-else class="bg-gray-50 shadow-sm border border-gray-200 mb-6">
-         <p class="text-gray-600 font-medium">Você está visualizando as estatísticas e os gastos de <strong class="text-gray-900">todos os entregadores</strong>. Selecione um entregador no filtro acima para ver suas informações específicas.</p>
       </UCard>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -80,8 +119,12 @@
             <div>
               <p class="text-gray-500 text-sm font-medium">Pedidos entregues</p>
               <div class="flex items-baseline gap-2 mt-1">
-                <p class="text-3xl font-bold text-primary">{{ stats.completedDeliveries }}</p>
-                <span class="text-sm text-gray-500"> / {{ stats.totalDeliveries }} total</span>
+                <p class="text-3xl font-bold text-primary">
+                  {{ stats.completedDeliveries }}
+                </p>
+                <span class="text-sm text-gray-500">
+                  / {{ stats.totalDeliveries }} total</span
+                >
               </div>
             </div>
             <div class="p-3 bg-blue-50 rounded-lg">
@@ -93,13 +136,18 @@
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Valor Total dos Pedidos</p>
+              <p class="text-gray-500 text-sm font-medium">
+                Valor Total dos Pedidos
+              </p>
               <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
                 {{ formatCurrency(stats.totalEarned) }}
               </p>
             </div>
             <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
-              <UIcon name="i-heroicons-banknotes" class="w-8 h-8 text-green-500" />
+              <UIcon
+                name="i-heroicons-banknotes"
+                class="w-8 h-8 text-green-500"
+              />
             </div>
           </div>
         </UCard>
@@ -107,13 +155,18 @@
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Valor pago a entregadores</p>
+              <p class="text-gray-500 text-sm font-medium">
+                Valor pago a entregadores
+              </p>
               <p class="text-3xl font-bold text-orange-600 mt-1 shrink-0">
                 {{ formatCurrency(stats.totalSpent) }}
               </p>
             </div>
             <div class="p-3 bg-orange-50 rounded-lg shrink-0 ml-2">
-              <UIcon name="i-heroicons-credit-card" class="w-8 h-8 text-orange-500" />
+              <UIcon
+                name="i-heroicons-credit-card"
+                class="w-8 h-8 text-orange-500"
+              />
             </div>
           </div>
         </UCard>
@@ -125,29 +178,46 @@
         </h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 rounded-t-lg border-b">
+            <thead
+              class="text-xs text-gray-700 uppercase bg-gray-50 rounded-t-lg border-b"
+            >
               <tr>
                 <th scope="col" class="px-4 py-3">Data</th>
                 <th scope="col" class="px-4 py-3">Cliente / Pedido</th>
-                <th scope="col" class="px-4 py-3" v-if="selectedBiker === 'all'">Entregador</th>
+                <th
+                  scope="col"
+                  class="px-4 py-3"
+                  v-if="selectedBiker === 'all'"
+                >
+                  Entregador
+                </th>
                 <th scope="col" class="px-4 py-3">Valor do Pedido</th>
                 <th scope="col" class="px-4 py-3">Taxa do Entregador</th>
                 <th scope="col" class="px-4 py-3 text-right">Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr 
-                v-for="delivery in stats.recentDeliveries" 
+              <tr
+                v-for="delivery in stats.recentDeliveries"
                 :key="delivery.id"
                 class="border-b hover:bg-gray-50 transition-colors"
               >
-                <td class="px-4 py-3 font-medium whitespace-nowrap">{{ formatDate(delivery.created_at) }}</td>
+                <td class="px-4 py-3 font-medium whitespace-nowrap">
+                  {{ formatDate(delivery.created_at) }}
+                </td>
                 <td class="px-4 py-3">
-                  <div class="font-medium text-gray-900">{{ delivery.customer_name || 'Cliente Oculto' }}</div>
-                  <div class="text-xs text-gray-500 max-w-[150px] truncate" :title="delivery.id">#{{ delivery.id.split('-')[0] }}</div>
+                  <div class="font-medium text-gray-900">
+                    {{ delivery.customer_name || "Cliente Oculto" }}
+                  </div>
+                  <div
+                    class="text-xs text-gray-500 max-w-[150px] truncate"
+                    :title="delivery.id"
+                  >
+                    #{{ delivery.id.split("-")[0] }}
+                  </div>
                 </td>
                 <td class="px-4 py-3" v-if="selectedBiker === 'all'">
-                  {{ delivery.Entregadores?.name || 'Não atribuído' }}
+                  {{ delivery.Entregadores?.name || "Não atribuído" }}
                 </td>
                 <td class="px-4 py-3 font-semibold text-gray-700">
                   {{ formatCurrency(delivery.total) }}
@@ -156,10 +226,11 @@
                   {{ formatCurrency(delivery.delivery_fee || 0) }}
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <span 
+                  <span
                     :class="[
                       'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                      statusStyles[delivery.status] || 'bg-gray-100 text-gray-800'
+                      statusStyles[delivery.status] ||
+                        'bg-gray-100 text-gray-800',
                     ]"
                   >
                     {{ statusLabels[delivery.status] || delivery.status }}
@@ -167,8 +238,14 @@
                 </td>
               </tr>
               <tr v-if="stats.recentDeliveries.length === 0">
-                <td :colspan="selectedBiker === 'all' ? 6 : 5" class="px-4 py-12 text-center text-gray-500">
-                  <UIcon name="i-heroicons-inbox" class="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <td
+                  :colspan="selectedBiker === 'all' ? 6 : 5"
+                  class="px-4 py-12 text-center text-gray-500"
+                >
+                  <UIcon
+                    name="i-heroicons-inbox"
+                    class="w-12 h-12 mx-auto text-gray-300 mb-2"
+                  />
                   Nenhuma entrega encontrada para este filtro.
                 </td>
               </tr>
@@ -196,11 +273,11 @@ const selectedBiker = ref("all");
 const selectedDate = ref("all");
 
 const dateRangeOptions = [
-  { label: 'Todos os períodos', value: 'all' },
-  { label: 'Hoje', value: 'today' },
-  { label: 'Ontem', value: 'yesterday' },
-  { label: 'Última semana', value: 'last_week' },
-  { label: 'Último mês', value: 'last_month' },
+  { label: "Todos os períodos", value: "all" },
+  { label: "Hoje", value: "today" },
+  { label: "Ontem", value: "yesterday" },
+  { label: "Última semana", value: "last_week" },
+  { label: "Último mês", value: "last_month" },
 ];
 
 const bikers = ref<any[]>([]);
@@ -209,12 +286,12 @@ const stats = ref({
   completedDeliveries: 0,
   totalEarned: 0,
   totalSpent: 0,
-  recentDeliveries: [] as any[]
+  recentDeliveries: [] as any[],
 });
 
 const selectedBikerData = computed(() => {
-  if (selectedBiker.value === 'all') return null;
-  return bikers.value.find(b => b.id === selectedBiker.value) || null;
+  if (selectedBiker.value === "all") return null;
+  return bikers.value.find((b) => b.id === selectedBiker.value) || null;
 });
 
 const statusLabels: Record<string, string> = {
@@ -234,18 +311,28 @@ const statusStyles: Record<string, string> = {
 };
 
 const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
 };
 
 const formatDate = (dateString: string) => {
   const d = new Date(dateString);
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
 };
 
 const loadBikers = async () => {
   if (!companyId.value) return;
   try {
-    const res = await $fetch<{ success: boolean; data: any[] }>(`/api/bikers?companyId=${companyId.value}`);
+    const res = await $fetch<{ success: boolean; data: any[] }>(
+      `/api/bikers?companyId=${companyId.value}`,
+    );
     if (res.success) {
       bikers.value = res.data || [];
     }
@@ -256,7 +343,7 @@ const loadBikers = async () => {
 
 const fetchStats = async () => {
   if (!companyId.value) return;
-  
+
   isLoading.value = true;
   try {
     let url = `/api/admin/biker-stats?companyId=${companyId.value}`;
