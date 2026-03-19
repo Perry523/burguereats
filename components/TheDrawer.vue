@@ -118,7 +118,7 @@
 </template>
 <script setup lang="ts">
 import { useDrawer } from "~/stores/drawer";
-import { useLoginStore } from "~/stores/user";
+import { useAuthStore } from "~/stores/auth";
 import { useBusinessSettingsStore } from "~/stores/businessSettings";
 import type { MenuItem } from "~/types";
 import {
@@ -129,7 +129,7 @@ import {
 const router = useRouter();
 const route = useRoute();
 const drawer = useDrawer();
-const user = useLoginStore();
+const authStore = useAuthStore();
 const socialRef = ref();
 const financasRef = ref();
 const productsRef = ref();
@@ -150,26 +150,12 @@ const isLogin = computed(() => {
 });
 async function logout() {
   try {
-    // Sign out from Supabase Auth
-    const supabase = useSupabaseClient();
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Clear local store
-    user.logout();
-
-    // Close drawer
+    await authStore.logout();
     drawer.active = false;
-
-    // Redirect to login page
     router.push("/login");
   } catch (error) {
     console.error("Logout failed:", error);
-    // Still clear local store and redirect even if Supabase logout fails
-    user.logout();
+    authStore.clearUser();
     drawer.active = false;
     router.push("/login");
   }
@@ -417,16 +403,16 @@ const routes = computed(() => {
     ],
   });
   // Apply role-based filtering
-  if (user.role === "attendant") {
-    return baseRoutes.filter(
-      (route) => !attendantRoutesBlocked.includes(route.label)
-    );
-  }
-  if (user.role === "professional") {
-    return baseRoutes.filter(
-      (route) => !professionalRoutesBlocked.includes(route.label)
-    );
-  }
+  // if (authStore.role === "attendant") {
+  //   return baseRoutes.filter(
+  //     (route) => !attendantRoutesBlocked.includes(route.label)
+  //   );
+  // }
+  // if (authStore.role === "professional") {
+  //   return baseRoutes.filter(
+  //     (route) => !professionalRoutesBlocked.includes(route.label)
+  //   );
+  // }
 
   return baseRoutes;
 });

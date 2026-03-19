@@ -6,6 +6,8 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     let companyId = typeof query.companyId === "string" ? query.companyId : undefined;
 
+    const search = typeof query.search === "string" ? query.search : undefined;
+
     // TODO: Remove this hardcoded fallback once subdomain logic is implemented
     if (!companyId) {
       companyId = 'cmhp2pzdq0000gjpvfdsaumu0';
@@ -35,6 +37,10 @@ export default defineEventHandler(async (event) => {
 
     if (activeOnly) {
       query_builder = query_builder.eq('is_active', true);
+    }
+
+    if (search) {
+      query_builder = query_builder.ilike('name', `%${search}%`);
     }
 
     const { data: products, error } = await query_builder.order('created_at', { ascending: false });

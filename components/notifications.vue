@@ -1,68 +1,83 @@
 <template>
-  <div class="relative">
-    <BellIcon class="w-6 cursor-pointer" @click="toggleNotifications" />
-    <div
-      v-if="newNotifications.length"
-      class="absolute -top-2 -right-2 pt-[1px] text-xs text-white font-black w-4 h-4 bg-red-500 rounded-full"
+  <div class="relative" ref="dropdownRef">
+    <button
+      @click="toggleDropdown"
+      class="relative flex items-center justify-center rounded-full p-2 text-slate-600 hover:bg-slate-100 transition-colors"
+      title="Notificações"
     >
-      {{ newNotifications.length }}
-    </div>
+      <UIcon name="i-heroicons-bell" class="h-5 w-5" />
+      <span
+        v-if="unreadCount > 0"
+        class="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
+      >
+        {{ unreadCount > 9 ? '9+' : unreadCount }}
+      </span>
+    </button>
+
     <teleport to="body">
-      <div v-if="isOpen" class="fixed z-50 top-12 right-4 w-72">
-        <div class="relative">
-          <div
-            class="fixed top-10 lg:right-[128px] right-[52px] z-40 border border-base-300 w-4 h-4 bg-base-100 transform rotate-45"
-          ></div>
-
-          <div
-            class="relative bg-base-100 z-50 rounded-lg shadow-xl border border-base-300"
+      <div
+        v-if="isOpen"
+        class="fixed inset-0 z-40"
+        @click="isOpen = false"
+      ></div>
+      <div
+        v-if="isOpen"
+        class="fixed z-50 right-4 top-14 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <h3 class="text-sm font-semibold text-gray-800">Notificações</h3>
+          <button
+            v-if="unreadCount > 0"
+            @click="markAllRead"
+            class="text-xs text-primary hover:underline font-medium"
           >
-            <div
-              class="px-4 py-3 flex gap-2 font-semibold border-b border-base-300"
-            >
-              <h3 class="">Notificações</h3>
-              <span v-if="notifications.length"
-                >({{ notifications.length }})</span
-              >
-            </div>
-            <div class="max-h-[300px] overflow-y-auto">
-              <div v-if="notifications.length === 0" class="p-4">
-                <p class="text-center py-2 text-sm text-base-content/70">
-                  Sem notificações
-                </p>
-              </div>
+            Marcar todas como lidas
+          </button>
+        </div>
 
-              <div v-else>
+        <!-- List -->
+        <div class="max-h-[320px] overflow-y-auto">
+          <div v-if="notifications.length === 0" class="py-10 text-center">
+            <UIcon name="i-heroicons-bell-slash" class="h-8 w-8 text-gray-300 mx-auto mb-2" />
+            <p class="text-sm text-gray-400">Sem notificações</p>
+          </div>
+
+          <div v-else>
+            <div
+              v-for="notification in notifications"
+              :key="notification.id"
+              @click="handleNotificationClick(notification)"
+              :class="[
+                'px-4 py-3 border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50',
+                !notification.read ? 'bg-blue-50/50' : '',
+              ]"
+            >
+              <div class="flex items-start gap-3">
                 <div
-                  v-for="notification in notifications"
-                  :key="notification.id"
-                  class="py-2 px-4 border-b border-base-300 hover:bg-base-200 transition-colors cursor-pointer"
+                  :class="[
+                    'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                    getTypeStyles(notification.type),
+                  ]"
                 >
-                  <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                      <div class="flex justify-between items-start">
-                        <p class="text-sm font-medium">
-                          {{ notification.title }}
-                        </p>
-                        <p
-                          v-if="!notification.read"
-                          class="text-xs text-base-content/50 mt-1"
-                        >
-                          {{ formatNotificationTime(notification.created_at) }}
-                        </p>
-                        <!-- <button
-                          v-if="!notification.read"
-                          @click.stop="markAsRead(notification.id)"
-                          class="text-xs text-primary hover:text-primary-focus"
-                        >
-                          Marcar como lido
-                        </button> -->
-                      </div>
-                      <p class="text-xs text-base-content/70">
-                        {{ notification.description }}
-                      </p>
-                    </div>
+                  <UIcon :name="getTypeIcon(notification.type)" class="h-4 w-4" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ notification.title }}
+                    </p>
+                    <span
+                      v-if="!notification.read"
+                      class="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500"
+                    ></span>
                   </div>
+                  <p v-if="notification.description" class="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                    {{ notification.description }}
+                  </p>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    {{ formatTime(notification.created_at) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -73,73 +88,101 @@
   </div>
 </template>
 
-<script setup>
-import { BellIcon } from "@heroicons/vue/24/solid";
-import { useNotifications } from "~/stores/notifications";
+<script setup lang="ts">
+import { useNotificationsStore } from "~/stores/notifications";
 import { storeToRefs } from "pinia";
-import dayjs from "dayjs";
 
-const isOpen = ref(false);
-const notificationsStore = useNotifications();
-const { notifications, newNotifications, hasNewNotifications } =
+const notificationsStore = useNotificationsStore();
+const { notifications, unreadCount, hasNewNotifications } =
   storeToRefs(notificationsStore);
 
-const toggleNotifications = () => {
+const isOpen = ref(false);
+const dropdownRef = ref<HTMLElement | null>(null);
+
+const toggleDropdown = () => {
   isOpen.value = !isOpen.value;
-};
-
-const handleClickOutside = () => {
-  //   isOpen.value = false;
-};
-
-const formatNotificationTime = (createdAt) => {
-  const now = new Date();
-  const notificationDate = new Date(createdAt);
-  const diffDays = Math.floor((now - notificationDate) / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return notificationDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } else if (diffDays === 1) {
-    return "Ontem";
-  } else {
-    return `${diffDays} dias atrás`;
+  if (isOpen.value) {
+    notificationsStore.fetchNotifications();
   }
 };
 
-const playNotificationSound = () => {
-  const audio = new Audio("/sounds/notify.mp3");
-  audio.play();
+const markAllRead = () => {
+  notificationsStore.markAsRead();
 };
 
-watch(hasNewNotifications, () => {
-  if (hasNewNotifications.value) {
+const handleNotificationClick = (notification: any) => {
+  if (!notification.read) {
+    notificationsStore.markAsRead(notification.id);
+  }
+};
+
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case "order_assigned":
+      return "i-heroicons-truck";
+    case "order_completed":
+      return "i-heroicons-check-circle";
+    case "warning":
+      return "i-heroicons-exclamation-triangle";
+    default:
+      return "i-heroicons-information-circle";
+  }
+};
+
+const getTypeStyles = (type: string) => {
+  switch (type) {
+    case "order_assigned":
+      return "bg-purple-100 text-purple-600";
+    case "order_completed":
+      return "bg-green-100 text-green-600";
+    case "warning":
+      return "bg-amber-100 text-amber-600";
+    default:
+      return "bg-blue-100 text-blue-600";
+  }
+};
+
+const formatTime = (dateStr: string) => {
+  const now = new Date();
+  const d = new Date(dateStr);
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Agora";
+  if (diffMins < 60) return `${diffMins}min atrás`;
+  if (diffHours < 24) return `${diffHours}h atrás`;
+  if (diffDays === 1) return "Ontem";
+  return `${diffDays} dias atrás`;
+};
+
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio("/sounds/notify.mp3");
+    audio.play();
+  } catch (e) {
+    // Ignore audio errors
+  }
+};
+
+watch(hasNewNotifications, (val) => {
+  if (val) {
     playNotificationSound();
   }
 });
 
+// Poll for new notifications every 30 seconds
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+
 onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-  navigator.serviceWorker.onmessage = function (evt) {
-    const message = evt.data;
-    console.log(message);
-    if (message.type === "notification") {
-      const data = message.data;
-      const newNotification = {
-        title: data.title,
-        description: data.body,
-        created_at: dayjs().format(),
-        read: false,
-      };
-      notifications.value.unshift(newNotification);
-      hasNewNotifications.value = true;
-    }
-  };
+  notificationsStore.fetchNotifications();
+  pollInterval = setInterval(() => {
+    notificationsStore.fetchNotifications();
+  }, 30000);
 });
 
 onUnmounted(() => {
-  document.removeEventListener("click", handleClickOutside);
+  if (pollInterval) clearInterval(pollInterval);
 });
 </script>

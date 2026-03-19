@@ -148,18 +148,10 @@
                 <label class="mb-2 block text-sm font-medium text-gray-700">
                   Preço <span class="text-red-500">*</span>
                 </label>
-                <div class="relative">
-                  <span class="absolute left-3 top-2 text-gray-500">R$</span>
-                  <input
-                    v-model.number="form.price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    placeholder="0.00"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-transparent focus:ring-2 focus:ring-primary"
-                  />
-                </div>
+                <Currency
+                  v-model="form.price"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
+                />
               </div>
             </div>
             <div class="mt-4">
@@ -529,12 +521,14 @@ const fetchDish = async () => {
       form.description = response.data.description ?? "";
       form.price = Number(response.data.price);
       form.categoryIds = uniqueArray(
-        response.data.categories
+        (response.data.categories || [])
+          .filter((c) => Boolean(c))
           .map((category) => category.id)
           .filter((value): value is string => typeof value === "string")
       );
       form.sideCategoryIds = uniqueArray(
-        response.data.sideCategories
+        (response.data.sideCategories || [])
+          .filter((c) => Boolean(c))
           .map((category) => category.id)
           .filter((value): value is string => typeof value === "string")
       );

@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-slate-950">
-    <div class="relative flex min-h-screen flex-col lg:flex-row">
+  <div class="h-screen w-full bg-slate-950 overflow-hidden">
+    <div class="relative flex h-full flex-col lg:flex-row">
       <div
         v-if="isSidebarOpen"
         class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
@@ -91,6 +91,7 @@
               </div>
             </div>
             <div class="flex items-center gap-3">
+              <Notifications />
               <div class="hidden text-right sm:block">
                 <p class="text-sm font-semibold text-slate-900">
                   {{ userName }}
@@ -125,19 +126,61 @@ if (!authStore.user) {
   await authStore.getCurrentUser();
 }
 
-const navItems = [
+const adminNavItems = [
   { label: "Dashboard", to: "/admin", icon: "i-heroicons-home-modern" },
-  { label: "Caixa", to: "/admin/pos", icon: "i-heroicons-currency-dollar" },
   { label: "Pedidos", to: "/admin/orders", icon: "i-heroicons-shopping-bag" },
   { label: "Pratos", to: "/admin/dishes", icon: "i-heroicons-squares-2x2" },
   { label: "Produtos", to: "/admin/products", icon: "i-heroicons-cube" },
   { label: "Categorias", to: "/admin/categories", icon: "i-heroicons-tag" },
   {
-    label: "Acompanhamentos",
-    to: "/admin/sides",
-    icon: "i-heroicons-queue-list",
+    label: "Entregadores",
+    to: "/admin/bikers",
+    icon: "i-heroicons-truck",
+  },
+
+  {
+    label: "Empresa",
+    to: "/admin/empresa",
+    icon: "i-heroicons-building-storefront",
+  },
+  {
+    label: "Perfil",
+    to: "/admin/profile",
+    icon: "i-heroicons-user-circle",
   },
 ];
+
+const bikerNavItems = [
+  {
+    label: "Dashboard",
+    to: "/admin/biker-dashboard",
+    icon: "i-heroicons-home-modern",
+  },
+  {
+    label: "Entregas",
+    to: "/admin/deliveries",
+    icon: "i-heroicons-truck",
+  },
+  {
+    label: "Novo Pedido",
+    to: "/admin/deliveries/create",
+    icon: "i-heroicons-plus-circle",
+  },
+  {
+    label: "Perfil",
+    to: "/admin/profile",
+    icon: "i-heroicons-user-circle",
+  },
+];
+
+const navItems = computed(() => {
+  const items = authStore.user?.role === "biker" ? bikerNavItems : adminNavItems;
+  const companyType = authStore.user?.company?.type;
+  if (companyType === "delivery") {
+    return items.filter((item: any) => item.to !== "/admin/pos");
+  }
+  return items;
+});
 
 const getInitials = (value: string) =>
   value
@@ -175,7 +218,7 @@ const userInitials = computed(() =>
   getInitials(authStore.user?.name ?? userName.value)
 );
 const activeNavLabel = computed(() => {
-  const current = navItems.find((item) => isRouteActive(item.to));
+  const current = navItems.value.find((item: any) => isRouteActive(item.to));
   return current?.label ?? "Painel";
 });
 

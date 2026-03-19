@@ -6,7 +6,9 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
 
-    if (!body.email || !body.password) {
+    const normalizedEmail = body.email.trim().toLowerCase();
+
+    if (!normalizedEmail || !body.password) {
       throw createError({
         statusCode: 400,
         statusMessage: "Email and password are required",
@@ -21,27 +23,61 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    let userData = null;
+    let userType: 'admin' | 'biker' = 'admin';
+
+    // 1. Try finding in Admins table first
     const { data: admin, error: adminError } = await supabase
       .from("Admins")
       .select("*")
-      .eq("email", body.email)
+      .ilike("email", normalizedEmail)
       .single();
 
-    if (adminError || !admin) {
+    if (admin && !adminError) {
+      userData = admin;
+      userType = 'admin';
+    } else {
+      // 2. Try finding in users table (for bikers)
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .ilike("email", normalizedEmail)
+        .eq("type", "biker")
+        .single();
+
+      if (user && !userError) {
+        userData = user;
+        userType = 'biker';
+      }
+    }
+
+    if (!userData) {
       throw createError({
         statusCode: 401,
         statusMessage: "Invalid email or password",
       });
     }
 
-    if (!admin.isActive) {
+    // Check if account is active (Admins have isActive, users might not have it yet or we check finished_register)
+    if (userType === 'admin' && !userData.isActive) {
       throw createError({
         statusCode: 403,
         statusMessage: "Admin account is inactive",
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(body.password, admin.password);
+    // 3. Verify password
+    // Admins use 'password', bikers (users table) use 'password_hash'
+    const storedPassword = userType === 'admin' ? userData.password : userData.password_hash;
+    
+    if (!storedPassword) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Invalid email or password",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(body.password, storedPassword);
 
     if (!isPasswordValid) {
       throw createError({
@@ -50,17 +86,38 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const { data: company } = await supabase
-      .from("Company")
-      .select("*")
-      .eq("id", admin.companyId)
-      .single();
+    // 4. Fetch Company
+    let company = null;
+    let companyId = null;
+
+    if (userType === 'admin') {
+      companyId = userData.companyId;
+    } else {
+      // For bikers, we need to find their Entregadores record to get the companyId
+      const { data: bikerRecord } = await supabase
+        .from("Entregadores")
+        .select("companyId")
+        .eq("userId", userData.id)
+        .single();
+      
+      companyId = bikerRecord?.companyId;
+    }
+
+    if (companyId) {
+      const { data: companyData } = await supabase
+        .from("Company")
+        .select("*")
+        .eq("id", companyId)
+        .single();
+      company = companyData;
+    }
 
     const token = jwt.sign(
       {
-        id: admin.id,
-        email: admin.email,
-        companyId: admin.companyId,
+        id: userData.id,
+        email: userData.email,
+        companyId: companyId,
+        role: userType === 'admin' ? 'admin' : 'biker',
       },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
@@ -77,14 +134,15 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       data: {
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
         company: company,
+        role: userType,
       },
     };
   } catch (error) {
-    if (error) {
+    if (error && (error as any).statusCode) {
       throw error;
     }
 

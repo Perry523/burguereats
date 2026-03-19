@@ -159,18 +159,10 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Preço <span class="text-red-500">*</span>
               </label>
-              <div class="relative">
-                <span class="absolute left-3 top-2 text-gray-500">R$</span>
-                <input
-                  v-model.number="form.price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  placeholder="0.00"
-                  class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
+              <Currency
+                v-model="form.price"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
             </div>
           </div>
 

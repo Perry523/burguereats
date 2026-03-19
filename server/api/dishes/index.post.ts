@@ -10,10 +10,10 @@ export default defineEventHandler(async (event) => {
     const parsedPrice =
       typeof body.price !== "undefined" ? parseFloat(body.price) : NaN;
     const categoryIds = Array.isArray(body.categoryIds)
-      ? body.categoryIds.filter((id) => typeof id === "string")
+      ? body.categoryIds.filter((id: string) => typeof id === "string")
       : [];
     const sideCategoryIds = Array.isArray(body.sideCategoryIds)
-      ? body.sideCategoryIds.filter((id) => typeof id === "string")
+      ? body.sideCategoryIds.filter((id: string) => typeof id === "string")
       : [];
     const incomingImage =
       typeof body.imageUrl === "string" ? body.imageUrl : body.image;
@@ -57,6 +57,7 @@ export default defineEventHandler(async (event) => {
         isAvailable:
           typeof body.isAvailable === "boolean" ? body.isAvailable : true,
         companyId: companyId,
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
@@ -64,8 +65,7 @@ export default defineEventHandler(async (event) => {
     if (dishError) throw dishError;
 
     if (categoryIds.length > 0) {
-      const dishCategories = categoryIds.map((categoryId) => ({
-        id: randomUUID(),
+      const dishCategories = categoryIds.map((categoryId: string) => ({
         dishId,
         categoryId,
       }));
@@ -74,8 +74,7 @@ export default defineEventHandler(async (event) => {
 
     if (sideCategoryIds.length > 0) {
       const dishSideCategories = sideCategoryIds.map(
-        (sideCategoryId, index) => ({
-          id: randomUUID(),
+        (sideCategoryId: string, index: number) => ({
           dishId,
           sideCategoryId,
           order: index,

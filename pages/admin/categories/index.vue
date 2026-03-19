@@ -1,110 +1,74 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Gerenciar Categorias</h1>
-        <p class="text-sm text-gray-500">Organize as categorias principais do cardápio.</p>
-      </div>
-      <NuxtLink to="/admin/categories/create">
-        <button class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary">
-          Adicionar categoria
-        </button>
-      </NuxtLink>
-    </div>
+  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+    <TableBase
+      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      :loading="isLoading"
+      :rows="paginatedCategories"
+      :total-items="categories.length"
+      :columns="columns"
+      v-model:page="page"
+      v-model:per_page="itemsPerPage"
+      @edit="goToEdit($event.id)"
+      @delete="deleteCategory($event.id)"
+    >
+      <template #filter>
+        <div class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-4 flex-1">
+            <!-- Search by Name -->
+            <div class="relative w-full max-w-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="search"
+                v-model="search"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white p-2 pl-10 text-sm focus:border-primary focus:ring-primary shadow-sm"
+                placeholder="Buscar categorias por nome..."
+              />
+            </div>
 
-    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div v-if="isLoading" class="space-y-4 p-6">
-        <div class="h-6 w-1/3 rounded-lg bg-gray-200 animate-pulse"></div>
-        <div v-for="index in 4" :key="`category-skeleton-${index}`" class="h-12 w-full rounded-lg bg-gray-100 animate-pulse"></div>
-      </div>
-
-      <div v-else-if="categories.length" class="space-y-6 p-6">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Ordem</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Nome</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Slug</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Descrição</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Atualizado</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Ações</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="category in paginatedCategories" :key="category.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  {{ category.order }}
-                </td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                  {{ category.name }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  {{ category.slug }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  {{ category.description || '-' }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  {{ formatDate(category.updatedAt) }}
-                </td>
-                <td class="px-6 py-4 text-right">
-                  <div class="flex justify-end gap-2">
-                    <NuxtLink :to="`/admin/categories/edit/${category.id}`">
-                      <button class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                        Editar
-                      </button>
-                    </NuxtLink>
-                    <button
-                      type="button"
-                      class="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                      @click="deleteCategory(category.id)"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p class="text-sm text-gray-500">
-            Página {{ page }} de {{ totalPages }}
-          </p>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="page === 1"
-              @click="page = Math.max(1, page - 1)"
+            <!-- Order By -->
+            <select
+              v-model="orderBy"
+              class="rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
             >
-              Anterior
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="page === totalPages"
-              @click="page = Math.min(totalPages, page + 1)"
-            >
-              Próxima
-            </button>
+              <option value="order_asc">Ordem (Crescente)</option>
+              <option value="order_desc">Ordem (Decrescente)</option>
+              <option value="name_asc">Nome (A-Z)</option>
+              <option value="name_desc">Nome (Z-A)</option>
+              <option value="newest">Mais Recentes</option>
+              <option value="oldest">Mais Antigos</option>
+            </select>
           </div>
-        </div>
-      </div>
 
-      <div v-else class="py-12 text-center">
-        <p class="text-gray-500">Nenhuma categoria cadastrada ainda</p>
-        <NuxtLink to="/admin/categories/create">
-          <button class="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary">
-            Adicionar primeira categoria
-          </button>
-        </NuxtLink>
-      </div>
-    </div>
+          <NuxtLink to="/admin/categories/create">
+            <button
+              type="button"
+              class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary shadow-sm whitespace-nowrap"
+            >
+              Adicionar categoria
+            </button>
+          </NuxtLink>
+        </div>
+      </template>
+
+      <template #description="{ row }">
+        <span class="text-sm text-gray-600">
+          {{ row.description || '-' }}
+        </span>
+      </template>
+
+      <template #updatedAt="{ row }">
+        <span class="text-sm text-gray-600">
+          {{ formatDate(row.updatedAt) }}
+        </span>
+      </template>
+    </TableBase>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
@@ -132,13 +96,64 @@ const toast = useToast();
 const categories = ref<CategoryRecord[]>([]);
 const isLoading = ref(false);
 const page = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = ref(10);
 
-const totalPages = computed(() => Math.max(1, Math.ceil(categories.value.length / itemsPerPage)));
-const paginatedCategories = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return categories.value.slice(start, start + itemsPerPage);
+const search = ref("");
+const orderBy = ref("order_asc");
+
+const filteredCategories = computed(() => {
+  let filtered = [...categories.value];
+
+  // Apply Search
+  if (search.value) {
+    const term = search.value.toLowerCase();
+    filtered = filtered.filter(c => c.name.toLowerCase().includes(term));
+  }
+
+  // Apply Sort
+  filtered.sort((a, b) => {
+    switch (orderBy.value) {
+      case "name_asc":
+        return a.name.localeCompare(b.name);
+      case "name_desc":
+        return b.name.localeCompare(a.name);
+      case "order_asc":
+        return a.order - b.order;
+      case "order_desc":
+        return b.order - a.order;
+      case "oldest":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "newest":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      default:
+        return 0;
+    }
+  });
+
+  return filtered;
 });
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredCategories.value.length / itemsPerPage.value)));
+const paginatedCategories = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value;
+  return filteredCategories.value.slice(start, start + itemsPerPage.value);
+});
+
+watch([search, orderBy], () => {
+  page.value = 1;
+});
+
+const columns = [
+  { key: "order", label: "Ordem", sm: true },
+  { key: "name", label: "Nome" },
+  { key: "slug", label: "Slug", sm: true },
+  { key: "description", label: "Descrição", sm: true },
+  { key: "updatedAt", label: "Atualizado", sm: true },
+];
+
+const goToEdit = (id: string) => {
+  navigateTo(`/admin/categories/edit/${id}`);
+};
 
 watch(
   () => categories.value.length,

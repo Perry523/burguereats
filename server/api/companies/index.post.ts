@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
         city: body.city,
         state: body.state,
         zipCode: body.zipCode,
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();

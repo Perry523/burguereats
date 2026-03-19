@@ -6,7 +6,9 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
 
-    if (!body.name || !body.email || !body.password || !body.companyId) {
+    const normalizedEmail = body.email?.trim().toLowerCase();
+
+    if (!body.name || !normalizedEmail || !body.password || !body.companyId) {
       throw createError({
         statusCode: 400,
         statusMessage: "Name, email, password, and companyId are required",
@@ -28,11 +30,12 @@ export default defineEventHandler(async (event) => {
       .insert({
         id: randomUUID(),
         name: body.name,
-        email: body.email,
+        email: normalizedEmail,
         password: hashedPassword,
         phone: body.phone,
         companyId: body.companyId,
         isActive: body.isActive ?? true,
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();

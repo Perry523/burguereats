@@ -346,7 +346,7 @@ interface Product {
 const fetchProduct = async (companyId: string) => {
   try {
     const response = await $fetch<{ success: boolean; data?: Product[] }>(
-      `/api/products?companyId=${companyId}`
+      `/api/products?companyId=${companyId}&_t=${Date.now()}`
     );
     const product = response.data?.find((p) => p.id === productId);
 

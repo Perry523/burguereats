@@ -89,14 +89,13 @@ export default defineEventHandler(async (event) => {
 
     if (Array.isArray(body.categoryIds)) {
       const categoryIds = body.categoryIds.filter(
-        (id) => typeof id === "string"
+        (id: string) => typeof id === "string"
       );
 
       await supabase.from("DishCategory").delete().eq("dishId", id);
 
       if (categoryIds.length > 0) {
-        const dishCategories = categoryIds.map((categoryId) => ({
-          id: randomUUID(),
+        const dishCategories = categoryIds.map((categoryId: string) => ({
           dishId: id,
           categoryId,
         }));
@@ -106,15 +105,14 @@ export default defineEventHandler(async (event) => {
 
     if (Array.isArray(body.sideCategoryIds)) {
       const sideCategoryIds = body.sideCategoryIds.filter(
-        (id) => typeof id === "string"
+        (id: string) => typeof id === "string"
       );
 
       await supabase.from("DishSideCategory").delete().eq("dishId", id);
 
       if (sideCategoryIds.length > 0) {
         const dishSideCategories = sideCategoryIds.map(
-          (sideCategoryId, index) => ({
-            id: randomUUID(),
+          (sideCategoryId: string, index: number) => ({
             dishId: id,
             sideCategoryId,
             order: index,

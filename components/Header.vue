@@ -50,16 +50,16 @@ import {
 } from "@heroicons/vue/24/solid";
 import { themeChange } from "theme-change";
 import { useDrawer } from "~/stores/drawer";
-import { useLoginStore } from "~/stores/user";
-const user = useLoginStore();
+import { useAuthStore } from "~/stores/auth";
+const authStore = useAuthStore();
 const colorMode = useColorMode();
 const drawer = useDrawer();
 const image = ref("");
 
 async function getImage() {
-  if (user.userInfo.image) image.value = user.userInfo.image;
+  if (authStore.user?.image) image.value = authStore.user.image;
   else {
-    image.value = `https://ui-avatars.com/api/?name=${user.userInfo?.name?.split(" ")[0]}`;
+    image.value = `https://ui-avatars.com/api/?name=${authStore.user?.name?.split(" ")[0] || "User"}`;
   }
 }
 const { toggledBar } = storeToRefs(drawer);

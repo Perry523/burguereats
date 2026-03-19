@@ -7,11 +7,11 @@
             <div />
           </div>
         </slot>
-        <slot name="create-button" v-if="!noCreate">
+        <!-- <slot name="create-button" v-if="!noCreate">
           <base-button class="" @click="emit('new')">
             Novo
           </base-button>
-        </slot>
+        </slot> -->
       </div>
       <div class="relative w-full h-3 overflow-hidden">
         <hr class="mt-1 border-base-200 -mb-[2px] sm:mt-1" />
@@ -21,11 +21,11 @@
         ></div>
       </div>
     </div>
-    <div class="overflow-auto">
-      <table class="table table-sm w-full">
-        <thead>
+    <div class="overflow-auto flex-1 bg-white">
+      <table class="min-w-full divide-y divide-gray-200 relative">
+        <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
           <tr>
-            <th v-if="select" class="w-14">
+            <th v-if="select" class="w-14 px-6 py-4">
               <label>
                 <input
                   type="checkbox"
@@ -40,18 +40,27 @@
               :class="[
                 sm ? '' : 'hidden sm:table-cell',
                 center ? 'text-center' : 'text-left',
+                'px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-800',
               ]"
               :key="label"
             >
               {{ label }}
             </th>
-            <th class="w-10 sm:w-24" v-if="!hideActions">Ações</th>
+            <th
+              class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-800 w-10 sm:w-24"
+              v-if="!hideActions"
+            >
+              Ações
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="w-full"></tr>
-          <tr v-for="(item, index) in paginatedRows" :key="index">
-            <td v-if="select">
+        <tbody class="divide-y divide-gray-200 bg-white">
+          <tr
+            v-for="(item, index) in paginatedRows"
+            :key="index"
+            class="hover:bg-gray-50"
+          >
+            <td v-if="select" class="px-6 py-4 whitespace-nowrap">
               <input
                 type="checkbox"
                 class="checkbox"
@@ -60,7 +69,10 @@
               />
             </td>
             <td
-              :class="sm ? '' : 'hidden sm:table-cell'"
+              :class="[
+                sm ? '' : 'hidden sm:table-cell',
+                'px-6 py-4 whitespace-nowrap text-sm text-gray-700',
+              ]"
               v-for="({ key, type, sm }, index) in columns"
               :key="key + index"
             >
@@ -80,26 +92,44 @@
               </slot>
             </td>
             <slot name="actions" :value="item">
-              <td v-if="!hideActions" class="px-0">
-                <div class="dropdown">
+              <td
+                v-if="!hideActions"
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <div class="relative inline-block text-left action-dropdown">
                   <div
-                    @click="dropdown = !dropdown"
                     role="button"
-                    class="btn btn-sm m-1"
-                    tabindex="0"
+                    class="btn btn-sm btn-ghost m-1 p-1 hover:bg-gray-200"
+                    @click.stop="toggleDropdown(index)"
                   >
-                    <EllipsisVerticalIcon class="w-5" />
+                    <EllipsisVerticalIcon class="w-5 h-5 text-gray-500" />
                   </div>
                   <ul
-                    v-if="dropdown"
-                    tabindex="0"
-                    class="dropdown-content text-base !fixed right-4 md:right-16 menu bg-base-100 rounded-box z-[1] w-32 p-2 shadow"
+                    v-if="activeDropdown === index"
+                    class="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl bg-white p-2 shadow-xl border border-gray-100 focus:outline-none space-y-1 text-left"
+                    @click="activeDropdown = null"
                   >
                     <li v-if="!hideEdit" @click="emit('edit', item)">
-                      <a>Editar</a>
+                      <a
+                        class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+                      >
+                        <UIcon
+                          name="i-heroicons-pencil-square"
+                          class="w-5 h-5 text-gray-400"
+                        />
+                        Editar
+                      </a>
                     </li>
                     <li v-if="!hideDelete" @click="emit('delete', item)">
-                      <a>Excluir</a>
+                      <a
+                        class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150"
+                      >
+                        <UIcon
+                          name="i-heroicons-trash"
+                          class="w-5 h-5 text-red-500 hover:text-red-600"
+                        />
+                        Excluir
+                      </a>
                     </li>
 
                     <li
@@ -107,7 +137,11 @@
                       :key="action.name"
                       @click="action.action(item)"
                     >
-                      <a>{{ action.name }}</a>
+                      <a
+                        class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+                      >
+                        {{ action.name }}
+                      </a>
                     </li>
                     <slot name="additional-actions" :item="item" />
                   </ul>
@@ -115,63 +149,90 @@
               </td>
             </slot>
           </tr>
+          <tr v-if="rows.length === 0 && !loading">
+            <td
+              :colspan="
+                columns.length + (select ? 1 : 0) + (hideActions ? 0 : 1)
+              "
+              class="px-6 py-12 text-center text-sm text-gray-500"
+            >
+              Nenhum registro encontrado
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
-    <div class="mt-auto min-h-12 flex justify-end items-center overflow-hidden">
-      <div class="flex items-center gap-2">
-        <select class="select select-bordered select-xs sm:select-sm" v-model="perPage">
+    <div
+      class="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 px-4 sm:px-6 pb-4"
+    >
+      <div
+        class="flex items-center gap-2 text-sm text-gray-500 w-full sm:w-auto justify-between sm:justify-start mb-4 sm:mb-0"
+      >
+        <span class="hidden sm:inline">Exibir</span>
+        <select
+          class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 object-cover text-sm shadow-sm hover:border-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-20"
+          v-model="perPage"
+        >
           <option
             v-for="option in [5, 10, 15, 20]"
             :key="option"
             :value="option"
           >
-            {{ option }} por página
+            {{ option }}
           </option>
         </select>
-        <div class="flex items-center">
-          <button
-            class="btn btn-xs sm:btn-sm"
-            :class="{ 'btn-disabled': currentPage === 1 }"
-            @click="changePage(1)"
-            v-if="currentPage !== 1"
-          >
-            «
-          </button>
-          <button
-            class="btn btn-xs sm:btn-sm"
-            :class="{ 'btn-disabled': currentPage === 1 }"
-            @click="changePage(currentPage - 1)"
-            v-if="currentPage !== 1"
-          >
-            ‹
-          </button>
-          <button
-            v-for="page in computedVisiblePages"
-            :key="page"
-            class="btn btn-xs sm:btn-sm"
-            :class="{ 'btn-primary rounded-full': page === currentPage }"
-            @click="changePage(page)"
-          >
-            {{ page }}
-          </button>
-          <button
-            class="btn btn-xs sm:btn-sm btn-ghost sm:text-xl text-gray-700"
-            :class="currentPage === totalPages ? 'btn-disabled hidden' : 'btn'"
-            @click="changePage(currentPage + 1)"
-            :disabled="currentPage === totalPages"
-          >
-            ›
-          </button>
-          <button
-            class="btn btn-xs sm:btn-sm btn-ghost sm:text-xl text-gray-700"
-            :class="{ 'btn-disabled hidden': currentPage === totalPages }"
-            @click="changePage(totalPages)"
-            :disabled="currentPage === totalPages"
-          >
-            »
-          </button>
-        </div>
+        <span>por página</span>
+      </div>
+
+      <div class="flex items-center gap-1 w-full sm:w-auto justify-center">
+        <!-- Pagination controls layout natively rounded & beautiful -->
+        <button
+          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="currentPage === 1"
+          @click="changePage(1)"
+        >
+          <span class="sr-only">Primeira página</span>
+          «
+        </button>
+        <button
+          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="currentPage === 1"
+          @click="changePage(currentPage - 1)"
+        >
+          <span class="sr-only">Página anterior</span>
+          ‹
+        </button>
+
+        <button
+          v-for="page in computedVisiblePages"
+          :key="page"
+          :class="[
+            'inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
+            page === currentPage
+              ? 'bg-primary text-white border border-primary'
+              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+          ]"
+          @click="changePage(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="currentPage === totalPages"
+          @click="changePage(currentPage + 1)"
+        >
+          <span class="sr-only">Próxima página</span>
+          ›
+        </button>
+        <button
+          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="currentPage === totalPages"
+          @click="changePage(totalPages)"
+        >
+          <span class="sr-only">Última página</span>
+          »
+        </button>
       </div>
     </div>
   </div>
@@ -182,10 +243,18 @@ import { EllipsisVerticalIcon } from "@heroicons/vue/24/solid";
 import dayjs from "dayjs";
 import { toBrl } from "#build/imports";
 import { onMounted, onUnmounted } from "vue";
-const dropdown = ref(false);
 const tableSelect = ref(false);
 const selecteds = ref<Row[]>([]);
 const isMobile = ref(false);
+const activeDropdown = ref<number | null>(null);
+
+const toggleDropdown = (index: number) => {
+  if (activeDropdown.value === index) {
+    activeDropdown.value = null;
+  } else {
+    activeDropdown.value = index;
+  }
+};
 
 const props = defineProps({
   columns: {
@@ -308,14 +377,14 @@ watch(
       tableSelect.value = false;
     }
     emit("update:selecteds", value);
-  }
+  },
 );
 watch(
   () => perPage.value,
   () => {
     currentPage.value = 1;
     emit("paginate", { page: 1, perPage: perPage.value });
-  }
+  },
 );
 const computedVisiblePages = computed(() => {
   if (totalPages.value === 0) {
@@ -347,17 +416,26 @@ const computedVisiblePages = computed(() => {
   return pages;
 });
 
-// Handle mobile detection
+// Handle mobile detection and dropdown outside clicks
 onMounted(() => {
   const checkMobile = () => {
     isMobile.value = window.innerWidth < 640;
   };
 
   checkMobile();
-  window.addEventListener('resize', checkMobile);
+  window.addEventListener("resize", checkMobile);
+
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (activeDropdown.value !== null && !target.closest(".action-dropdown")) {
+      activeDropdown.value = null;
+    }
+  };
+  document.addEventListener("click", handleClickOutside);
 
   onUnmounted(() => {
-    window.removeEventListener('resize', checkMobile);
+    window.removeEventListener("resize", checkMobile);
+    document.removeEventListener("click", handleClickOutside);
   });
 });
 </script>

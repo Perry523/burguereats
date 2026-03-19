@@ -1,139 +1,105 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-800">Gerenciar Pratos</h1>
-        <p class="text-sm text-gray-500">Mantenha categorias e acompanhamentos atualizados para cada prato.</p>
-      </div>
-      <button
-        type="button"
-        class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary"
-        @click="goToCreate"
-      >
-        Adicionar Prato
-      </button>
-    </div>
+  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+    <TableBase
+      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      :loading="isLoading"
+      :rows="paginatedDishes"
+      :total-items="dishes.length"
+      :columns="columns"
+      v-model:page="page"
+      v-model:per_page="itemsPerPage"
+      @edit="goToEdit($event.id)"
+      @delete="deleteDish($event.id)"
+    >
+      <template #filter>
+        <div class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-4 flex-1">
+            <!-- Search by Name -->
+            <div class="relative w-full max-w-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="search"
+                v-model="search"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white p-2 pl-10 text-sm focus:border-primary focus:ring-primary shadow-sm"
+                placeholder="Buscar pratos por nome..."
+              />
+            </div>
 
-    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div v-if="isLoading" class="space-y-4 p-6">
-        <div class="h-6 w-1/3 rounded-lg bg-gray-200 animate-pulse"></div>
-        <div
-          v-for="index in 4"
-          :key="`dish-skeleton-${index}`"
-          class="h-12 w-full rounded-lg bg-gray-100 animate-pulse"
-        ></div>
-      </div>
+            <!-- Category Filter -->
+            <select
+              v-model="categoryFilter"
+              class="rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
+              <option value="">Todas Categorias</option>
+              <option v-for="cat in categoryOptions" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+            </select>
 
-      <div v-else-if="dishes.length" class="space-y-6 p-6">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Prato</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Categorias</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Preço</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Ações</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="dish in paginatedDishes" :key="dish.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <img
-                      v-if="dish.image"
-                      :src="dish.image"
-                      alt="Prato"
-                      class="h-10 w-10 rounded-lg object-cover"
-                    />
-                    <div>
-                      <p class="text-sm font-medium text-gray-900">{{ dish.name }}</p>
-                      <p v-if="dish.description" class="text-xs text-gray-500">
-                        {{ dish.description }}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="category in dish.categories"
-                      :key="category.id || category.slug"
-                      class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
-                    >
-                      {{ category.name }}
-                    </span>
-                    <span
-                      v-if="dish.categories.length === 0"
-                      class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
-                    >
-                      {{ dish.category ? formatCategoryLabel(dish.category) : 'Sem categoria' }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-sm font-semibold text-gray-900">
-                  {{ currencyFormatter.format(dish.price) }}
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
-                      @click="goToEdit(dish.id)"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                      @click="deleteDish(dish.id)"
-                    >
-                      Deletar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            <!-- Order By -->
+            <select
+              v-model="orderBy"
+              class="rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
+              <option value="name_asc">Nome (A-Z)</option>
+              <option value="name_desc">Nome (Z-A)</option>
+              <option value="price_desc">Maior Preço</option>
+              <option value="price_asc">Menor Preço</option>
+              <option value="newest">Mais Recentes</option>
+              <option value="oldest">Mais Antigos</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary shadow-sm whitespace-nowrap"
+            @click="goToCreate"
+          >
+            Adicionar Prato
+          </button>
         </div>
+      </template>
 
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p class="text-sm text-gray-500">
-            Página {{ page }} de {{ totalPages }}
-          </p>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="page === 1"
-              @click="page = Math.max(1, page - 1)"
-            >
-              Anterior
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="page === totalPages"
-              @click="page = Math.min(totalPages, page + 1)"
-            >
-              Próxima
-            </button>
+      <template #dish="{ row }">
+        <div class="flex items-center gap-3">
+          <img
+            v-if="row.image"
+            :src="row.image"
+            alt="Prato"
+            class="h-10 w-10 rounded-lg object-cover"
+          />
+          <div>
+            <p class="text-sm font-medium text-gray-900">{{ row.name }}</p>
+            <p v-if="row.description" class="text-xs text-gray-500 truncate max-w-xs">
+              {{ row.description }}
+            </p>
           </div>
         </div>
-      </div>
+      </template>
 
-      <div v-else class="py-12 text-center">
-        <p class="text-gray-500">Nenhum prato adicionado ainda</p>
-        <button
-          type="button"
-          class="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary"
-          @click="goToCreate"
-        >
-          Adicionar primeiro prato
-        </button>
-      </div>
-    </div>
+      <template #categories="{ row }">
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-for="category in row.categories"
+            :key="category.id || category.slug"
+            class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
+          >
+            {{ category.name }}
+          </span>
+          <span
+            v-if="row.categories.length === 0"
+            class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
+          >
+            {{ row.category ? formatCategoryLabel(row.category) : 'Sem categoria' }}
+          </span>
+        </div>
+      </template>
+    </TableBase>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
@@ -202,15 +168,74 @@ const sideCategoryOptions = ref<SelectOption[]>([])
 const isLoading = ref(false)
 
 const page = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = ref(10)
+const search = ref("")
+const categoryFilter = ref("")
+const orderBy = ref("newest")
 
 const companyId = computed(() => user.value?.company?.id ?? '')
 
-const totalPages = computed(() => Math.max(1, Math.ceil(dishes.value.length / itemsPerPage)))
-const paginatedDishes = computed(() => {
-  const start = (page.value - 1) * itemsPerPage
-  return dishes.value.slice(start, start + itemsPerPage)
+const filteredDishes = computed(() => {
+  let filtered = [...dishes.value]
+
+  // Apply Search
+  if (search.value) {
+    const term = search.value.toLowerCase()
+    filtered = filtered.filter(d => 
+      d.name.toLowerCase().includes(term) || 
+      (d.description && d.description.toLowerCase().includes(term))
+    )
+  }
+
+  // Apply Category Filter
+  if (categoryFilter.value) {
+    filtered = filtered.filter(d => {
+      // Check if it's in the categories array
+      if (d.categories && d.categories.length > 0) {
+        return d.categories.some(c => c.id === categoryFilter.value || c.slug === categoryFilter.value)
+      }
+      // Or fallback to direct category matches
+      return d.category === categoryFilter.value
+    })
+  }
+
+  // Apply Sort
+  filtered.sort((a, b) => {
+    switch (orderBy.value) {
+      case "name_asc":
+        return a.name.localeCompare(b.name)
+      case "name_desc":
+        return b.name.localeCompare(a.name)
+      case "price_asc":
+        return a.price - b.price
+      case "price_desc":
+        return b.price - a.price
+      case "oldest":
+        return 1
+      case "newest":
+      default:
+        return 0
+    }
+  })
+
+  return filtered
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredDishes.value.length / itemsPerPage.value)))
+const paginatedDishes = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value
+  return filteredDishes.value.slice(start, start + itemsPerPage.value)
+})
+
+watch([search, categoryFilter, orderBy], () => {
+  page.value = 1
+})
+
+const columns = [
+  { key: "dish", label: "Prato" },
+  { key: "categories", label: "Categorias" },
+  { key: "price", label: "Preço", type: "currency" },
+];
 
 watch(() => dishes.value.length, () => {
   const maxPage = totalPages.value
@@ -348,8 +373,8 @@ const deleteDish = async (id: string) => {
 const ensureResources = async () => {
   let id = companyId.value
   if (!id) {
-    const currentUser = await getCurrentUser()
-    id = currentUser?.company?.id
+    await getCurrentUser()
+    id = user.value?.company?.id ?? ''
   }
   await fetchResources(id)
 }

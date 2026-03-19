@@ -26,32 +26,75 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    let userData = null;
+    let userType: 'admin' | 'biker' = 'admin';
+
+    // 1. Try finding in Admins table first
     const { data: admin, error: adminError } = await supabase
       .from("Admins")
       .select("*")
       .eq("id", decoded.id)
       .single();
 
-    if (adminError || !admin) {
+    if (admin && !adminError) {
+      userData = admin;
+      userType = 'admin';
+    } else {
+      // 2. Try finding in users table (for bikers)
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", decoded.id)
+        .eq("type", "biker")
+        .single();
+
+      if (user && !userError) {
+        userData = user;
+        userType = 'biker';
+      }
+    }
+
+    if (!userData) {
       throw createError({
         statusCode: 401,
-        statusMessage: "Admin not found",
+        statusMessage: "User not found",
       });
     }
 
-    const { data: company } = await supabase
-      .from("Company")
-      .select("*")
-      .eq("id", admin.companyId)
-      .single();
+    // 3. Fetch Company
+    let company = null;
+    let companyId = null;
+
+    if (userType === 'admin') {
+      companyId = userData.companyId;
+    } else {
+      const { data: bikerRecord } = await supabase
+        .from("Entregadores")
+        .select("companyId")
+        .eq("userId", userData.id)
+        .single();
+      
+      companyId = bikerRecord?.companyId;
+    }
+
+    if (companyId) {
+      const { data: companyData } = await supabase
+        .from("Company")
+        .select("*")
+        .eq("id", companyId)
+        .single();
+      company = companyData;
+    }
 
     return {
       success: true,
       data: {
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        phone: userData.phone || null,
         company: company,
+        role: userType,
       },
     };
   } catch (error) {

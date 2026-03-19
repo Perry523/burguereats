@@ -33,17 +33,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const updateData: Record<string, any> = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.type !== undefined) updateData.type = body.type;
+    if (body.email !== undefined) updateData.email = body.email;
+    if (body.phone !== undefined) updateData.phone = body.phone;
+    if (body.address !== undefined) updateData.address = body.address;
+    if (body.city !== undefined) updateData.city = body.city;
+    if (body.state !== undefined) updateData.state = body.state;
+
     const { data: company, error } = await supabase
       .from("Company")
-      .update({
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        zip_code: body.zipCode,
-      })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();

@@ -109,7 +109,6 @@ definePageMeta({
   layout: false,
 })
 
-const supabase = useSupabase()
 const fullName = ref('')
 const companyName = ref('')
 const email = ref('')
@@ -137,34 +136,13 @@ const handleRegister = async () => {
     return
   }
 
+  const trimmedEmail = email.value.trim().toLowerCase()
+
   isLoading.value = true
   error.value = ''
   successMessage.value = ''
 
   try {
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
-      options: {
-        data: {
-          full_name: trimmedName,
-        },
-      },
-    })
-
-    const isAlreadyRegistered =
-      signUpError?.message?.toLowerCase().includes('already registered') ?? false
-
-    if (signUpError && !isAlreadyRegistered) {
-      error.value = signUpError.message
-      return
-    }
-
-    if (!data?.user && !isAlreadyRegistered) {
-      error.value = 'Não foi possível criar a conta. Tente novamente.'
-      return
-    }
-
     let companyId: string | null = null
 
     try {
@@ -174,7 +152,7 @@ const handleRegister = async () => {
           method: 'POST',
           body: {
             name: trimmedCompanyName,
-            email: email.value,
+            email: trimmedEmail,
           },
         }
       )
@@ -186,7 +164,7 @@ const handleRegister = async () => {
           '/api/companies'
         )
         const existingCompany = companiesResponse.data.find(
-          (company) => company.email === email.value || company.name === trimmedCompanyName
+          (company) => company.email.toLowerCase() === trimmedEmail || company.name === trimmedCompanyName
         )
         if (existingCompany) {
           companyId = existingCompany.id
@@ -207,7 +185,7 @@ const handleRegister = async () => {
         method: 'POST',
         body: {
           name: trimmedName,
-          email: email.value,
+          email: trimmedEmail,
           password: password.value,
           companyId,
         },
@@ -215,7 +193,7 @@ const handleRegister = async () => {
     } catch (adminError) {
       try {
         const adminsResponse = await $fetch<{ success: boolean; data: Array<{ email: string }> }>('/api/admins')
-        const existingAdmin = adminsResponse.data.find((admin) => admin.email === email.value)
+        const existingAdmin = adminsResponse.data.find((admin) => admin.email.toLowerCase() === trimmedEmail)
         if (!existingAdmin) {
           throw adminError
         }

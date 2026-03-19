@@ -4,6 +4,7 @@ export interface AuthCompany {
   id: string;
   name?: string | null;
   email?: string | null;
+  type?: string | null;
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
@@ -14,6 +15,7 @@ export interface AuthUser {
   name?: string | null;
   email?: string | null;
   company?: AuthCompany | null;
+  role?: 'admin' | 'biker';
 }
 
 interface AuthState {
@@ -46,7 +48,7 @@ export const useAuthStore = defineStore("auth", {
         });
 
         if (response.success) {
-          this.setUser(response.data);
+          this.setUser(response.data as any);
           return response.data;
         }
 
@@ -71,7 +73,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await $fetch("/api/auth/me");
         if (response.success) {
-          this.setUser(response.data);
+          this.setUser(response.data as any);
           return response.data;
         }
 

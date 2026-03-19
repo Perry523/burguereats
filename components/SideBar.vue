@@ -104,10 +104,10 @@
 
 <script setup lang="ts">
 import { useDrawer } from "~/stores/drawer";
-import { useLoginStore } from "~/stores/user";
+import { useAuthStore } from "~/stores/auth";
 import { useBusinessSettingsStore } from "~/stores/businessSettings";
 import { ArrowLeftOnRectangleIcon } from "@heroicons/vue/24/solid";
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const open = ref(false);
@@ -115,23 +115,11 @@ const drawer = useDrawer();
 const { toggledBar } = storeToRefs(drawer);
 async function logout() {
   try {
-    // Sign out from Supabase Auth
-    const supabase = useSupabaseClient();
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Clear local store
-    loginStore.logout();
-
-    // Redirect to login page
+    await authStore.logout();
     router.push("/login");
   } catch (error) {
     console.error("Logout failed:", error);
-    // Still clear local store and redirect even if Supabase logout fails
-    loginStore.logout();
+    authStore.clearUser();
     router.push("/login");
   }
 }
@@ -432,16 +420,16 @@ const routes = computed(() => {
   // });
 
   // Apply role-based filtering
-  if (loginStore.role === "attendant") {
-    return baseRoutes.filter(
-      (route) => !attendantRoutesBlocked.includes(route.label)
-    );
-  }
-  if (loginStore.role === "professional") {
-    return baseRoutes.filter(
-      (route) => !professionalRoutesBlocked.includes(route.label)
-    );
-  }
+  // if (authStore.role === "attendant") {
+  //   return baseRoutes.filter(
+  //     (route) => !attendantRoutesBlocked.includes(route.label)
+  //   );
+  // }
+  // if (authStore.role === "professional") {
+  //   return baseRoutes.filter(
+  //     (route) => !professionalRoutesBlocked.includes(route.label)
+  //   );
+  // }
 
   return baseRoutes;
 });

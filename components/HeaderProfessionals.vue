@@ -24,30 +24,18 @@
 </template>
 <script lang="ts" setup>
 import { ArrowRightOnRectangleIcon } from "@heroicons/vue/24/solid";
-import { useLoginStore } from "~/stores/user";
+import { useAuthStore } from "~/stores/auth";
 const router = useRouter();
 const route = useRoute();
-const user = useLoginStore();
+const authStore = useAuthStore();
 
 async function logout() {
   try {
-    // Sign out from Supabase Auth
-    const supabase = useSupabaseClient();
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Clear local store
-    user.logout();
-
-    // Redirect to login page
+    await authStore.logout();
     router.push("/login");
   } catch (error) {
     console.error("Logout failed:", error);
-    // Still clear local store and redirect even if Supabase logout fails
-    user.logout();
+    authStore.clearUser();
     router.push("/login");
   }
 }

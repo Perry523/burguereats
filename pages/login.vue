@@ -64,8 +64,12 @@ const { isLoading, error, login } = useAuth()
 
 const handleLogin = async () => {
   try {
-    await login(email.value, password.value)
-    await navigateTo('/admin')
+    const user = await login(email.value.trim().toLowerCase(), password.value)
+    if (user?.role === 'biker') {
+      await navigateTo('/admin/biker-dashboard')
+    } else {
+      await navigateTo('/admin')
+    }
   } catch (err) {
     console.error('Login error:', err)
   }
