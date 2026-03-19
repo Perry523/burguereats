@@ -6,7 +6,7 @@
         <div class="flex justify-between items-center py-1">
           <div class="flex items-center">
             <nuxt-img
-              src="/logo-restaurante.jpg"
+              src="/logo-restaurante.webp"
               alt="Logo"
               class="w-14 md:w-20"
             />
@@ -116,7 +116,7 @@
                       <span class="text-sm font-semibold text-slate-900">
                         {{
                           currencyFormatter.format(
-                            item.unitPrice * item.quantity
+                            item.unitPrice * item.quantity,
                           )
                         }}
                       </span>
@@ -231,7 +231,7 @@
                         <span class="text-sm font-semibold text-slate-900">
                           {{
                             currencyFormatter.format(
-                              item.unitPrice * item.quantity
+                              item.unitPrice * item.quantity,
                             )
                           }}
                         </span>
@@ -282,7 +282,7 @@ const searchQuery = useState("menuSearch", () => "");
 
 const categories = useState<Array<{ id: string; name: string }>>(
   "menuCategories",
-  () => [{ id: "todos", name: "Todos" }]
+  () => [{ id: "todos", name: "Todos" }],
 );
 
 const visibleCategories = computed(() => {

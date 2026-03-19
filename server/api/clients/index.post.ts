@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const { company_id, name, phone, email } = body;
+    const { company_id, name, phone } = body;
 
     if (!company_id || !name) {
       throw createError({
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error("Missing Supabase configuration");
@@ -28,7 +28,6 @@ export default defineEventHandler(async (event) => {
           company_id,
           name: name.trim(),
           phone: phone?.trim() || null,
-          email: email?.trim()?.toLowerCase() || null,
         },
       ])
       .select()
@@ -38,10 +37,10 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, data: client };
   } catch (error: any) {
-    console.error("Error creating client:", error);
+    console.error("Error creating client:", JSON.stringify(error, null, 2));
     throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to create client",
+      statusCode: error.statusCode || 500,
+      statusMessage: error.message || error.statusMessage || "Failed to create client",
     });
   }
 });

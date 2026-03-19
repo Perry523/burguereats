@@ -92,20 +92,11 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Telefone (Opcional)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
               <input
                 v-model="newClient.phone"
                 type="text"
                 placeholder="(00) 00000-0000"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
-              <input
-                v-model="newClient.email"
-                type="email"
-                placeholder="cliente@email.com"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
@@ -233,11 +224,11 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Valor da entrega</label>
               <input
-                v-model.number="form.delivery_fee"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0,00"
+                :value="deliveryFeeDisplay"
+                @input="handleDeliveryFeeInput"
+                type="text"
+                inputmode="numeric"
+                placeholder="R$ 0,00"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
@@ -400,7 +391,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref } from "vue";
 import { storeToRefs } from "pinia";
 
 definePageMeta({
@@ -424,7 +415,6 @@ interface Client {
   id: string;
   name: string;
   phone: string | null;
-  email: string | null;
 }
 
 interface Biker {
@@ -468,7 +458,7 @@ const productToAdd = ref<string>("");
 const items = ref<OrderItem[]>([]);
 const productItems = ref<ProductItem[]>([]);
 
-const newClient = reactive({ name: "", phone: "", email: "" });
+const newClient = reactive({ name: "", phone: "" });
 
 const form = reactive({
   client_id: "",
@@ -488,6 +478,22 @@ const addressDetails = reactive({
 });
 
 const cepLoading = ref(false);
+
+const deliveryFeeDisplay = computed(() => {
+  if (!form.delivery_fee) return '';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(form.delivery_fee);
+});
+
+const handleDeliveryFeeInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const digits = target.value.replace(/\D/g, '');
+  const cents = parseInt(digits || '0', 10);
+  form.delivery_fee = cents / 100;
+  // Force the display to update
+  nextTick(() => {
+    target.value = deliveryFeeDisplay.value;
+  });
+};
 
 const applyMask = (value: string) => {
   return value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2').substr(0, 9);
@@ -588,19 +594,13 @@ const createNewClient = async () => {
   try {
     const response = await $fetch<{ success: boolean; data?: Client }>("/api/clients", {
       method: "POST",
-      body: { 
-        company_id: companyId, 
-        name: newClient.name.trim(), 
-        phone: newClient.phone.trim() || null,
-        email: newClient.email.trim() || null
-      },
+      body: { company_id: companyId, name: newClient.name.trim(), phone: newClient.phone.trim() || null },
     });
     if (response.success && response.data) {
       availableClients.value.push(response.data);
       form.client_id = response.data.id;
       newClient.name = "";
       newClient.phone = "";
-      newClient.email = "";
       showNewClientForm.value = false;
       toast.add({ color: "success", title: "Cliente criado com sucesso" });
     }
@@ -722,7 +722,6 @@ const saveOrder = async () => {
       client_id: form.client_id,
       customer_name: selectedClient.value?.name,
       customer_phone: selectedClient.value?.phone,
-      customer_email: selectedClient.value?.email,
       customer_address: fullAddress,
       status: form.status,
       notes: form.notes,

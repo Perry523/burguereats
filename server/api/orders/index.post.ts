@@ -65,7 +65,6 @@ export default defineEventHandler(async (event) => {
           client_id: body.client_id || null,
           customer_name: body.customer_name?.trim() || null,
           customer_phone: body.customer_phone?.trim() || null,
-          customer_email: body.customer_email?.trim()?.toLowerCase() || null,
           customer_address: body.customer_address?.trim() || null,
           total: calculatedTotal,
           status: body.status || "pending",
