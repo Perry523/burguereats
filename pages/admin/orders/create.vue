@@ -110,12 +110,24 @@
             </button>
           </div>
 
-          <!-- Address Section (Shared) -->
+          <!-- Address Section & Order Type -->
           <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
-            <h3 class="text-md font-semibold text-gray-800">Endereço de Entrega</h3>
+            <h3 class="text-md font-semibold text-gray-800">Tipo de Pedido e Endereço</h3>
             
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">CEP (Opcional)</label>
+            <div class="flex gap-6 mb-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="orderType" value="delivery" class="text-primary focus:ring-primary h-4 w-4" />
+                <span class="text-sm text-gray-700 font-medium">Entrega</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="orderType" value="pickup" class="text-primary focus:ring-primary h-4 w-4" />
+                <span class="text-sm text-gray-700 font-medium">Retirada no Local</span>
+              </label>
+            </div>
+
+            <div v-if="orderType === 'delivery'" class="space-y-4 border-t border-gray-100 pt-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">CEP (Opcional)</label>
               <div class="relative">
                 <input
                   v-model="addressDetails.cep"
@@ -178,6 +190,7 @@
             </div>
             
             <p class="text-xs text-gray-500 italic mt-1">* Estado e País fixados em PB, Brasil.</p>
+            </div>
           </div>
         </div>
 
@@ -226,10 +239,12 @@
               <input
                 :value="deliveryFeeDisplay"
                 @input="handleDeliveryFeeInput"
+                @paste="handleDeliveryFeePaste"
+                :disabled="orderType === 'pickup'"
                 type="text"
                 inputmode="numeric"
                 placeholder="R$ 0,00"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:bg-gray-100"
               />
             </div>
             
@@ -391,7 +406,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 
 definePageMeta({
@@ -478,6 +493,13 @@ const addressDetails = reactive({
 });
 
 const cepLoading = ref(false);
+const orderType = ref("delivery");
+
+watch(orderType, (newVal) => {
+  if (newVal === "pickup") {
+    form.delivery_fee = 0;
+  }
+});
 
 const deliveryFeeDisplay = computed(() => {
   if (!form.delivery_fee) return '';
@@ -493,6 +515,30 @@ const handleDeliveryFeeInput = (e: Event) => {
   nextTick(() => {
     target.value = deliveryFeeDisplay.value;
   });
+};
+
+const handleDeliveryFeePaste = (e: ClipboardEvent) => {
+  e.preventDefault();
+  const pastedValue = e.clipboardData?.getData('text') || '';
+  
+  let cleanStr = pastedValue.replace(/[^\d.,]/g, '');
+  if (!cleanStr) return;
+  
+  if (cleanStr.includes(',') && cleanStr.includes('.')) {
+     cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+  } else if (cleanStr.includes(',')) {
+     cleanStr = cleanStr.replace(',', '.');
+  }
+  
+  const parsedFloat = parseFloat(cleanStr);
+  
+  if (!isNaN(parsedFloat)) {
+    form.delivery_fee = parsedFloat;
+    const target = e.target as HTMLInputElement;
+    nextTick(() => {
+      target.value = deliveryFeeDisplay.value;
+    });
+  }
 };
 
 const applyMask = (value: string) => {
@@ -707,15 +753,19 @@ const saveOrder = async () => {
 
   isSaving.value = true;
   try {
-    const addressParts = [];
-    if (addressDetails.logradouro) addressParts.push(addressDetails.logradouro);
-    if (addressDetails.numero) addressParts.push(addressDetails.numero);
-    if (addressDetails.complemento) addressParts.push(`(${addressDetails.complemento})`);
-    if (addressDetails.bairro) addressParts.push(`- ${addressDetails.bairro}`);
-    if (addressDetails.cidade) addressParts.push(`- ${addressDetails.cidade}`);
-    if (addressParts.length > 0) addressParts.push("- PB, BR");
-
-    const fullAddress = addressParts.join(" ");
+    let fullAddress = "Retirada no local";
+    
+    if (orderType.value === "delivery") {
+      const addressParts = [];
+      if (addressDetails.logradouro) addressParts.push(addressDetails.logradouro);
+      if (addressDetails.numero) addressParts.push(addressDetails.numero);
+      if (addressDetails.complemento) addressParts.push(`(${addressDetails.complemento})`);
+      if (addressDetails.bairro) addressParts.push(`- ${addressDetails.bairro}`);
+      if (addressDetails.cidade) addressParts.push(`- ${addressDetails.cidade}`);
+      if (addressParts.length > 0) addressParts.push("- PB, BR");
+  
+      fullAddress = addressParts.join(" ");
+    }
 
     const payload = {
       companyId,

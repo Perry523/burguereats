@@ -8,6 +8,7 @@ export interface AuthCompany {
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
+  logo?: string | null;
 }
 
 export interface AuthUser {

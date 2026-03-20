@@ -16,7 +16,14 @@
         <div class="border-b border-white/10 p-6">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
+              <img
+                v-if="companyLogo"
+                :src="companyLogo"
+                alt="Company Logo"
+                class="h-12 w-12 rounded-2xl object-cover"
+              />
               <div
+                v-else
                 class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold uppercase"
               >
                 {{ companyInitials }}
@@ -33,7 +40,7 @@
               class="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:bg-white/10 lg:hidden"
               @click="closeSidebar"
             >
-              <UIcon name="i-heroicons-x-mark" class="h-5 w-5" />
+              <UIcon name="i-ph-x" class="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -58,7 +65,7 @@
           <UButton
             @click="handleLogout"
             class="w-full justify-center"
-            icon="i-heroicons-arrow-right-on-rectangle"
+            icon="i-ph-sign-out-duotone"
           >
             Sair
           </UButton>
@@ -79,7 +86,7 @@
                 @click="toggleSidebar"
               >
                 <span class="sr-only">Abrir menu</span>
-                <UIcon name="i-heroicons-bars-3" class="h-5 w-5" />
+                <UIcon name="i-ph-list" class="h-5 w-5" />
               </button>
               <div>
                 <h1 class="text-lg font-semibold text-slate-900 sm:text-xl">
@@ -127,26 +134,25 @@ if (!authStore.user) {
 }
 
 const adminNavItems = [
-  { label: "Dashboard", to: "/admin", icon: "i-heroicons-home-modern" },
-  { label: "Pedidos", to: "/admin/orders", icon: "i-heroicons-shopping-bag" },
-  { label: "Pratos", to: "/admin/dishes", icon: "i-heroicons-squares-2x2" },
-  { label: "Produtos", to: "/admin/products", icon: "i-heroicons-cube" },
-  { label: "Categorias", to: "/admin/categories", icon: "i-heroicons-tag" },
+  { label: "Dashboard", to: "/admin", icon: "i-ph-squares-four-duotone" },
+  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-shopping-bag-duotone" },
+  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-fork-knife-duotone" },
+  { label: "Produtos", to: "/admin/products", icon: "i-ph-package-duotone" },
+  { label: "Categorias", to: "/admin/categories", icon: "i-ph-tags-duotone" },
   {
     label: "Entregadores",
     to: "/admin/bikers",
-    icon: "i-heroicons-truck",
+    icon: "i-ph-motorcycle-duotone",
   },
-
   {
     label: "Empresa",
     to: "/admin/empresa",
-    icon: "i-heroicons-building-storefront",
+    icon: "i-ph-storefront-duotone",
   },
   {
     label: "Perfil",
     to: "/admin/profile",
-    icon: "i-heroicons-user-circle",
+    icon: "i-ph-user-circle-duotone",
   },
 ];
 
@@ -154,27 +160,28 @@ const bikerNavItems = [
   {
     label: "Dashboard",
     to: "/admin/biker-dashboard",
-    icon: "i-heroicons-home-modern",
+    icon: "i-ph-squares-four-duotone",
   },
   {
     label: "Entregas",
     to: "/admin/deliveries",
-    icon: "i-heroicons-truck",
+    icon: "i-ph-motorcycle-duotone",
   },
   {
     label: "Novo Pedido",
     to: "/admin/deliveries/create",
-    icon: "i-heroicons-plus-circle",
+    icon: "i-ph-plus-circle-duotone",
   },
   {
     label: "Perfil",
     to: "/admin/profile",
-    icon: "i-heroicons-user-circle",
+    icon: "i-ph-user-circle-duotone",
   },
 ];
 
 const navItems = computed(() => {
-  const items = authStore.user?.role === "biker" ? bikerNavItems : adminNavItems;
+  const items =
+    authStore.user?.role === "biker" ? bikerNavItems : adminNavItems;
   const companyType = authStore.user?.company?.type;
   if (companyType === "delivery") {
     return items.filter((item: any) => item.to !== "/admin/pos");
@@ -208,14 +215,15 @@ const isRouteActive = (path: string) => {
 };
 
 const companyName = computed(
-  () => authStore.user?.company?.name ?? "Restaurante"
+  () => authStore.user?.company?.name ?? "Restaurante",
 );
 const companyEmail = computed(() => authStore.user?.company?.email ?? "");
+const companyLogo = computed(() => authStore.user?.company?.logo ?? "");
 const userName = computed(() => authStore.user?.name ?? "Administrador");
 const userEmail = computed(() => authStore.user?.email ?? "");
 const companyInitials = computed(() => getInitials(companyName.value));
 const userInitials = computed(() =>
-  getInitials(authStore.user?.name ?? userName.value)
+  getInitials(authStore.user?.name ?? userName.value),
 );
 const activeNavLabel = computed(() => {
   const current = navItems.value.find((item: any) => isRouteActive(item.to));
@@ -226,7 +234,7 @@ watch(
   () => route.path,
   () => {
     closeSidebar();
-  }
+  },
 );
 
 const handleLogout = async () => {
