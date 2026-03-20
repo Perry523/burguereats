@@ -18,9 +18,13 @@ export async function createNotification(params: CreateNotificationParams) {
   const supabaseKey = process.env.SUPABASE_ANON_KEY!;
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isUuid = uuidRegex.test(params.userId);
+  const actualUserId = isUuid ? params.userId : "00000000-0000-0000-0000-000000000000";
+
   const { error } = await supabase.from("notifications").insert([
     {
-      user_id: params.userId,
+      user_id: actualUserId,
       company_id: params.companyId || null,
       title: params.title,
       description: params.description || null,

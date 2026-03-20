@@ -309,7 +309,7 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500">Telefone</p>
-                <p class="font-medium">{{ selectedOrder.customer_phone }}</p>
+                <p class="font-medium">{{ formatPhone(selectedOrder.customer_phone) }}</p>
               </div>
               <div v-if="selectedOrder.customer_address && selectedOrder.customer_address !== 'Retirada no local'">
                 <p class="text-sm text-gray-500">Endereço</p>
@@ -518,6 +518,17 @@ const formatDate = (dateString: string) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+};
+
+const formatPhone = (phone: string) => {
+  if (!phone || phone === 'Retirada no local') return phone;
+  const val = phone.replace(/\D/g, "");
+  if (val.length === 11) {
+    return `(${val.substring(0, 2)}) ${val.substring(2, 7)}-${val.substring(7)}`;
+  } else if (val.length === 10) {
+    return `(${val.substring(0, 2)}) ${val.substring(2, 6)}-${val.substring(6)}`;
+  }
+  return phone;
 };
 
 const fetchOrders = async (companyId: string, status?: string, clientId?: string, bikerId?: string, dateRange?: string) => {

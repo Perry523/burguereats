@@ -16,12 +16,25 @@ export default defineEventHandler(async (event) => {
     const supabaseKey = process.env.SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data, error } = await supabase
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded.id);
+
+    let query = supabase
       .from("notifications")
       .select("*")
-      .eq("user_id", decoded.id)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    if (isUuid) {
+      query = query.eq("user_id", decoded.id);
+    } else {
+      // Decode.companyId exists for admins (from auth token)
+      if (!(decoded as any).companyId) {
+        return { success: true, data: [] };
+      }
+      query = query.eq("company_id", (decoded as any).companyId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
