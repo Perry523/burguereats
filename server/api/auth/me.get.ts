@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     let userData = null;
-    let userType: 'admin' | 'biker' = 'admin';
+    let userType: 'admin' | 'manager' | 'biker' = 'admin';
 
     // 1. Try finding in Admins table first
     const { data: admin, error: adminError } = await supabase
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
 
     if (admin && !adminError) {
       userData = admin;
-      userType = 'admin';
+      userType = admin.role || 'manager';
     } else {
       // 2. Try finding in users table (for bikers)
       const { data: user, error: userError } = await supabase
@@ -65,16 +65,17 @@ export default defineEventHandler(async (event) => {
     let company = null;
     let companyId = null;
 
-    if (userType === 'admin') {
+    if (userType === 'admin' || userType === 'manager') {
       companyId = userData.companyId;
     } else {
       const { data: bikerRecord } = await supabase
         .from("Entregadores")
-        .select("companyId")
+        .select("companyId, wallet")
         .eq("userId", userData.id)
         .single();
       
       companyId = bikerRecord?.companyId;
+      userData.wallet = Number(bikerRecord?.wallet) || 0;
     }
 
     if (companyId) {
@@ -93,8 +94,10 @@ export default defineEventHandler(async (event) => {
         email: userData.email,
         name: userData.name,
         phone: userData.phone || null,
+        companyId: companyId,
         company: company,
         role: userType,
+        wallet: userData.wallet,
       },
     };
   } catch (error) {

@@ -407,6 +407,8 @@ const uploadProductImage = async (companyId: string) => {
   return manualUrl ? manualUrl : null;
 };
 
+const companyId = computed(() => auth.currentCompanyId || user.value?.company?.id || '');
+
 const saveProduct = async () => {
   if (!form.name.trim()) {
     toast.add({ color: "warning", title: "Informe o nome do produto" });
@@ -418,15 +420,14 @@ const saveProduct = async () => {
     return;
   }
 
-  const companyId = user.value?.company?.id;
-  if (!companyId) {
+  if (!companyId.value) {
     toast.add({ color: "error", title: "Empresa não encontrada" });
     return;
   }
 
   isSaving.value = true;
   try {
-    const imageUrl = await uploadProductImage(companyId);
+    const imageUrl = await uploadProductImage(companyId.value);
 
     const payload = {
       name: form.name.trim(),
@@ -467,9 +468,9 @@ onMounted(async () => {
   if (!user.value?.company?.id) {
     await auth.getCurrentUser();
   }
-  const companyId = user.value?.company?.id;
-  if (companyId) {
-    await Promise.all([loadCategories(companyId), fetchProduct(companyId)]);
+  const cid = companyId.value;
+  if (cid) {
+    await Promise.all([loadCategories(cid), fetchProduct(cid)]);
   }
 });
 </script>

@@ -7,5 +7,7 @@ export interface User {
   image: string,
   commission: number;
   phone: string;
-  worker?: boolean
+  company_id?: string;
+  role?: 'admin' | 'manager' | 'biker';
+  worker?: boolean;
 }

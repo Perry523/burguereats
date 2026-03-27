@@ -4,7 +4,7 @@ import { useAuthStore } from "~/stores/auth";
 
 export const useAuth = () => {
   const authStore = useAuthStore();
-  const { user, isAuthenticated, isLoading } = storeToRefs(authStore);
+  const { user, isAuthenticated, isLoading, activeCompanyId, currentCompanyId } = storeToRefs(authStore);
   const error = ref<string | null>(null);
 
   const login = async (email: string, password: string) => {
@@ -36,6 +36,8 @@ export const useAuth = () => {
     user,
     isAuthenticated,
     isLoading,
+    activeCompanyId,
+    currentCompanyId,
     error: readonly(error),
     login,
     logout,

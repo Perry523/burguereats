@@ -23,9 +23,12 @@
     </div>
     <div class="overflow-auto flex-1 bg-white">
       <table class="min-w-full divide-y divide-gray-200 relative">
-        <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
+        <thead class="bg-gray-50 sm:bg-gray-100 sticky top-0 z-10 shadow-sm">
           <tr>
-            <th v-if="select" class="w-14 px-6 py-4">
+            <th
+              v-if="select"
+              class="w-10 sm:w-14 px-3 py-1 md:py-2.5 sm:px-6 sm:py-4"
+            >
               <label>
                 <input
                   type="checkbox"
@@ -40,14 +43,14 @@
               :class="[
                 sm ? '' : 'hidden sm:table-cell',
                 center ? 'text-center' : 'text-left',
-                'px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-800',
+                'px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800',
               ]"
               :key="label"
             >
               {{ label }}
             </th>
             <th
-              class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-800 w-10 sm:w-24"
+              class="px-4 py-3 sm:px-6 sm:py-4 text-right text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800 w-10 sm:w-24"
               v-if="!hideActions"
             >
               Ações
@@ -60,7 +63,10 @@
             :key="index"
             class="hover:bg-gray-50"
           >
-            <td v-if="select" class="px-6 py-4 whitespace-nowrap">
+            <td
+              v-if="select"
+              class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap"
+            >
               <input
                 type="checkbox"
                 class="checkbox"
@@ -71,7 +77,7 @@
             <td
               :class="[
                 sm ? '' : 'hidden sm:table-cell',
-                'px-6 py-4 whitespace-nowrap text-sm text-gray-700',
+                'px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-700',
               ]"
               v-for="({ key, type, sm }, index) in columns"
               :key="key + index"
@@ -94,7 +100,7 @@
             <slot name="actions" :value="item">
               <td
                 v-if="!hideActions"
-                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                class="px-2 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-right text-sm font-medium"
               >
                 <div class="relative inline-block text-left action-dropdown">
                   <div
@@ -163,14 +169,14 @@
       </table>
     </div>
     <div
-      class="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 px-4 sm:px-6 pb-4"
+      class="mt-auto flex flex-row items-center justify-between border-t border-gray-200 pt-2 pb-2 px-2 sm:pt-3 sm:pb-3 sm:px-6 gap-2"
     >
       <div
-        class="flex items-center gap-2 text-sm text-gray-500 w-full sm:w-auto justify-between sm:justify-start mb-4 sm:mb-0"
+        class="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm text-gray-500 shrink-0"
       >
         <span class="hidden sm:inline">Exibir</span>
         <select
-          class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 object-cover text-sm shadow-sm hover:border-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-20"
+          class="rounded-lg border border-gray-300 bg-white px-1 sm:px-2 py-1 object-cover text-xs sm:text-sm shadow-sm hover:border-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-12 sm:w-20"
           v-model="perPage"
         >
           <option
@@ -181,13 +187,15 @@
             {{ option }}
           </option>
         </select>
-        <span>por página</span>
+        <span class="hidden sm:inline">por página</span>
       </div>
 
-      <div class="flex items-center gap-1 w-full sm:w-auto justify-center">
+      <div
+        class="flex flex-wrap flex-1 sm:flex-initial items-center justify-end gap-1"
+      >
         <!-- Pagination controls layout natively rounded & beautiful -->
         <button
-          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="currentPage === 1"
           @click="changePage(1)"
         >
@@ -195,7 +203,7 @@
           «
         </button>
         <button
-          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
         >
@@ -207,7 +215,7 @@
           v-for="page in computedVisiblePages"
           :key="page"
           :class="[
-            'inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
+            'inline-flex h-7 min-w-[28px] sm:h-8 sm:min-w-[32px] items-center justify-center rounded-lg px-2 text-xs sm:text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
             page === currentPage
               ? 'bg-primary text-white border border-primary'
               : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
@@ -218,7 +226,7 @@
         </button>
 
         <button
-          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
@@ -226,7 +234,7 @@
           ›
         </button>
         <button
-          class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="currentPage === totalPages"
           @click="changePage(totalPages)"
         >

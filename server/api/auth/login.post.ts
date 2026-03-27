@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     let userData = null;
-    let userType: 'admin' | 'biker' = 'admin';
+    let userType: 'admin' | 'manager' | 'biker' = 'admin';
 
     // 1. Try finding in Admins table first
     const { data: admin, error: adminError } = await supabase
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
     if (admin && !adminError) {
       userData = admin;
-      userType = 'admin';
+      userType = admin.role || 'manager'; // Default to manager if role is not set
     } else {
       // 2. Try finding in users table (for bikers)
       const { data: user, error: userError } = await supabase
@@ -58,17 +58,16 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Check if account is active (Admins have isActive, users might not have it yet or we check finished_register)
-    if (userType === 'admin' && !userData.isActive) {
+    // Check if account is active
+    if ((userType === 'admin' || userType === 'manager') && !userData.isActive) {
       throw createError({
         statusCode: 403,
-        statusMessage: "Admin account is inactive",
+        statusMessage: "Account is inactive",
       });
     }
 
     // 3. Verify password
-    // Admins use 'password', bikers (users table) use 'password_hash'
-    const storedPassword = userType === 'admin' ? userData.password : userData.password_hash;
+    const storedPassword = (userType === 'admin' || userType === 'manager') ? userData.password : userData.password_hash;
     
     if (!storedPassword) {
       throw createError({
@@ -90,7 +89,7 @@ export default defineEventHandler(async (event) => {
     let company = null;
     let companyId = null;
 
-    if (userType === 'admin') {
+    if (userType === 'admin' || userType === 'manager') {
       companyId = userData.companyId;
     } else {
       // For bikers, we need to find their Entregadores record to get the companyId
@@ -117,7 +116,7 @@ export default defineEventHandler(async (event) => {
         id: userData.id,
         email: userData.email,
         companyId: companyId,
-        role: userType === 'admin' ? 'admin' : 'biker',
+        role: userType,
       },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
@@ -137,6 +136,7 @@ export default defineEventHandler(async (event) => {
         id: userData.id,
         email: userData.email,
         name: userData.name,
+        companyId: companyId,
         company: company,
         role: userType,
       },

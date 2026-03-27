@@ -2,37 +2,38 @@ import jwt from "jsonwebtoken";
 import type { H3Event } from "h3";
 
 export interface AuthUser {
-  userId: string;
+  id: string;
   email: string;
-  type: string;
+  role: 'admin' | 'manager' | 'biker';
+  companyId?: string | null;
 }
 
 export function extractToken(event: H3Event): string | null {
   const authHeader = getHeader(event, "authorization");
 
-  if (!authHeader) {
-    return null;
+  if (authHeader) {
+    if (authHeader.startsWith("Bearer ")) {
+      return authHeader.substring(7);
+    }
+    return authHeader;
   }
 
-  if (authHeader.startsWith("Bearer ")) {
-    return authHeader.substring(7);
-  }
-
-  return authHeader;
+  // Fallback to cookie
+  return getCookie(event, "auth_token") || null;
 }
 
 export function verifyToken(token: string): AuthUser | null {
   try {
-    const runtimeConfig = useRuntimeConfig();
     const decoded = jwt.verify(
       token,
-      runtimeConfig.jwtSecret || "your-secret-key"
+      process.env.JWT_SECRET || "secret"
     ) as any;
 
     return {
-      userId: decoded.userId,
+      id: decoded.id,
       email: decoded.email,
-      type: decoded.type,
+      role: decoded.role,
+      companyId: decoded.companyId,
     };
   } catch (error) {
     console.error("Token verification failed:", error);
@@ -77,7 +78,7 @@ export async function requireCompanyAccess(
     const companyUser = await db("company_users")
       .where({
         company_id: companyId,
-        user_id: user.userId,
+        user_id: user.id,
         is_active: true,
       })
       .first();

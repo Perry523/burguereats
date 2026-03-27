@@ -3,18 +3,19 @@ import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
+    const auth = requireAuth(event);
     const query = getQuery(event);
     let companyId = typeof query.companyId === "string" ? query.companyId : undefined;
 
-    const search = typeof query.search === "string" ? query.search : undefined;
-
-    // TODO: Remove this hardcoded fallback once subdomain logic is implemented
-    if (!companyId) {
-      companyId = 'cmhp2pzdq0000gjpvfdsaumu0';
+    // Enforcement: Managers can only see their own company's products
+    if (auth.role === 'manager') {
+      companyId = auth.companyId as string;
     }
+
+    const search = typeof query.search === "string" ? query.search : undefined;
     const activeOnly = query.activeOnly === 'true';
 
-    if (!companyId) {
+    if (!companyId && auth.role !== 'admin') {
       throw createError({
         statusCode: 400,
         statusMessage: "Company ID is required",
@@ -32,8 +33,11 @@ export default defineEventHandler(async (event) => {
 
     let query_builder = supabase
       .from('products')
-      .select('*')
-      .eq('company_id', companyId);
+      .select('*');
+
+    if (companyId) {
+      query_builder = query_builder.eq('company_id', companyId);
+    }
 
     if (activeOnly) {
       query_builder = query_builder.eq('is_active', true);
@@ -51,6 +55,7 @@ export default defineEventHandler(async (event) => {
       data: products,
     });
   } catch (error) {
+    if (error.statusCode) throw error;
     return handleServerError(event, error, {
       statusCode: 500,
       code: "PRODUCTS_FETCH_FAILED",

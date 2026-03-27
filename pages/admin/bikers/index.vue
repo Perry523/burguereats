@@ -1,7 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
-      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
       :rows="filteredBikers"
       :total-items="filteredBikers.length"
@@ -13,11 +13,18 @@
       hide-delete
     >
       <template #filter>
-        <div class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4">
+        <div
+          class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4"
+        >
           <div class="flex flex-wrap items-center gap-4 flex-1">
             <div class="relative w-full max-w-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              <div
+                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+              >
+                <UIcon
+                  name="i-heroicons-magnifying-glass"
+                  class="h-5 w-5 text-gray-400"
+                />
               </div>
               <input
                 id="search"
@@ -28,7 +35,7 @@
               />
             </div>
           </div>
-          
+
           <NuxtLink to="/admin/bikers/create">
             <button
               class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 shadow-sm whitespace-nowrap"
@@ -44,10 +51,12 @@
         <span
           :class="[
             'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium',
-            row.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            row.isActive
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800',
           ]"
         >
-          {{ row.isActive ? 'Ativo' : 'Inativo' }}
+          {{ row.isActive ? "Ativo" : "Inativo" }}
         </span>
       </template>
     </TableBase>
@@ -71,7 +80,7 @@ interface Biker {
 }
 
 const auth = useAuthStore();
-const { user } = storeToRefs(auth);
+const { user, currentCompanyId } = storeToRefs(auth);
 
 const bikers = ref<Biker[]>([]);
 const isLoading = ref(false);
@@ -79,14 +88,15 @@ const search = ref("");
 const page = ref(1);
 const itemsPerPage = ref(10);
 
-const companyId = computed(() => user.value?.company?.id ?? "");
+const companyId = computed(() => currentCompanyId.value || "");
 
 const filteredBikers = computed(() => {
   if (!search.value) return bikers.value;
   const term = search.value.toLowerCase();
-  return bikers.value.filter(b => 
-    b.name.toLowerCase().includes(term) || 
-    b.email.toLowerCase().includes(term)
+  return bikers.value.filter(
+    (b) =>
+      b.name.toLowerCase().includes(term) ||
+      b.email.toLowerCase().includes(term),
   );
 });
 
@@ -107,7 +117,9 @@ const tableActions: any[] = [
 const fetchBikers = async (companyId: string) => {
   isLoading.value = true;
   try {
-    const response = await $fetch<{ success: boolean; data?: Biker[] }>(`/api/bikers?companyId=${companyId}`);
+    const response = await $fetch<{ success: boolean; data?: Biker[] }>(
+      `/api/bikers?companyId=${companyId}`,
+    );
     bikers.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
     console.error("Error fetching bikers:", error);
@@ -117,7 +129,11 @@ const fetchBikers = async (companyId: string) => {
   }
 };
 
-watch(companyId, async (id) => {
-  if (id) await fetchBikers(id);
-}, { immediate: true });
+watch(
+  companyId,
+  async (id) => {
+    if (id || user.value?.role === "admin") await fetchBikers(id || "");
+  },
+  { immediate: true },
+);
 </script>

@@ -8,14 +8,28 @@
       :class="toggledBar ? 'w-[58px]' : 'w-64'"
       class="bg-base-100 menu p-0 text-base gap-0 h-full"
     >
-      <div class="flex items-center pl-2 pt-3 pb-1 -ml-1">
-        <div
-          class="w-8 h-8 bg-gradient-to-r from-red-500 to-red-400 rounded-full flex items-center justify-center ml-1 shadow-lg"
-        >
-          <span class="text-white font-bold text-lg">🍅</span>
-        </div>
-        <div v-if="!toggledBar" class="ml-2">
-          <span class="text-lg font-bold text-primary">Tomatiza</span>
+      <div class="flex flex-col gap-2 pl-2 pt-3 pb-2 -ml-1 pr-2">
+        <div class="flex items-center">
+          <div
+            class="w-8 h-8 flex-shrink-0 bg-gradient-to-r from-red-500 to-red-400 rounded-full flex items-center justify-center ml-1 shadow-lg"
+          >
+            <span class="text-white font-bold text-lg">🍅</span>
+          </div>
+          <!-- <div v-if="!toggledBar" class="ml-2 w-full overflow-hidden">
+            <span v-if="authStore.user?.role !== 'admin'" class="text-lg font-bold text-primary block truncate">
+              {{ authStore.user?.company?.name || 'Tomatiza' }}
+            </span>
+            <select 
+              v-else 
+              v-model="selectedCompanyId" 
+              class="select select-bordered select-sm w-full max-w-full bg-base-100 text-primary font-bold px-2 py-0 h-8 min-h-0"
+            >
+              <option :value="null" disabled>Selecione a empresa</option>
+              <option v-for="company in companies" :key="company.id" :value="company.id">
+                {{ company.name }}
+              </option>
+            </select>
+          </div> -->
         </div>
       </div>
       <li
@@ -113,6 +127,13 @@ const route = useRoute();
 const open = ref(false);
 const drawer = useDrawer();
 const { toggledBar } = storeToRefs(drawer);
+
+const companies = ref<any[]>([]);
+const selectedCompanyId = computed({
+  get: () => authStore.activeCompanyId,
+  set: (val) => authStore.setActiveCompanyId(val as string | null),
+});
+
 async function logout() {
   try {
     await authStore.logout();
@@ -195,8 +216,18 @@ function handleToggleOption() {
     if (settingsRef.value) settingsRef.value[0].open = true;
   }
 }
-onMounted(() => {
+onMounted(async () => {
   handleToggleOption();
+  if (authStore.user?.role === "admin") {
+    try {
+      const response = await $fetch<any>("/api/companies");
+      if (response && response.success) {
+        companies.value = response.data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch companies for sidebar:", error);
+    }
+  }
 });
 import {
   CalendarDaysIcon,

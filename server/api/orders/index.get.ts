@@ -2,13 +2,19 @@ import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
+    const auth = requireAuth(event);
     const query = getQuery(event);
-    const companyId = query.companyId as string | undefined;
+    let companyId = query.companyId as string | undefined;
     const status = query.status as string | undefined;
     const clientId = query.clientId as string | undefined;
     const bikerId = query.bikerId as string | undefined;
     const dateFrom = query.dateFrom as string | undefined;
     const dateTo = query.dateTo as string | undefined;
+
+    // Enforcement: Managers can only see their own company's orders
+    if (auth.role === 'manager') {
+      companyId = auth.companyId as string;
+    }
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;

@@ -3,12 +3,18 @@ import dayjs from "dayjs";
 
 export default defineEventHandler(async (event) => {
   try {
+    const auth = requireAuth(event);
     const query = getQuery(event);
-    const companyId = query.companyId as string;
+    let companyId = query.companyId as string;
     const bikerId = query.bikerId as string | undefined;
     const dateRange = query.dateRange as string | undefined;
 
-    if (!companyId) {
+    // Enforcement: Managers can only see their own company's stats
+    if (auth.role === 'manager') {
+      companyId = auth.companyId as string;
+    }
+
+    if (!companyId && auth.role !== 'admin') {
       throw createError({
         statusCode: 400,
         statusMessage: "Company ID is required",
@@ -28,8 +34,11 @@ export default defineEventHandler(async (event) => {
     let ordersQuery = supabase
       .from("orders")
       .select("*, Entregadores(name)")
-      .eq("company_id", companyId)
       .not("biker_id", "is", null);
+
+    if (companyId) {
+      ordersQuery = ordersQuery.eq("company_id", companyId);
+    }
 
     // Biker filter
     if (bikerId && bikerId !== "all") {
@@ -73,23 +82,57 @@ export default defineEventHandler(async (event) => {
     let totalEarned = 0;
     let totalSpent = 0;
 
-    const completedOrders = allOrders.filter(o => o.status === "completed" || o.status === "delivering");
+    const completedOrders = (allOrders || []).filter(o => o.status === "completed" || o.status === "delivering");
 
     completedOrders.forEach(order => {
       totalEarned += order.total || 0;
       totalSpent += order.delivery_fee || 0;
     });
 
-    const recentDeliveries = allOrders
+    const recentDeliveries = (allOrders || [])
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 10);
 
+    // Extra financial stats if a specific biker is selected
+    let financial = null;
+    if (bikerId && bikerId !== "all") {
+      const { data: b } = await supabase
+        .from("Entregadores")
+        .select("wallet, advance_money")
+        .eq("id", bikerId)
+        .single();
+      
+      if (b) {
+        // Unpaid delivery fee sum from biker_payments
+        const { data: unpaidPayments } = await supabase
+          .from("biker_payments")
+          .select("total_deliveries")
+          .eq("biker_id", bikerId)
+          .eq("is_paid", false);
+        
+        let unpaidDeliveriesCount = 0;
+        (unpaidPayments || []).forEach(p => unpaidDeliveriesCount += (Number(p.total_deliveries) || 0));
+        
+        const wallet = Number(b.wallet) || 0;
+        const advances = Number(b.advance_money) || 0;
+        const totalFees = unpaidDeliveriesCount * 1;
+        
+        financial = {
+          wallet,
+          advances,
+          totalFees,
+          netPay: wallet - advances - totalFees
+        };
+      }
+    }
+
     const stats = {
-      totalDeliveries: allOrders.length, // total orders given to bikers
+      totalDeliveries: (allOrders || []).length, // total orders given to bikers
       completedDeliveries: completedOrders.length,
       totalEarned,
       totalSpent,
-      recentDeliveries
+      recentDeliveries,
+      financial
     };
 
     return {
@@ -97,6 +140,7 @@ export default defineEventHandler(async (event) => {
       data: stats
     };
   } catch (error: any) {
+    if (error.statusCode) throw error;
     console.error("Error fetching admin biker stats:", error);
     throw createError({
       statusCode: 500,

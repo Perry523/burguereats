@@ -1,11 +1,11 @@
 <template>
   <div
-    class="h-[calc(100vh-140px)] flex flex-col pt-6 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-auto"
+    class="h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
   >
     <div
-      class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4"
+      class="flex flex-row items-center justify-between mt-2 mb-6 gap-2"
     >
-      <div>
+      <div class="hidden lg:block">
         <h1 class="text-3xl font-bold text-gray-800">
           {{ isBikerRole ? "Meu Painel" : "Painel de Entregadores" }}
         </h1>
@@ -18,14 +18,14 @@
         </p>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto">
         <select
           v-if="!isBikerRole"
           v-model="selectedBiker"
-          class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[200px]"
+          class="flex-1 lg:flex-initial rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[120px] sm:min-w-[200px]"
           :disabled="isLoading"
         >
-          <option value="all">Filtro: Todos</option>
+          <option value="all">Todos</option>
           <option v-for="biker in bikers" :key="biker.id" :value="biker.id">
             {{ biker.name }}
           </option>
@@ -33,7 +33,7 @@
 
         <select
           v-model="selectedDate"
-          class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[180px]"
+          class="flex-1 lg:flex-initial rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[120px] sm:min-w-[180px]"
           :disabled="isLoading"
         >
           <option
@@ -130,54 +130,54 @@
       </UCard> -->
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Meus ganhos / Saldo total -->
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Pedidos entregues</p>
+              <p class="text-gray-500 text-sm font-medium">Saldo Total (Bruto)</p>
               <div class="flex items-baseline gap-2 mt-1">
-                <p class="text-3xl font-bold text-primary">
-                  {{ stats.completedDeliveries }}
+                <p class="text-3xl font-bold text-gray-900">
+                  {{ stats.financial ? formatCurrency(stats.financial.wallet) : formatCurrency(0) }}
                 </p>
-                <span class="text-sm text-gray-500">
-                  / {{ stats.totalDeliveries }} total</span
-                >
               </div>
             </div>
-            <div class="p-3 bg-blue-50 rounded-lg">
-              <UIcon name="i-heroicons-truck" class="w-8 h-8 text-primary" />
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <UIcon name="i-ph-bank-duotone" class="w-8 h-8 text-gray-400" />
             </div>
           </div>
         </UCard>
 
-        <!-- <UCard class="bg-white shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-500 text-sm font-medium">Valor Total dos Pedidos</p>
-              <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
-                {{ formatCurrency(stats.totalEarned) }}
-              </p>
-            </div>
-            <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
-              <UIcon name="i-heroicons-banknotes" class="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-        </UCard> -->
-
+        <!-- Descontos pendentes -->
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">
-                Valor a ser recebido
-              </p>
-              <p class="text-3xl font-bold text-orange-600 mt-1 shrink-0">
-                {{ formatCurrency(stats.totalSpent) }}
+              <p class="text-gray-500 text-sm font-medium">Descontos Pendentes</p>
+              <div class="mt-1">
+                <p class="text-3xl font-bold text-red-600">
+                  {{ stats.financial ? formatCurrency(stats.financial.advances + stats.financial.totalFees) : formatCurrency(0) }}
+                </p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider" v-if="stats.financial">
+                  {{ formatCurrency(stats.financial.advances) }} vales + {{ formatCurrency(stats.financial.totalFees) }} taxas
+                </p>
+              </div>
+            </div>
+            <div class="p-3 bg-red-50 rounded-lg">
+              <UIcon name="i-ph-trend-down-duotone" class="w-8 h-8 text-red-400" />
+            </div>
+          </div>
+        </UCard>
+
+        <!-- Lucro Líquido -->
+        <UCard class="bg-white shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Líquido Disponível</p>
+              <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
+                {{ stats.financial ? formatCurrency(stats.financial.netPay) : formatCurrency(0) }}
               </p>
             </div>
-            <div class="p-3 bg-orange-50 rounded-lg shrink-0 ml-2">
-              <UIcon
-                name="i-heroicons-currency-dollar"
-                class="w-8 h-8 text-orange-500"
-              />
+            <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
+              <UIcon name="i-ph-money-duotone" class="w-8 h-8 text-green-600" />
             </div>
           </div>
         </UCard>
@@ -305,6 +305,12 @@ const stats = ref({
   totalEarned: 0,
   totalSpent: 0,
   recentDeliveries: [] as any[],
+  financial: null as {
+    wallet: number;
+    advances: number;
+    totalFees: number;
+    netPay: number;
+  } | null,
 });
 
 const selectedBikerData = computed(() => {

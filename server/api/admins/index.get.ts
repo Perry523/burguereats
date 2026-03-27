@@ -2,8 +2,14 @@ import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
+    const user = requireAuth(event);
     const query = getQuery(event);
-    const companyId = query.companyId as string;
+    let companyId = query.companyId as string;
+
+    // Enforcement: Managers can only see their own company
+    if (user.role === 'manager') {
+      companyId = user.companyId as string;
+    }
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;

@@ -136,6 +136,49 @@
         </button>
       </form>
     </div>
+
+    <!-- Operating Hours -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Horários de Funcionamento</h2>
+      <p class="text-sm text-gray-500 mb-4">Defina os horários de abertura e fechamento para cada dia da semana.</p>
+      <form @submit.prevent="saveOperatingHours" class="space-y-3 max-w-lg">
+        <div v-for="(day, idx) in dayLabels" :key="idx" class="grid grid-cols-[120px_1fr_1fr_auto] items-center gap-3">
+          <span class="text-sm font-medium text-gray-700">{{ day }}</span>
+          <div>
+            <input
+              v-model="operatingHours[idx].open_time"
+              type="time"
+              :disabled="!operatingHours[idx].enabled"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm disabled:opacity-40 disabled:bg-gray-100"
+            />
+          </div>
+          <div>
+            <input
+              v-model="operatingHours[idx].close_time"
+              type="time"
+              :disabled="!operatingHours[idx].enabled"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm disabled:opacity-40 disabled:bg-gray-100"
+            />
+          </div>
+          <label class="flex items-center gap-1.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              v-model="operatingHours[idx].enabled"
+              class="checkbox checkbox-sm checkbox-primary"
+            />
+            <span class="text-xs text-gray-500">Aberto</span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          :disabled="isSavingHours"
+          class="mt-4 px-6 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 transition-colors"
+        >
+          {{ isSavingHours ? 'Salvando...' : 'Salvar Horários' }}
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -148,9 +191,22 @@ const auth = useAuthStore();
 const toast = useToast();
 
 const isSaving = ref(false);
+const isSavingHours = ref(false);
 const isUploadingLogo = ref(false);
 const logoUrl = ref("");
 const logoInput = ref<HTMLInputElement | null>(null);
+
+const dayLabels = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+interface DayHours {
+  open_time: string;
+  close_time: string;
+  enabled: boolean;
+}
+
+const operatingHours = ref<DayHours[]>(
+  Array.from({ length: 7 }, () => ({ open_time: '08:00', close_time: '22:00', enabled: true }))
+);
 
 const form = reactive({
   name: "",
@@ -183,6 +239,21 @@ const loadCompany = async () => {
       form.state = c.state || "";
       form.zipCode = c.zip_code || c.zipCode || "";
       logoUrl.value = c.logo || "";
+
+      // Load operating hours
+      if (c.operating_hours && typeof c.operating_hours === 'object') {
+        for (let i = 0; i < 7; i++) {
+          if (c.operating_hours[i]) {
+            operatingHours.value[i] = {
+              open_time: c.operating_hours[i].open_time || '08:00',
+              close_time: c.operating_hours[i].close_time || '22:00',
+              enabled: c.operating_hours[i].enabled !== false,
+            };
+          } else {
+            operatingHours.value[i] = { open_time: '', close_time: '', enabled: false };
+          }
+        }
+      }
     }
   } catch (error) {
     console.error("Error loading company:", error);
@@ -224,6 +295,44 @@ const saveCompany = async () => {
     });
   } finally {
     isSaving.value = false;
+  }
+};
+
+const saveOperatingHours = async () => {
+  if (!companyId.value) return;
+
+  isSavingHours.value = true;
+  try {
+    // Build the operating_hours object: key is day index (0-6)
+    const hoursPayload: Record<number, any> = {};
+    for (let i = 0; i < 7; i++) {
+      const h = operatingHours.value[i];
+      if (h.enabled && h.open_time && h.close_time) {
+        hoursPayload[i] = {
+          open_time: h.open_time,
+          close_time: h.close_time,
+          enabled: true,
+        };
+      } else {
+        hoursPayload[i] = { open_time: '', close_time: '', enabled: false };
+      }
+    }
+
+    await $fetch(`/api/companies/${companyId.value}`, {
+      method: "PUT",
+      body: { operating_hours: hoursPayload },
+    });
+
+    toast.add({ color: "success", title: "Horários salvos com sucesso" });
+  } catch (error: any) {
+    console.error("Error saving operating hours:", error);
+    toast.add({
+      color: "error",
+      title: "Erro ao salvar horários",
+      description: error?.data?.statusMessage || "Tente novamente",
+    });
+  } finally {
+    isSavingHours.value = false;
   }
 };
 
@@ -279,3 +388,4 @@ onMounted(async () => {
   await loadCompany();
 });
 </script>
+

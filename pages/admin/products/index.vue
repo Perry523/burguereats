@@ -1,7 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
-      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
       :rows="paginatedProducts"
       :total-items="products.length"
@@ -13,12 +13,19 @@
       @delete="deleteProduct($event.id)"
     >
       <template #filter>
-        <div class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4">
+        <div
+          class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4"
+        >
           <div class="flex flex-wrap items-center gap-4 flex-1">
             <!-- Search by Name -->
             <div class="relative w-full max-w-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              <div
+                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+              >
+                <UIcon
+                  name="i-heroicons-magnifying-glass"
+                  class="h-5 w-5 text-gray-400"
+                />
               </div>
               <input
                 id="search"
@@ -35,7 +42,9 @@
               class="rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
             >
               <option value="">Todas Categorias</option>
-              <option v-for="cat in uniqueCategories" :key="cat" :value="cat">{{ cat }}</option>
+              <option v-for="cat in uniqueCategories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
             </select>
 
             <!-- Stock Filter -->
@@ -73,8 +82,6 @@
           </button>
         </div>
       </template>
-
-
 
       <template #name="{ row }">
         <div class="flex items-center gap-3">
@@ -150,7 +157,7 @@ interface Product {
 }
 
 const auth = useAuthStore();
-const { user } = storeToRefs(auth);
+const { user, currentCompanyId } = storeToRefs(auth);
 const { getCurrentUser } = auth;
 
 const router = useRouter();
@@ -166,11 +173,13 @@ const stockFilter = ref("all");
 const orderBy = ref("newest");
 
 const uniqueCategories = computed(() => {
-  const categories = new Set(products.value.map(p => p.category).filter(Boolean));
+  const categories = new Set(
+    products.value.map((p) => p.category).filter(Boolean),
+  );
   return Array.from(categories).sort();
 });
 
-const companyId = computed(() => user.value?.company?.id ?? "");
+const companyId = computed(() => currentCompanyId.value || "");
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value];
@@ -178,22 +187,22 @@ const filteredProducts = computed(() => {
   // Apply Search
   if (search.value) {
     const term = search.value.toLowerCase();
-    filtered = filtered.filter(p => p.name.toLowerCase().includes(term));
+    filtered = filtered.filter((p) => p.name.toLowerCase().includes(term));
   }
 
   // Apply Category Filter
   if (categoryFilter.value) {
-    filtered = filtered.filter(p => p.category === categoryFilter.value);
+    filtered = filtered.filter((p) => p.category === categoryFilter.value);
   }
 
   // Apply Stock Filter
   if (stockFilter.value !== "all") {
     if (stockFilter.value === "low") {
-      filtered = filtered.filter(p => p.stock > 0 && p.stock <= 10);
+      filtered = filtered.filter((p) => p.stock > 0 && p.stock <= 10);
     } else if (stockFilter.value === "out") {
-      filtered = filtered.filter(p => p.stock === 0);
+      filtered = filtered.filter((p) => p.stock === 0);
     } else if (stockFilter.value === "in_stock") {
-      filtered = filtered.filter(p => p.stock > 0);
+      filtered = filtered.filter((p) => p.stock > 0);
     }
   }
 
@@ -211,7 +220,7 @@ const filteredProducts = computed(() => {
       case "oldest":
         // Fallback to original order (which is usually chronological if not sorted)
         // Since we can't reliably know creation date here unless we add it, we do a stable reverse.
-        return 1; 
+        return 1;
       case "newest":
       default:
         // By default the API returns newest first, so stable sort.
@@ -223,7 +232,7 @@ const filteredProducts = computed(() => {
 });
 
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredProducts.value.length / perPage.value))
+  Math.max(1, Math.ceil(filteredProducts.value.length / perPage.value)),
 );
 
 const paginatedProducts = computed(() => {
@@ -232,9 +241,9 @@ const paginatedProducts = computed(() => {
 });
 
 const columns = [
-  { key: "name", label: "Produto" },
+  { key: "name", label: "Produto", sm: true },
   { key: "category", label: "Categoria" },
-  { key: "sell_price", label: "Preço Venda", type: "currency" },
+  { key: "sell_price", label: "Preço Venda", type: "currency", sm: true },
   { key: "stock", label: "Estoque" },
 ];
 
@@ -245,7 +254,7 @@ watch(
     if (page.value > maxPage) {
       page.value = maxPage;
     }
-  }
+  },
 );
 
 watch(page, (value) => {
@@ -275,12 +284,15 @@ const fetchProducts = async (id: string | undefined) => {
   }
   isLoading.value = true;
   try {
-    const query = new URLSearchParams({ companyId: id, _t: Date.now().toString() });
+    const query = new URLSearchParams({
+      companyId: id,
+      _t: Date.now().toString(),
+    });
     if (search.value) {
-      query.append('search', search.value);
+      query.append("search", search.value);
     }
     const response = await $fetch<{ success: boolean; data?: Product[] }>(
-      `/api/products?${query.toString()}`
+      `/api/products?${query.toString()}`,
     );
     products.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
@@ -310,7 +322,7 @@ const deleteProduct = async (id: string) => {
 const ensureResources = async () => {
   let id = companyId.value;
   if (!id) {
-    const currentUser = await getCurrentUser() as any;
+    const currentUser = (await getCurrentUser()) as any;
     id = currentUser?.company?.id;
   }
   await fetchProducts(id);
@@ -323,7 +335,7 @@ watch(
       fetchProducts(id);
     }
   },
-  { immediate: false }
+  { immediate: false },
 );
 
 onMounted(async () => {

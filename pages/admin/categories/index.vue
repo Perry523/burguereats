@@ -1,7 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
-      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
       :rows="paginatedCategories"
       :total-items="categories.length"
@@ -12,12 +12,19 @@
       @delete="deleteCategory($event.id)"
     >
       <template #filter>
-        <div class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4">
+        <div
+          class="w-full px-5 pb-4 flex flex-wrap items-center justify-between gap-4"
+        >
           <div class="flex flex-wrap items-center gap-4 flex-1">
             <!-- Search by Name -->
             <div class="relative w-full max-w-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              <div
+                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+              >
+                <UIcon
+                  name="i-heroicons-magnifying-glass"
+                  class="h-5 w-5 text-gray-400"
+                />
               </div>
               <input
                 id="search"
@@ -55,7 +62,7 @@
 
       <template #description="{ row }">
         <span class="text-sm text-gray-600">
-          {{ row.description || '-' }}
+          {{ row.description || "-" }}
         </span>
       </template>
 
@@ -67,8 +74,6 @@
     </TableBase>
   </div>
 </template>
-
-
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
@@ -89,7 +94,7 @@ interface CategoryRecord {
 }
 
 const auth = useAuth();
-const { user } = auth;
+const { user, currentCompanyId } = auth;
 const { getCurrentUser } = auth;
 const toast = useToast();
 
@@ -107,7 +112,7 @@ const filteredCategories = computed(() => {
   // Apply Search
   if (search.value) {
     const term = search.value.toLowerCase();
-    filtered = filtered.filter(c => c.name.toLowerCase().includes(term));
+    filtered = filtered.filter((c) => c.name.toLowerCase().includes(term));
   }
 
   // Apply Sort
@@ -122,9 +127,13 @@ const filteredCategories = computed(() => {
       case "order_desc":
         return b.order - a.order;
       case "oldest":
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       case "newest":
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       default:
         return 0;
     }
@@ -133,7 +142,9 @@ const filteredCategories = computed(() => {
   return filtered;
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredCategories.value.length / itemsPerPage.value)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredCategories.value.length / itemsPerPage.value)),
+);
 const paginatedCategories = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value;
   return filteredCategories.value.slice(start, start + itemsPerPage.value);
@@ -162,7 +173,7 @@ watch(
     if (page.value > maxPage) {
       page.value = maxPage;
     }
-  }
+  },
 );
 
 const formatDate = (value: string | Date | null | undefined) => {
@@ -177,13 +188,16 @@ const formatDate = (value: string | Date | null | undefined) => {
 };
 
 const fetchCategories = async () => {
-  const companyId = user.value?.company?.id;
+  const companyId = currentCompanyId.value;
   if (!companyId) {
     return;
   }
   isLoading.value = true;
   try {
-    const response = await $fetch<{ success: boolean; data?: CategoryRecord[] }>(`/api/categories?companyId=${companyId}`);
+    const response = await $fetch<{
+      success: boolean;
+      data?: CategoryRecord[];
+    }>(`/api/categories?companyId=${companyId}`);
     categories.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -208,8 +222,18 @@ const deleteCategory = async (id: string) => {
   }
 };
 
+watch(
+  currentCompanyId,
+  (id) => {
+    if (id) {
+      fetchCategories();
+    }
+  },
+  { immediate: false },
+);
+
 onMounted(async () => {
-  if (!user.value?.company?.id) {
+  if (!currentCompanyId.value) {
     await getCurrentUser();
   }
   await fetchCategories();

@@ -1,7 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
-      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
       :rows="paginatedOrders"
       :total-items="orders.length"
@@ -14,11 +14,15 @@
     >
       <template #filter>
         <div class="w-full px-5 pb-4 flex items-center justify-between gap-2">
-          
           <!-- Search Bar (Always straight on the left, takes available space) -->
           <div class="relative flex-1 max-w-sm">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+            >
+              <UIcon
+                name="i-heroicons-magnifying-glass"
+                class="h-5 w-5 text-gray-400"
+              />
             </div>
             <input
               id="search"
@@ -31,19 +35,45 @@
 
           <!-- Desktop Hidden Filters (Only show on sm+) -->
           <div class="hidden sm:flex items-center gap-2">
-            <select v-model="selectedClient" class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]">
+            <select
+              v-model="selectedClient"
+              class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
               <option value="all">Todos os clientes</option>
-              <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}</option>
+              <option
+                v-for="client in clients"
+                :key="client.id"
+                :value="client.id"
+              >
+                {{ client.name }}
+              </option>
             </select>
-            <select v-model="selectedProfessional" class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]">
+            <select
+              v-model="selectedProfessional"
+              class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
               <option value="all">Todos os entregadores</option>
-              <option v-for="biker in bikers" :key="biker.id" :value="biker.id">{{ biker.name }}</option>
+              <option v-for="biker in bikers" :key="biker.id" :value="biker.id">
+                {{ biker.name }}
+              </option>
             </select>
 
-            <select v-model="selectedDateRange" class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]">
-              <option v-for="opt in dateRangeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            <select
+              v-model="selectedDateRange"
+              class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
+              <option
+                v-for="opt in dateRangeOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
             </select>
-            <select v-model="orderBy" class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]">
+            <select
+              v-model="orderBy"
+              class="rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[150px]"
+            >
               <option value="newest">Mais Recentes</option>
               <option value="oldest">Mais Antigos</option>
               <option value="total_desc">Maior Valor</option>
@@ -61,7 +91,7 @@
             >
               <UIcon name="i-heroicons-funnel" class="h-5 w-5" />
             </button>
-            
+
             <!-- New Record / Add Button -->
             <NuxtLink to="/admin/orders/create">
               <button
@@ -88,18 +118,25 @@
             {{ row.customer_name }}
           </p>
           <div class="flex items-center gap-2 mt-1 sm:hidden">
-             <!-- On mobile, show an inline status pill next to the address-->
-             <span
-               :class="[
-                 'inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase',
-                 statusStyles[row.status] || 'bg-gray-100 text-gray-800',
-               ]"
-             >
-               {{ statusLabels[row.status] || row.status }}
-             </span>
+            <!-- On mobile, show an inline status pill next to the address-->
+            <span
+              :class="[
+                'inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase',
+                statusStyles[row.status] || 'bg-gray-100 text-gray-800',
+              ]"
+            >
+              {{ statusLabels[row.status] || row.status }}
+            </span>
           </div>
-          <p class="text-xs text-gray-500 mt-1 line-clamp-1 truncate" :title="row.customer_address">
-            {{ row.customer_address === 'Retirada no local' ? '🏪 Retirada' : row.customer_address }}
+          <p
+            class="text-xs text-gray-500 mt-1 line-clamp-1 truncate"
+            :title="row.customer_address"
+          >
+            {{
+              row.customer_address === "Retirada no local"
+                ? "🏪 Retirada"
+                : row.customer_address
+            }}
           </p>
         </div>
       </template>
@@ -136,7 +173,10 @@
             @click.prevent="updateStatusDirectly(row, 'completed')"
             class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors duration-150 cursor-pointer w-full text-left"
           >
-            <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-green-500" />
+            <UIcon
+              name="i-heroicons-check-circle"
+              class="w-5 h-5 text-green-500"
+            />
             Finalizar
           </a>
         </li>
@@ -147,20 +187,28 @@
     <BaseDialog v-model="showMobileFilters" title="Filtros">
       <div class="p-4 space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Cliente</label
+          >
           <select
             v-model="selectedClient"
             class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-primary focus:ring-primary"
           >
             <option value="all">Todos os clientes</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
+            <option
+              v-for="client in clients"
+              :key="client.id"
+              :value="client.id"
+            >
               {{ client.name }}
             </option>
           </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Entregador</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Entregador</label
+          >
           <select
             v-model="selectedProfessional"
             class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-primary focus:ring-primary"
@@ -171,21 +219,29 @@
             </option>
           </select>
         </div>
-        
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Período</label
+          >
           <select
             v-model="selectedDateRange"
             class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-primary focus:ring-primary"
           >
-            <option v-for="opt in dateRangeOptions" :key="opt.value" :value="opt.value">
+            <option
+              v-for="opt in dateRangeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </option>
           </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Ordenar por</label
+          >
           <select
             v-model="orderBy"
             class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-primary focus:ring-primary"
@@ -210,11 +266,18 @@
     <BaseDialog v-model="showBikerModal" title="Vincular Entregador e Entregar">
       <div class="p-4 space-y-4">
         <p class="text-sm text-gray-600">
-          Selecione o entregador responsável por este pedido. Ao confirmar, o status será alterado para <span class="inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase bg-purple-100 text-purple-800">Em entrega</span>.
+          Selecione o entregador responsável por este pedido. Ao confirmar, o
+          status será alterado para
+          <span
+            class="inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase bg-purple-100 text-purple-800"
+            >Em entrega</span
+          >.
         </p>
-        
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Entregador</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Entregador</label
+          >
           <select
             v-model="selectedBikerToAssign"
             class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-primary focus:ring-primary"
@@ -238,29 +301,50 @@
             :disabled="!selectedBikerToAssign || isUpdatingStatus"
             class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-focus disabled:opacity-50"
           >
-            {{ isUpdatingStatus ? 'Processando...' : 'Confirmar e Entregar' }}
+            {{ isUpdatingStatus ? "Processando..." : "Confirmar e Entregar" }}
           </button>
         </div>
       </div>
     </BaseDialog>
 
     <!-- Order Details Modal -->
-    <BaseDialog v-model="showOrderModal" title="Detalhes do Pedido" :extraLarge="true">
+    <BaseDialog
+      v-model="showOrderModal"
+      title="Detalhes do Pedido"
+      :extraLarge="true"
+    >
       <div v-if="isLoadingOrder" class="py-12 text-center text-gray-500">
-        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin mx-auto mb-2" />
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-8 h-8 animate-spin mx-auto mb-2"
+        />
         <p>Carregando pedido...</p>
       </div>
-      <div v-else-if="selectedOrder" class="p-4 sm:p-6 grid gap-6 md:grid-cols-3">
+      <div
+        v-else-if="selectedOrder"
+        class="p-4 sm:p-6 grid gap-6 md:grid-cols-3"
+      >
         <!-- Main details -->
         <div class="md:col-span-2 space-y-6">
           <!-- Items -->
           <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Itens do Pedido</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">
+              Itens do Pedido
+            </h3>
             <div class="divide-y divide-gray-200">
-              <div v-for="item in selectedOrder.items" :key="item.id" class="py-3 flex justify-between items-center">
+              <div
+                v-for="item in selectedOrder.items"
+                :key="item.id"
+                class="py-3 flex justify-between items-center"
+              >
                 <div>
-                  <p class="font-medium text-gray-900">{{ item.dish_name || item.product_name }}</p>
-                  <p class="text-sm text-gray-500">{{ item.quantity }}x {{ currencyFormatter.format(item.unit_price) }}</p>
+                  <p class="font-medium text-gray-900">
+                    {{ item.dish_name || item.product_name }}
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    {{ item.quantity }}x
+                    {{ currencyFormatter.format(item.unit_price) }}
+                  </p>
                 </div>
                 <div class="font-semibold text-gray-900">
                   {{ currencyFormatter.format(item.total_price) }}
@@ -276,9 +360,14 @@
           </div>
 
           <!-- Notes -->
-          <div v-if="selectedOrder.notes" class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+          <div
+            v-if="selectedOrder.notes"
+            class="bg-white rounded-lg border border-gray-200 shadow-sm p-5"
+          >
             <h2 class="text-lg font-semibold mb-2">Observações</h2>
-            <p class="text-gray-700 whitespace-pre-line">{{ selectedOrder.notes }}</p>
+            <p class="text-gray-700 whitespace-pre-line">
+              {{ selectedOrder.notes }}
+            </p>
           </div>
         </div>
 
@@ -291,7 +380,8 @@
               <span
                 :class="[
                   'inline-flex items-center rounded-full px-3 py-1 font-semibold text-sm',
-                  statusStyles[selectedOrder.status] || 'bg-gray-100 text-gray-800',
+                  statusStyles[selectedOrder.status] ||
+                    'bg-gray-100 text-gray-800',
                 ]"
               >
                 {{ statusLabels[selectedOrder.status] || selectedOrder.status }}
@@ -309,11 +399,20 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500">Telefone</p>
-                <p class="font-medium">{{ formatPhone(selectedOrder.customer_phone) }}</p>
+                <p class="font-medium">
+                  {{ formatPhone(selectedOrder.customer_phone) }}
+                </p>
               </div>
-              <div v-if="selectedOrder.customer_address && selectedOrder.customer_address !== 'Retirada no local'">
+              <div
+                v-if="
+                  selectedOrder.customer_address &&
+                  selectedOrder.customer_address !== 'Retirada no local'
+                "
+              >
                 <p class="text-sm text-gray-500">Endereço</p>
-                <p class="font-medium whitespace-pre-line">{{ selectedOrder.customer_address }}</p>
+                <p class="font-medium whitespace-pre-line">
+                  {{ selectedOrder.customer_address }}
+                </p>
               </div>
               <div v-else>
                 <p class="text-sm text-gray-500">Tipo de Entrega</p>
@@ -346,7 +445,7 @@ interface Order {
 }
 
 const auth = useAuthStore();
-const { user } = storeToRefs(auth);
+const { user, activeCompanyId } = storeToRefs(auth);
 const { getCurrentUser } = auth;
 
 const orders = ref<Order[]>([]);
@@ -375,7 +474,7 @@ const isUpdatingStatus = ref(false);
 const selectedOrder = ref<any>(null);
 const toast = useToast();
 
-const companyId = computed(() => user.value?.company?.id ?? "");
+const companyId = computed(() => activeCompanyId.value || "");
 
 const filteredOrders = computed(() => {
   let filtered = [...orders.value];
@@ -383,9 +482,10 @@ const filteredOrders = computed(() => {
   // Apply Search
   if (search.value) {
     const term = search.value.toLowerCase();
-    filtered = filtered.filter(o => 
-      o.customer_name.toLowerCase().includes(term) || 
-      o.id.toLowerCase().includes(term)
+    filtered = filtered.filter(
+      (o) =>
+        o.customer_name.toLowerCase().includes(term) ||
+        o.id.toLowerCase().includes(term),
     );
   }
 
@@ -400,9 +500,13 @@ const filteredOrders = computed(() => {
       case "total_desc":
         return b.total - a.total;
       case "oldest":
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        return (
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
       case "newest":
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       default:
         return 0;
     }
@@ -416,20 +520,25 @@ const paginatedOrders = computed(() => {
   return filteredOrders.value.slice(start, start + itemsPerPage.value);
 });
 
-watch([search, orderBy, selectedClient, selectedProfessional, selectedDateRange], () => {
-  page.value = 1;
-});
+watch(
+  [search, orderBy, selectedClient, selectedProfessional, selectedDateRange],
+  () => {
+    page.value = 1;
+  },
+);
 
 const dateRangeOptions = [
-  { label: 'Todos os períodos', value: 'all' },
-  { label: 'Hoje', value: 'today' },
-  { label: 'Ontem', value: 'yesterday' },
-  { label: 'Última semana', value: 'last_week' },
-  { label: 'Último mês', value: 'last_month' },
+  { label: "Todos os períodos", value: "all" },
+  { label: "Hoje", value: "today" },
+  { label: "Ontem", value: "yesterday" },
+  { label: "Última semana", value: "last_week" },
+  { label: "Último mês", value: "last_month" },
 ];
 
-const getDateRange = (range: string): { dateFrom?: string; dateTo?: string } => {
-  if (range === 'all') return {};
+const getDateRange = (
+  range: string,
+): { dateFrom?: string; dateTo?: string } => {
+  if (range === "all") return {};
   const now = new Date();
   const startOfDay = (d: Date) => {
     const copy = new Date(d);
@@ -443,22 +552,34 @@ const getDateRange = (range: string): { dateFrom?: string; dateTo?: string } => 
   };
 
   switch (range) {
-    case 'today':
-      return { dateFrom: startOfDay(now).toISOString(), dateTo: endOfDay(now).toISOString() };
-    case 'yesterday': {
+    case "today":
+      return {
+        dateFrom: startOfDay(now).toISOString(),
+        dateTo: endOfDay(now).toISOString(),
+      };
+    case "yesterday": {
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
-      return { dateFrom: startOfDay(yesterday).toISOString(), dateTo: endOfDay(yesterday).toISOString() };
+      return {
+        dateFrom: startOfDay(yesterday).toISOString(),
+        dateTo: endOfDay(yesterday).toISOString(),
+      };
     }
-    case 'last_week': {
+    case "last_week": {
       const weekAgo = new Date(now);
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return { dateFrom: startOfDay(weekAgo).toISOString(), dateTo: endOfDay(now).toISOString() };
+      return {
+        dateFrom: startOfDay(weekAgo).toISOString(),
+        dateTo: endOfDay(now).toISOString(),
+      };
     }
-    case 'last_month': {
+    case "last_month": {
       const monthAgo = new Date(now);
       monthAgo.setMonth(monthAgo.getMonth() - 1);
-      return { dateFrom: startOfDay(monthAgo).toISOString(), dateTo: endOfDay(now).toISOString() };
+      return {
+        dateFrom: startOfDay(monthAgo).toISOString(),
+        dateTo: endOfDay(now).toISOString(),
+      };
     }
     default:
       return {};
@@ -475,9 +596,9 @@ const columns = [
 
 const tableActions = [
   {
-    name: 'Ver Detalhes',
-    action: (row: any) => openOrderModal(row.id)
-  }
+    name: "Ver Detalhes",
+    action: (row: any) => openOrderModal(row.id),
+  },
 ];
 
 const statusOptions = [
@@ -521,7 +642,7 @@ const formatDate = (dateString: string) => {
 };
 
 const formatPhone = (phone: string) => {
-  if (!phone || phone === 'Retirada no local') return phone;
+  if (!phone || phone === "Retirada no local") return phone;
   const val = phone.replace(/\D/g, "");
   if (val.length === 11) {
     return `(${val.substring(0, 2)}) ${val.substring(2, 7)}-${val.substring(7)}`;
@@ -531,7 +652,13 @@ const formatPhone = (phone: string) => {
   return phone;
 };
 
-const fetchOrders = async (companyId: string, status?: string, clientId?: string, bikerId?: string, dateRange?: string) => {
+const fetchOrders = async (
+  companyId: string,
+  status?: string,
+  clientId?: string,
+  bikerId?: string,
+  dateRange?: string,
+) => {
   isLoading.value = true;
   try {
     let url = `/api/orders?companyId=${companyId}`;
@@ -544,7 +671,7 @@ const fetchOrders = async (companyId: string, status?: string, clientId?: string
     if (bikerId && bikerId !== "all") {
       url += `&bikerId=${bikerId}`;
     }
-    const { dateFrom, dateTo } = getDateRange(dateRange || 'all');
+    const { dateFrom, dateTo } = getDateRange(dateRange || "all");
     if (dateFrom) url += `&dateFrom=${encodeURIComponent(dateFrom)}`;
     if (dateTo) url += `&dateTo=${encodeURIComponent(dateTo)}`;
 
@@ -560,7 +687,9 @@ const fetchOrders = async (companyId: string, status?: string, clientId?: string
 
 const loadClients = async (companyId: string) => {
   try {
-    const response = await $fetch<{ success: boolean; data: any[] }>(`/api/clients?companyId=${companyId}`);
+    const response = await $fetch<{ success: boolean; data: any[] }>(
+      `/api/clients?companyId=${companyId}`,
+    );
     if (response.success) {
       clients.value = response.data;
     }
@@ -571,7 +700,9 @@ const loadClients = async (companyId: string) => {
 
 const loadBikers = async (companyId: string) => {
   try {
-    const response = await $fetch<{ success: boolean; data: any[] }>(`/api/bikers?companyId=${companyId}`);
+    const response = await $fetch<{ success: boolean; data: any[] }>(
+      `/api/bikers?companyId=${companyId}`,
+    );
     if (response.success) {
       bikers.value = response.data;
     }
@@ -585,7 +716,9 @@ const openOrderModal = async (orderId: string) => {
   isLoadingOrder.value = true;
   selectedOrder.value = null;
   try {
-    const response = await $fetch<{ success: boolean; data?: any }>(`/api/orders/${orderId}`);
+    const response = await $fetch<{ success: boolean; data?: any }>(
+      `/api/orders/${orderId}`,
+    );
     if (response.success && response.data) {
       selectedOrder.value = response.data;
     }
@@ -603,26 +736,39 @@ const openBikerModal = (row: any) => {
 };
 
 const assignBikerAndDeliver = async () => {
-  if (!selectedOrderIdForBiker.value || !selectedBikerToAssign.value || isUpdatingStatus.value) return;
+  if (
+    !selectedOrderIdForBiker.value ||
+    !selectedBikerToAssign.value ||
+    isUpdatingStatus.value
+  )
+    return;
 
   isUpdatingStatus.value = true;
   try {
-    const response = await $fetch(`/api/orders/${selectedOrderIdForBiker.value}`, {
-      method: "PUT" as any,
-      body: { status: 'delivering', biker_id: selectedBikerToAssign.value },
-    });
+    const response = await $fetch(
+      `/api/orders/${selectedOrderIdForBiker.value}`,
+      {
+        method: "PUT" as any,
+        body: { status: "delivering", biker_id: selectedBikerToAssign.value },
+      },
+    );
 
     if (response.success) {
-      const index = orders.value.findIndex(o => o.id === selectedOrderIdForBiker.value);
+      const index = orders.value.findIndex(
+        (o) => o.id === selectedOrderIdForBiker.value,
+      );
       if (index !== -1) {
-        orders.value[index].status = 'delivering';
+        orders.value[index].status = "delivering";
       }
-      toast.add({ color: 'success', title: 'Entregador selecionado e pedido em entrega!' });
+      toast.add({
+        color: "success",
+        title: "Entregador selecionado e pedido em entrega!",
+      });
       showBikerModal.value = false;
     }
   } catch (error) {
     console.error("Error linking biker:", error);
-    toast.add({ color: 'error', title: 'Erro ao registrar entrega' });
+    toast.add({ color: "error", title: "Erro ao registrar entrega" });
   } finally {
     isUpdatingStatus.value = false;
   }
@@ -640,18 +786,23 @@ const updateStatusDirectly = async (row: any, newStatus: string) => {
 
     if (response.success) {
       row.status = newStatus;
-      toast.add({ color: 'success', title: 'Pedido finalizado com sucesso!' });
+      toast.add({ color: "success", title: "Pedido finalizado com sucesso!" });
     }
   } catch (error) {
     console.error("Error updating order status directly:", error);
-    toast.add({ color: 'error', title: 'Erro ao finalizar pedido' });
+    toast.add({ color: "error", title: "Erro ao finalizar pedido" });
   } finally {
     isUpdatingStatus.value = false;
   }
 };
 
 const updateStatus = async (newStatus: string) => {
-  if (!selectedOrder.value || isUpdatingStatus.value || selectedOrder.value.status === newStatus) return;
+  if (
+    !selectedOrder.value ||
+    isUpdatingStatus.value ||
+    selectedOrder.value.status === newStatus
+  )
+    return;
 
   isUpdatingStatus.value = true;
   try {
@@ -663,7 +814,9 @@ const updateStatus = async (newStatus: string) => {
     if (response.success) {
       selectedOrder.value.status = newStatus;
       // Also update the order in the list so we don't need a full refetch
-      const index = orders.value.findIndex(o => o.id === selectedOrder.value.id);
+      const index = orders.value.findIndex(
+        (o) => o.id === selectedOrder.value.id,
+      );
       if (index !== -1) {
         orders.value[index].status = newStatus;
       }
@@ -676,11 +829,20 @@ const updateStatus = async (newStatus: string) => {
   }
 };
 
-watch([selectedStatus, selectedClient, selectedProfessional, selectedDateRange], async ([newStatus, newClient, newProfessional, newDateRange]) => {
-  if (companyId.value) {
-    await fetchOrders(companyId.value, newStatus, newClient, newProfessional, newDateRange);
-  }
-});
+watch(
+  [selectedStatus, selectedClient, selectedProfessional, selectedDateRange],
+  async ([newStatus, newClient, newProfessional, newDateRange]) => {
+    if (companyId.value) {
+      await fetchOrders(
+        companyId.value,
+        newStatus,
+        newClient,
+        newProfessional,
+        newDateRange,
+      );
+    }
+  },
+);
 
 watch(
   companyId,
@@ -689,11 +851,17 @@ watch(
       await Promise.all([
         loadClients(id),
         loadBikers(id),
-        fetchOrders(id, selectedStatus.value, selectedClient.value, selectedProfessional.value, selectedDateRange.value)
+        fetchOrders(
+          id,
+          selectedStatus.value,
+          selectedClient.value,
+          selectedProfessional.value,
+          selectedDateRange.value,
+        ),
       ]);
     }
   },
-  { immediate: false }
+  { immediate: false },
 );
 
 onMounted(async () => {
@@ -706,7 +874,13 @@ onMounted(async () => {
     await Promise.all([
       loadClients(id),
       loadBikers(id),
-      fetchOrders(id, selectedStatus.value, selectedClient.value, selectedProfessional.value, selectedDateRange.value)
+      fetchOrders(
+        id,
+        selectedStatus.value,
+        selectedClient.value,
+        selectedProfessional.value,
+        selectedDateRange.value,
+      ),
     ]);
   }
 });

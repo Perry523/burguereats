@@ -140,7 +140,7 @@
                 Valor Total dos Pedidos
               </p>
               <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
-                {{ formatCurrency(stats.totalEarned) }}
+                {{ formatCurrency(stats.totalEarned || 0) }}
               </p>
             </div>
             <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
@@ -159,7 +159,7 @@
                 Valor pago a entregadores
               </p>
               <p class="text-3xl font-bold text-orange-600 mt-1 shrink-0">
-                {{ formatCurrency(stats.totalSpent) }}
+                {{ formatCurrency(stats.totalSpent || 0) }}
               </p>
             </div>
             <div class="p-3 bg-orange-50 rounded-lg shrink-0 ml-2">
@@ -266,7 +266,7 @@ definePageMeta({
 });
 
 const auth = useAuthStore();
-const companyId = computed(() => auth.user?.company?.id);
+const companyId = computed(() => auth.currentCompanyId);
 
 const isLoading = ref(true);
 const selectedBiker = ref("all");
@@ -367,6 +367,13 @@ const fetchStats = async () => {
 
 watch([selectedBiker, selectedDate], () => {
   fetchStats();
+});
+
+watch(companyId, () => {
+  if (companyId.value) {
+    loadBikers();
+    fetchStats();
+  }
 });
 
 onMounted(async () => {

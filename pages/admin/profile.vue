@@ -1,16 +1,20 @@
 <template>
-  <div class="space-y-6">
-    <div>
+  <div class="space-y-6 pb-14">
+    <!-- <div>
       <h1 class="text-3xl font-bold text-gray-900">Meu Perfil</h1>
       <p class="text-sm text-gray-500">Atualize suas informações pessoais</p>
-    </div>
+    </div> -->
 
     <!-- Profile Form -->
     <div class="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 class="text-lg font-semibold text-gray-800 mb-4">Informações Pessoais</h2>
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        Informações Pessoais
+      </h2>
       <form @submit.prevent="saveProfile" class="space-y-4 max-w-lg">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Nome</label
+          >
           <input
             v-model="profileForm.name"
             type="text"
@@ -21,7 +25,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Email</label
+          >
           <input
             v-model="profileForm.email"
             type="email"
@@ -32,7 +38,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Telefone</label
+          >
           <input
             v-model="profileForm.phone"
             type="text"
@@ -46,7 +54,7 @@
           :disabled="isSavingProfile"
           class="px-6 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 transition-colors"
         >
-          {{ isSavingProfile ? 'Salvando...' : 'Salvar alterações' }}
+          {{ isSavingProfile ? "Salvando..." : "Salvar alterações" }}
         </button>
       </form>
     </div>
@@ -56,7 +64,9 @@
       <h2 class="text-lg font-semibold text-gray-800 mb-4">Alterar Senha</h2>
       <form @submit.prevent="changePassword" class="space-y-4 max-w-lg">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Senha Atual</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Senha Atual</label
+          >
           <input
             v-model="passwordForm.currentPassword"
             type="password"
@@ -67,7 +77,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Nova Senha</label
+          >
           <input
             v-model="passwordForm.newPassword"
             type="password"
@@ -79,7 +91,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Nova Senha</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Confirmar Nova Senha</label
+          >
           <input
             v-model="passwordForm.confirmPassword"
             type="password"
@@ -95,7 +109,7 @@
           :disabled="isChangingPassword"
           class="px-6 py-2.5 text-sm font-semibold text-white bg-slate-800 rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
         >
-          {{ isChangingPassword ? 'Alterando...' : 'Alterar senha' }}
+          {{ isChangingPassword ? "Alterando..." : "Alterar senha" }}
         </button>
       </form>
     </div>
@@ -205,7 +219,8 @@ const changePassword = async () => {
     toast.add({
       color: "error",
       title: "Erro ao alterar senha",
-      description: msg === "Current password is incorrect" ? "Senha atual incorreta" : msg,
+      description:
+        msg === "Current password is incorrect" ? "Senha atual incorreta" : msg,
     });
   } finally {
     isChangingPassword.value = false;

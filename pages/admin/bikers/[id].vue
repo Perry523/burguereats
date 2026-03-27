@@ -1,8 +1,8 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col gap-4 pt-6">
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
     <!-- Re-use the bikers list behind the modal -->
     <TableBase
-      class="flex-1 min-h-0 bg-white rounded-lg pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
       :rows="filteredBikers"
       :total-items="filteredBikers.length"
@@ -82,9 +82,7 @@
           ></div>
 
           <div class="relative z-10 w-full max-w-lg">
-            <div
-              class="overflow-hidden rounded-2xl bg-white shadow-2xl"
-            >
+            <div class="overflow-hidden rounded-2xl bg-white shadow-2xl">
               <!-- Header -->
               <div
                 class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50"
@@ -344,8 +342,7 @@ const loadBikerDetail = async () => {
       // If not in the list yet, try fetching all and finding
       if (companyId.value && bikers.value.length === 0) {
         await fetchBikers(companyId.value);
-        biker.value =
-          bikers.value.find((b) => b.id === bikerId.value) || null;
+        biker.value = bikers.value.find((b) => b.id === bikerId.value) || null;
       }
     }
   } catch (error) {

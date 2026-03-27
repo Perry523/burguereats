@@ -16,25 +16,44 @@ export interface AuthUser {
   name?: string | null;
   email?: string | null;
   company?: AuthCompany | null;
-  role?: 'admin' | 'biker';
+  companyId?: string | null;
+  role?: 'admin' | 'manager' | 'biker';
+  wallet?: number;
 }
 
 interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
+  activeCompanyId: string | null;
 }
 
 export const useAuthStore = defineStore("auth", {
   state: (): AuthState => ({
     user: null,
     isLoading: false,
+    activeCompanyId: null,
   }),
   getters: {
     isAuthenticated: (state) => state.user !== null,
+    currentCompanyId: (state) => state.activeCompanyId || state.user?.company?.id || state.user?.companyId || null,
   },
   actions: {
     setUser(user: AuthUser | null) {
       this.user = user;
+      if (user) {
+        // If manager or biker, activeCompanyId is fixed
+        if (user.role !== 'admin') {
+          this.activeCompanyId = user.company?.id || user.companyId || null;
+        } else if (!this.activeCompanyId) {
+          // If admin and no active company selected, default to their own if any
+          this.activeCompanyId = user.company?.id || user.companyId || null;
+        }
+      } else {
+        this.activeCompanyId = null;
+      }
+    },
+    setActiveCompanyId(id: string | null) {
+      this.activeCompanyId = id;
     },
     clearUser() {
       this.user = null;

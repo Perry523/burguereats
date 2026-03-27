@@ -2,10 +2,16 @@ import { createClient } from "@supabase/supabase-js";
 
 export default defineEventHandler(async (event) => {
   try {
+    const auth = requireAuth(event);
     const query = getQuery(event);
-    const companyId = query.companyId as string;
+    let companyId = query.companyId as string;
 
-    if (!companyId) {
+    // Enforcement: Managers can only see their own company's clients
+    if (auth.role === 'manager') {
+      companyId = auth.companyId as string;
+    }
+
+    if (!companyId && auth.role !== 'admin') {
       throw createError({
         statusCode: 400,
         statusMessage: "Company ID is required",
@@ -21,16 +27,22 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: clients, error } = await supabase
+    let clientsQuery = supabase
       .from("clients")
       .select("*")
-      .eq("company_id", companyId)
       .order("name", { ascending: true });
+
+    if (companyId) {
+      clientsQuery = clientsQuery.eq("company_id", companyId);
+    }
+
+    const { data: clients, error } = await clientsQuery;
 
     if (error) throw error;
 
     return { success: true, data: clients };
   } catch (error: any) {
+    if (error.statusCode) throw error;
     console.error("Error fetching clients:", error);
     throw createError({
       statusCode: 500,
