@@ -6,17 +6,19 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     let companyId = query.companyId as string;
 
-    // Enforcement: Managers can only see their own company's bikers
+    // Enforcement: 
     if (auth.role === 'manager') {
+      // Managers ALWAYS filtered by their company
       companyId = auth.companyId as string;
     } else if (auth.role === 'admin') {
-      companyId = ''; // Admins see all bikers always
+      // Admins can see all (empty companyId) OR filter by a specific company if provided in query
+      companyId = query.companyId as string || '';
     }
 
-    if (!companyId && auth.role !== 'admin') {
+    if (!companyId && auth.role === 'manager') {
       throw createError({
         statusCode: 400,
-        statusMessage: "Company ID is required",
+        statusMessage: "Company ID is required for managers",
       });
     }
 

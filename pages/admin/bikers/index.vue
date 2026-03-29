@@ -88,7 +88,10 @@ const search = ref("");
 const page = ref(1);
 const itemsPerPage = ref(10);
 
-const companyId = computed(() => currentCompanyId.value || "");
+const companyId = computed(() => {
+  if (user.value?.role === "admin") return "";
+  return currentCompanyId.value || "";
+});
 
 const filteredBikers = computed(() => {
   if (!search.value) return bikers.value;

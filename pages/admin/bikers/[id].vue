@@ -271,7 +271,10 @@ const showModal = ref(true);
 const isLoadingBiker = ref(false);
 const biker = ref<Biker | null>(null);
 
-const companyId = computed(() => user.value?.company?.id ?? "");
+const companyId = computed(() => {
+  if (user.value?.role === "admin") return "";
+  return user.value?.company?.id ?? "";
+});
 const bikerId = computed(() => route.params.id as string);
 
 const filteredBikers = computed(() => {
@@ -331,33 +334,48 @@ const fetchBikers = async (companyId: string) => {
 };
 
 const loadBikerDetail = async () => {
+  if (!bikerId.value) return;
+  
   isLoadingBiker.value = true;
+  biker.value = null; // Reset current biker while loading
   try {
-    // Wait for bikers list to load, then find the biker by ID
+    // 1. Give a small delay to allow the list to populate if needed
     await nextTick();
-    const found = bikers.value.find((b) => b.id === bikerId.value);
-    if (found) {
-      biker.value = found;
+    
+    // 2. Try finding in the local list first for responsiveness
+    const foundInList = bikers.value.find((b) => b.id === bikerId.value);
+    if (foundInList) {
+      biker.value = foundInList;
     } else {
-      // If not in the list yet, try fetching all and finding
-      if (companyId.value && bikers.value.length === 0) {
-        await fetchBikers(companyId.value);
-        biker.value = bikers.value.find((b) => b.id === bikerId.value) || null;
+      // 3. Fetch directly from the single lookup API for reliability
+      const response = await $fetch<{ success: boolean; data: Biker }>(
+        `/api/bikers/${bikerId.value}`,
+      );
+      if (response?.success && response.data) {
+        biker.value = response.data;
       }
     }
   } catch (error) {
     console.error("Error loading biker detail:", error);
-    biker.value = null;
   } finally {
     isLoadingBiker.value = false;
   }
 };
 
 watch(
-  companyId,
-  async (id) => {
-    if (id) {
-      await fetchBikers(id);
+  [companyId, bikerId],
+  async ([newCompanyId, newBikerId]) => {
+    // 1. Fetch the list if needed
+    // Admins can see all bikers (empty companyId), managers need a companyId
+    if (newCompanyId || user.value?.role === "admin") {
+      // Only fetch list if it's empty or company changed
+      if (bikers.value.length === 0) {
+        await fetchBikers(newCompanyId || "");
+      }
+    }
+    
+    // 2. Always try to load the detail if we have an ID
+    if (newBikerId) {
       await loadBikerDetail();
     }
   },
