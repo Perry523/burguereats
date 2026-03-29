@@ -109,16 +109,13 @@ const form = reactive({
 
 const saveBiker = async () => {
   const companyId = user.value?.company?.id;
-  if (!companyId) {
-    toast.add({ color: "error", title: "Empresa não encontrada" });
-    return;
-  }
-
+  // Biker can now be created without a company association
+  
   isSaving.value = true;
   try {
     const payload = {
       ...form,
-      companyId,
+      companyId: companyId || null,
     };
 
     await $fetch("/api/bikers", {

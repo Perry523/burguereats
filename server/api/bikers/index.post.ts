@@ -8,10 +8,10 @@ export default defineEventHandler(async (event) => {
 
     const normalizedEmail = body.email?.trim().toLowerCase();
 
-    if (!body.name || !normalizedEmail || !body.password || !body.companyId) {
+    if (!body.name || !normalizedEmail || !body.password) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Name, email, password, and companyId are required",
+        statusMessage: "Name, email, and password are required",
       });
     }
 
