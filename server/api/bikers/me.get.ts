@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     if (bikerError || !biker) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Biker profile not found",
+        statusMessage: "Biker profile not found in Entregadores table",
       });
     }
 
@@ -44,10 +44,12 @@ export default defineEventHandler(async (event) => {
       success: true,
       data: biker,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode) throw error;
+    console.error("Error fetching biker profile:", error);
     throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
+      statusCode: 500,
+      statusMessage: "Internal Server Error",
     });
   }
 });

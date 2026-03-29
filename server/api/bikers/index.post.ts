@@ -26,6 +26,26 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 0. Check if email already exists in either table
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+
+    const { data: existingEntregador } = await supabase
+      .from("Entregadores")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+
+    if (existingUser || existingEntregador) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Email already exists. If this is unexpected, please contact support to resolve account inconsistency.",
+        });
+    }
+
     // 1. Create record in 'users' table
     const userId = randomUUID();
     const { error: userError } = await supabase

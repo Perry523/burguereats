@@ -73,6 +73,43 @@ export default defineEventHandler(async (event) => {
         ordersQuery = ordersQuery.gte("created_at", dateFrom).lte("created_at", dateTo);
       }
     }
+    
+    // --- PAYMENTS QUERY FOR ADMIN STATS ---
+    let paymentsQuery = supabase
+      .from("biker_payments")
+      .select("*")
+      .eq("is_paid", false);
+
+    if (companyId) {
+      paymentsQuery = paymentsQuery.eq("company_id", companyId);
+    }
+    if (bikerId && bikerId !== "all") {
+      paymentsQuery = paymentsQuery.eq("biker_id", bikerId);
+    }
+    
+    if (dateRange && dateRange !== "all") {
+      let dFromStr = "";
+      let dToStr = now.endOf("day").format("YYYY-MM-DD");
+      switch (dateRange) {
+        case "today":
+          dFromStr = now.format("YYYY-MM-DD");
+          break;
+        case "yesterday":
+          dFromStr = now.subtract(1, "day").format("YYYY-MM-DD");
+          dToStr = dFromStr;
+          break;
+        case "last_week":
+          dFromStr = now.subtract(7, "day").format("YYYY-MM-DD");
+          break;
+        case "last_month":
+          dFromStr = now.subtract(1, "month").format("YYYY-MM-DD");
+          break;
+      }
+      if (dFromStr) {
+        paymentsQuery = paymentsQuery.gte("date", dFromStr).lte("date", dToStr);
+      }
+    }
+    // ------------------------------------
 
     const { data: allOrders, error: ordersError } = await ordersQuery;
 
@@ -126,7 +163,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const stats = {
+    const stats: any = {
       totalDeliveries: (allOrders || []).length, // total orders given to bikers
       completedDeliveries: completedOrders.length,
       totalEarned,
@@ -134,6 +171,48 @@ export default defineEventHandler(async (event) => {
       recentDeliveries,
       financial
     };
+
+    // --- PROCESS PAYMENTS STATS FOR ADMIN ---
+    const { data: pendingPayments } = await paymentsQuery;
+    let pendingDeliveriesCount = 0;
+    let totalPendingAmount = 0;
+
+    (pendingPayments || []).forEach(p => {
+      pendingDeliveriesCount += Number(p.total_deliveries) || 0;
+      totalPendingAmount += Number(p.amount) || 0;
+    });
+
+    // Advance Money Calculation
+    let totalAdvances = 0;
+    let advancesQuery = supabase.from("Entregadores").select("id, advance_money");
+    
+    if (bikerId && bikerId !== "all") {
+      advancesQuery = advancesQuery.eq("id", bikerId);
+    } else if (companyId) {
+      const bIds = [...new Set((pendingPayments || []).map(p => p.biker_id))];
+      if (bIds.length > 0) {
+        advancesQuery = advancesQuery.in("id", bIds);
+      } else {
+        advancesQuery = null as any; // Skip querying
+      }
+    }
+
+    if (advancesQuery) {
+      const { data: advancesData } = await advancesQuery;
+      (advancesData || []).forEach(b => {
+        totalAdvances += Number(b.advance_money) || 0;
+      });
+    }
+
+    stats.adminStats = {
+      pendingDeliveriesCount,
+      totalGross: totalPendingAmount,
+      totalAdvances,
+      totalServiceFee: pendingDeliveriesCount * 1,
+      totalNet: totalPendingAmount - (pendingDeliveriesCount * 1) - totalAdvances,
+      pendingRegisters: (pendingPayments || []).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10)
+    };
+    // ----------------------------------------
 
     return {
       success: true,

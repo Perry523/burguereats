@@ -226,15 +226,7 @@ if (!authStore.user) {
 }
 
 const adminNavItems = [
-  { label: "Dashboard", to: "/admin", icon: "i-ph-squares-four-duotone" },
-  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-shopping-bag-duotone" },
-  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-fork-knife-duotone" },
-  { label: "Produtos", to: "/admin/products", icon: "i-ph-package-duotone" },
-  {
-    label: "Categorias",
-    to: "/admin/categories",
-    icon: "i-ph-list-bullets-duotone",
-  },
+  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-line-up-duotone" },
   {
     label: "Entregadores",
     to: "/admin/bikers",
@@ -243,17 +235,17 @@ const adminNavItems = [
   {
     label: "Financeiro Moto",
     to: "/admin/bikers-financials",
-    icon: "i-ph-money-duotone",
+    icon: "i-ph-currency-dollar-duotone",
   },
   {
     label: "Pagamentos",
     to: "/admin/payouts",
-    icon: "i-ph-bank-duotone",
+    icon: "i-ph-hand-coins-duotone",
   },
   {
     label: "Escala",
     to: "/admin/biker-assignments",
-    icon: "i-ph-clipboard-text-duotone",
+    icon: "i-ph-calendar-check-duotone",
   },
   {
     label: "Empresas",
@@ -263,14 +255,14 @@ const adminNavItems = [
   {
     label: "Perfil",
     to: "/admin/profile",
-    icon: "i-ph-user-circle-duotone",
+    icon: "i-ph-user-duotone",
   },
 ];
 
 const managerNavItems = [
-  { label: "Dashboard", to: "/admin", icon: "i-ph-squares-four-duotone" },
-  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-shopping-bag-duotone" },
-  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-fork-knife-duotone" },
+  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-line-up-duotone" },
+  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-shopping-cart-simple-duotone" },
+  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-cooking-pot-duotone" },
   { label: "Produtos", to: "/admin/products", icon: "i-ph-package-duotone" },
   {
     label: "Categorias",
@@ -290,7 +282,7 @@ const managerNavItems = [
   {
     label: "Perfil",
     to: "/admin/profile",
-    icon: "i-ph-user-circle-duotone",
+    icon: "i-ph-user-duotone",
   },
 ];
 
@@ -298,7 +290,7 @@ const bikerNavItems = [
   {
     label: "Dashboard",
     to: "/admin/biker-dashboard",
-    icon: "i-ph-squares-four-duotone",
+    icon: "i-ph-chart-pie-duotone",
   },
   {
     label: "Entregas",
@@ -308,7 +300,7 @@ const bikerNavItems = [
   {
     label: "Escala",
     to: "/admin/biker-escala",
-    icon: "i-ph-clipboard-text-duotone",
+    icon: "i-ph-calendar-check-duotone",
   },
   {
     label: "Registros",
@@ -318,12 +310,12 @@ const bikerNavItems = [
   {
     label: "Pagamentos",
     to: "/admin/payouts",
-    icon: "i-ph-bank-duotone",
+    icon: "i-ph-hand-coins-duotone",
   },
   {
     label: "Perfil",
     to: "/admin/profile",
-    icon: "i-ph-user-circle-duotone",
+    icon: "i-ph-user-duotone",
   },
 ];
 
@@ -331,19 +323,19 @@ const bikerBottomNav = [
   {
     label: "Início",
     to: "/admin/biker-dashboard",
-    icon: "i-ph-squares-four-duotone",
+    icon: "i-ph-chart-pie-duotone",
   },
   {
     label: "Escala",
     to: "/admin/biker-escala",
-    icon: "i-ph-clipboard-text-duotone",
+    icon: "i-ph-calendar-check-duotone",
   },
   {
     label: "Registros",
     to: "/admin/biker-payments",
     icon: "i-ph-wallet-duotone",
   },
-  { label: "Pagos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
+  { label: "Pagos", to: "/admin/payouts", icon: "i-ph-hand-coins-duotone" },
 ];
 
 const navItems = computed(() => {

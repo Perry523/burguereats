@@ -113,7 +113,79 @@
         </div>
       </UCard>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Admin 4 Cards -->
+      <div
+        v-if="auth.user?.role === 'admin'"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <UCard class="bg-white shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Qtd Entregas</p>
+              <p class="text-3xl font-bold text-primary mt-1 shrink-0">
+                {{ stats.adminStats?.pendingDeliveriesCount || 0 }}
+              </p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg shrink-0 ml-2">
+              <UIcon name="i-heroicons-truck" class="w-8 h-8 text-primary" />
+            </div>
+          </div>
+        </UCard>
+
+        <UCard class="bg-white shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Valor Adiantado</p>
+              <p class="text-3xl font-bold text-red-600 mt-1 shrink-0">
+                {{ formatCurrency(stats.adminStats?.totalAdvances || 0) }}
+              </p>
+            </div>
+            <div class="p-3 bg-red-50 rounded-lg shrink-0 ml-2">
+              <UIcon
+                name="i-heroicons-arrow-trending-down"
+                class="w-8 h-8 text-red-500"
+              />
+            </div>
+          </div>
+        </UCard>
+
+        <UCard class="bg-white shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Total Bruto</p>
+              <p class="text-3xl font-bold text-orange-600 mt-1 shrink-0">
+                {{ formatCurrency(stats.adminStats?.totalGross || 0) }}
+              </p>
+            </div>
+            <div class="p-3 bg-orange-50 rounded-lg shrink-0 ml-2">
+              <UIcon
+                name="i-heroicons-banknotes"
+                class="w-8 h-8 text-orange-500"
+              />
+            </div>
+          </div>
+        </UCard>
+
+        <UCard class="bg-white shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium">A ser pago</p>
+              <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
+                {{ formatCurrency(stats.adminStats?.totalNet || 0) }}
+              </p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
+              <UIcon
+                name="i-heroicons-currency-dollar"
+                class="w-8 h-8 text-green-500"
+              />
+            </div>
+          </div>
+        </UCard>
+      </div>
+
+      <!-- Manager 3 Cards -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
@@ -174,9 +246,62 @@
 
       <UCard class="bg-white shadow-sm border border-gray-200 mt-8">
         <h2 class="text-xl font-semibold text-gray-800 mb-4 px-1">
-          Histórico de Entregas
+          {{
+            auth.user?.role === "admin"
+              ? "Registros Pendentes"
+              : "Histórico de Entregas"
+          }}
         </h2>
-        <div class="overflow-x-auto">
+
+        <!-- Admin Table: Pending Registers -->
+        <div v-if="auth.user?.role === 'admin'" class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead
+              class="text-xs text-gray-700 uppercase bg-gray-50 rounded-t-lg border-b"
+            >
+              <tr>
+                <th scope="col" class="px-4 py-3">Data Ref.</th>
+                <th scope="col" class="px-4 py-3">Entregador</th>
+                <th scope="col" class="px-4 py-3 text-center">Entregas</th>
+                <th scope="col" class="px-4 py-3">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="reg in stats.adminStats?.pendingRegisters"
+                :key="reg.id"
+                class="border-b hover:bg-gray-50 transition-colors"
+              >
+                <td class="px-4 py-3 font-medium whitespace-nowrap">
+                  {{ formatDate(reg.date) }}
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900">
+                    {{ getBikerName(reg.biker_id) || "Entregador Oculto" }}
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-center font-semibold text-primary">
+                  {{ reg.total_deliveries }}
+                </td>
+                <td class="px-4 py-3 font-semibold text-green-600">
+                  {{ formatCurrency(reg.amount) }}
+                </td>
+              </tr>
+              <tr v-if="!stats.adminStats?.pendingRegisters?.length">
+                <td colspan="4" class="px-4 py-12 text-center text-gray-500">
+                  <UIcon
+                    name="i-heroicons-check-circle"
+                    class="w-12 h-12 mx-auto text-green-400 mb-2"
+                  />
+                  Nenhum registro pendente de pagamento encontrado.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Manager Table: Recent Deliveries -->
+        <div v-else class="overflow-x-auto">
           <table class="w-full text-sm text-left text-gray-500">
             <thead
               class="text-xs text-gray-700 uppercase bg-gray-50 rounded-t-lg border-b"
@@ -237,7 +362,11 @@
                   </span>
                 </td>
               </tr>
-              <tr v-if="stats.recentDeliveries.length === 0">
+              <tr
+                v-if="
+                  stats.recentDeliveries && stats.recentDeliveries.length === 0
+                "
+              >
                 <td
                   :colspan="selectedBiker === 'all' ? 6 : 5"
                   class="px-4 py-12 text-center text-gray-500"
@@ -266,7 +395,10 @@ definePageMeta({
 });
 
 const auth = useAuthStore();
-const companyId = computed(() => auth.currentCompanyId);
+const companyId = computed(() => {
+  if (auth.user?.role === "admin") return "";
+  return auth.currentCompanyId || "";
+});
 
 const isLoading = ref(true);
 const selectedBiker = ref("all");
@@ -287,6 +419,7 @@ const stats = ref({
   totalEarned: 0,
   totalSpent: 0,
   recentDeliveries: [] as any[],
+  adminStats: null as any,
 });
 
 const selectedBikerData = computed(() => {
@@ -318,6 +451,14 @@ const formatCurrency = (value: number) => {
 };
 
 const formatDate = (dateString: string) => {
+  if (!dateString) return "-";
+
+  // Handle YYYY-MM-DD from biker_payments
+  if (dateString.length === 10) {
+    const [y, m, d] = dateString.split("-");
+    return `${d}/${m}/${y}`;
+  }
+
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -327,8 +468,11 @@ const formatDate = (dateString: string) => {
   }).format(d);
 };
 
+const getBikerName = (id: string) =>
+  bikers.value.find((b) => b.id === id)?.name;
+
 const loadBikers = async () => {
-  if (!companyId.value) return;
+  if (!companyId.value && auth.user?.role !== "admin") return;
   try {
     const res = await $fetch<{ success: boolean; data: any[] }>(
       `/api/bikers?companyId=${companyId.value}`,
@@ -342,7 +486,7 @@ const loadBikers = async () => {
 };
 
 const fetchStats = async () => {
-  if (!companyId.value) return;
+  if (!companyId.value && auth.user?.role !== "admin") return;
 
   isLoading.value = true;
   try {
