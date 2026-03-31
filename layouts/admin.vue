@@ -226,97 +226,33 @@ if (!authStore.user) {
 }
 
 const adminNavItems = [
-  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-line-up-duotone" },
-  {
-    label: "Entregadores",
-    to: "/admin/bikers",
-    icon: "i-ph-motorcycle-duotone",
-  },
-  {
-    label: "Financeiro Moto",
-    to: "/admin/bikers-financials",
-    icon: "i-ph-currency-dollar-duotone",
-  },
-  {
-    label: "Pagamentos",
-    to: "/admin/payouts",
-    icon: "i-ph-hand-coins-duotone",
-  },
-  {
-    label: "Escala",
-    to: "/admin/biker-assignments",
-    icon: "i-ph-calendar-check-duotone",
-  },
-  {
-    label: "Empresas",
-    to: "/admin/companies",
-    icon: "i-ph-buildings-duotone",
-  },
-  {
-    label: "Perfil",
-    to: "/admin/profile",
-    icon: "i-ph-user-duotone",
-  },
+  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-pie-duotone" },
+  { label: "Entregadores", to: "/admin/bikers", icon: "i-ph-users-four-duotone" },
+  { label: "Financeiro Moto", to: "/admin/bikers-financials", icon: "i-ph-coins-duotone" },
+  { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
+  { label: "Escala", to: "/admin/biker-assignments", icon: "i-ph-calendar-check-duotone" },
+  { label: "Empresas", to: "/admin/companies", icon: "i-ph-buildings-duotone" },
+  { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
 
 const managerNavItems = [
-  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-line-up-duotone" },
-  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-shopping-cart-simple-duotone" },
-  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-cooking-pot-duotone" },
+  { label: "Dashboard", to: "/admin", icon: "i-ph-chart-pie-duotone" },
+  { label: "Pedidos", to: "/admin/orders", icon: "i-ph-receipt-duotone" },
+  { label: "Pratos", to: "/admin/dishes", icon: "i-ph-bowl-food-duotone" },
   { label: "Produtos", to: "/admin/products", icon: "i-ph-package-duotone" },
-  {
-    label: "Categorias",
-    to: "/admin/categories",
-    icon: "i-ph-list-bullets-duotone",
-  },
-  {
-    label: "Entregadores",
-    to: "/admin/bikers",
-    icon: "i-ph-motorcycle-duotone",
-  },
-  {
-    label: "Empresa",
-    to: "/admin/empresa",
-    icon: "i-ph-storefront-duotone",
-  },
-  {
-    label: "Perfil",
-    to: "/admin/profile",
-    icon: "i-ph-user-duotone",
-  },
+  { label: "Categorias", to: "/admin/categories", icon: "i-ph-tag-duotone" },
+  { label: "Entregadores", to: "/admin/bikers", icon: "i-ph-users-four-duotone" },
+  { label: "Empresa", to: "/admin/empresa", icon: "i-ph-storefront-duotone" },
+  { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
 
 const bikerNavItems = [
-  {
-    label: "Dashboard",
-    to: "/admin/biker-dashboard",
-    icon: "i-ph-chart-pie-duotone",
-  },
-  {
-    label: "Entregas",
-    to: "/admin/deliveries",
-    icon: "i-ph-motorcycle-duotone",
-  },
-  {
-    label: "Escala",
-    to: "/admin/biker-escala",
-    icon: "i-ph-calendar-check-duotone",
-  },
-  {
-    label: "Registros",
-    to: "/admin/biker-payments",
-    icon: "i-ph-wallet-duotone",
-  },
-  {
-    label: "Pagamentos",
-    to: "/admin/payouts",
-    icon: "i-ph-hand-coins-duotone",
-  },
-  {
-    label: "Perfil",
-    to: "/admin/profile",
-    icon: "i-ph-user-duotone",
-  },
+  { label: "Dashboard", to: "/admin/biker-dashboard", icon: "i-ph-chart-pie-duotone" },
+  { label: "Entregas", to: "/admin/deliveries", icon: "i-ph-moped-duotone" },
+  { label: "Escala", to: "/admin/biker-escala", icon: "i-ph-calendar-check-duotone" },
+  { label: "Registros", to: "/admin/biker-payments", icon: "i-ph-wallet-duotone" },
+  { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
+  { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
 
 const bikerBottomNav = [
