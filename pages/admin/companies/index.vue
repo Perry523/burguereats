@@ -9,7 +9,7 @@
       :actions="tableActions"
       v-model:page="page"
       v-model:per_page="itemsPerPage"
-      hide-edit
+      @edit="goToEdit($event.id)"
       hide-delete
     >
       <template #filter>
@@ -143,6 +143,10 @@ const columns = [
   { key: "type", label: "Tipo" },
   { key: "created_at", label: "Data de Criação" },
 ];
+
+const goToEdit = (id: string) => {
+  router.push(`/admin/companies/${id}`);
+};
 
 const tableActions: any[] = [];
 
