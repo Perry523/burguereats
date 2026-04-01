@@ -40,6 +40,30 @@
         </div>
 
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Negócio <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-4 mt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                v-model="form.type"
+                value="restaurant"
+                class="radio radio-primary radio-sm"
+              />
+              <span class="text-sm text-gray-700">Restaurante</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                v-model="form.type"
+                value="delivery"
+                class="radio radio-primary radio-sm"
+              />
+              <span class="text-sm text-gray-700">Delivery</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
            <input
              v-model="form.phone"
@@ -227,6 +251,7 @@ const ufOptions = [
 
 const form = ref({
   name: '',
+  type: 'delivery',
   email: '',
   phone: '',
   address: '',

@@ -45,6 +45,7 @@ export default defineEventHandler(async (event) => {
         id: companyId,
         name: body.name,
         email: body.email,
+        type: body.type || 'delivery',
         phone: body.phone,
         address: body.address,
         city: body.city,

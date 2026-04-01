@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
     if (body.address !== undefined) updateData.address = body.address;
     if (body.city !== undefined) updateData.city = body.city;
     if (body.state !== undefined) updateData.state = body.state;
+    if (body.ifood_merchant_id !== undefined) updateData.ifood_merchant_id = body.ifood_merchant_id;
     if (body.operating_hours !== undefined) updateData.operating_hours = body.operating_hours;
 
     const { data: company, error } = await supabase

@@ -179,6 +179,23 @@
         </button>
       </form>
     </div>
+    <!-- iFood Integration -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Integração iFood</h2>
+      <p class="text-sm text-gray-500 mb-4">Configure o ID do seu restaurante no iFood para receber pedidos automaticamente.</p>
+      <div class="space-y-4 max-w-lg">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ID do Restaurante (Merchant ID)</label>
+          <input
+            v-model="form.ifood_merchant_id"
+            type="text"
+            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="ID do iFood"
+          />
+        </div>
+        <p class="text-xs text-gray-400">Nota: As credenciais de aplicativo (Client ID/Secret) devem ser configuradas pelo administrador do sistema.</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -217,6 +234,7 @@ const form = reactive({
   city: "",
   state: "",
   zipCode: "",
+  ifood_merchant_id: "",
 });
 
 const companyId = computed(() => auth.user?.company?.id);
@@ -239,6 +257,10 @@ const loadCompany = async () => {
       form.state = c.state || "";
       form.zipCode = c.zip_code || c.zipCode || "";
       logoUrl.value = c.logo || "";
+
+      if (c.ifood_merchant_id !== undefined) {
+        form.ifood_merchant_id = c.ifood_merchant_id || "";
+      }
 
       // Load operating hours
       if (c.operating_hours && typeof c.operating_hours === 'object') {
@@ -276,6 +298,7 @@ const saveCompany = async () => {
         city: form.city,
         state: form.state,
         zipCode: form.zipCode,
+        ifood_merchant_id: form.ifood_merchant_id,
       },
     });
 
