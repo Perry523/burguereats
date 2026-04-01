@@ -4,22 +4,25 @@ import { fetchIfoodOrderDetails, acknowledgeIfoodOrder } from "../../utils/ifood
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
+  console.log('📦 iFood Webhook Received:', JSON.stringify(body, null, 2));
   
   // 1. Initial Checks
   if (!body.merchantId || !body.orderId) {
+    console.warn('⚠️ iFood Webhook ignored: Missing merchantId or orderId');
     return { status: "ignored", message: "Missing required fields" };
   }
 
   // 2. Identify Local Company
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // Service key for global lookup
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Missing Supabase configuration");
+    throw new Error("Missing Supabase configuration in .env");
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  console.log(`🔍 Searching for company with merchant ID: ${body.merchantId}...`);
   const { data: company, error: companyError } = await supabase
     .from("Company")
     .select("id, name")
@@ -27,19 +30,26 @@ export default defineEventHandler(async (event) => {
     .single();
 
   if (companyError || !company) {
-    console.error(`Company not found for iFood merchant ID: ${body.merchantId}`);
+    console.error(`❌ Company not found for iFood merchant ID: ${body.merchantId}`);
     return { status: "ignored", message: "Merchant not found in local DB" };
   }
 
+  console.log(`✅ Company found: ${company.name} (${company.id})`);
+
   // 3. Process Events
-  // iFood typically sends simple events: "PLC" (Placed), "CAN" (Cancelled), etc.
-  if (body.fullCode !== "PLACED" && body.code !== "PLC") {
-    return { status: "ignored", message: "Event not handled: " + (body.fullCode || body.code) };
+  const eventCode = body.fullCode || body.code;
+  console.log(`🎫 Processing iFood event: ${eventCode}`);
+  
+  if (eventCode !== "PLACED" && eventCode !== "PLC") {
+    console.log(`ℹ️ Event skipped (not PLACED)`);
+    return { status: "ignored", message: "Event not handled: " + eventCode };
   }
 
   // 4. Fetch Order Details from iFood
+  console.log(`📡 Fetching order details for ${body.orderId} from iFood API...`);
   try {
     const ifoodOrder = await fetchIfoodOrderDetails(body.orderId);
+    console.log(`📄 iFood Order Details fetched successfully`);
     
     // Check if order already exists
     const { data: existingOrder } = await supabase
@@ -49,10 +59,12 @@ export default defineEventHandler(async (event) => {
       .single();
 
     if (existingOrder) {
+      console.warn(`⚠️ Order ${body.orderId} already exists in local DB. Skipping.`);
       return { status: "ignored", message: "Order already synced" };
     }
 
     // 5. Map and Save Order
+    console.log(`💾 Saving new order to database...`);
     const orderId = randomUUID();
     const pickupCode = Math.floor(100 + Math.random() * 900).toString();
 

@@ -51,6 +51,7 @@ export default defineEventHandler(async (event) => {
         city: body.city,
         state: body.state,
         zipCode: body.zipCode,
+        ifood_merchant_id: body.ifood_merchant_id || null,
         updatedAt: new Date().toISOString(),
       })
       .select()
