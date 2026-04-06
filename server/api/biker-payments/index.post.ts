@@ -41,8 +41,10 @@ export default defineEventHandler(async (event) => {
     }
 
     const bikerId = bikerRecord.id;
+    const supabaseKeyService = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+    const supabaseService = createClient(supabaseUrl, supabaseKeyService);
 
-    // Verify the biker was actually assigned to this company on this date
+    // Verify permission: Either has a daily assignment OR has a persistent vinculation
     const { data: assignment } = await supabase
       .from("biker_assignments")
       .select("id")
@@ -50,13 +52,23 @@ export default defineEventHandler(async (event) => {
       .eq("company_id", company_id)
       .eq("date", date)
       .eq("status", "confirmado")
-      .single();
+      .maybeSingle();
 
     if (!assignment) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Você não estava escalado para este restaurante nesta data.",
-      });
+      // If not in scale, check for persistent vinculation (bound)
+      const { data: vinculation } = await supabaseService
+        .from("biker_companies")
+        .select("id")
+        .eq("biker_id", bikerId)
+        .eq("company_id", company_id)
+        .maybeSingle();
+
+      if (!vinculation) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Você não possui vínculo nem está escalado para este restaurante nesta data.",
+        });
+      }
     }
 
     // Create the payment record

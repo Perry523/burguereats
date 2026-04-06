@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     const auth = requireAuth(event);
     const query = getQuery(event);
     let companyId = query.companyId as string;
-    const bikerId = query.bikerId as string | undefined;
+    let bikerId = query.bikerId as string | undefined;
     const dateRange = query.dateRange as string | undefined;
 
     // Enforcement: Managers can only see their own company's stats
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
       companyId = auth.companyId as string;
     }
 
-    if (!companyId && auth.role !== 'admin') {
+    if (!companyId && auth.role !== 'admin' && auth.role !== 'biker') {
       throw createError({
         statusCode: 400,
         statusMessage: "Company ID is required",
@@ -29,6 +29,18 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    if (auth.role === 'biker') {
+      const { data: entregador } = await supabase
+        .from('Entregadores')
+        .select('id')
+        .eq('userId', auth.id)
+        .single();
+      
+      if (entregador) {
+        bikerId = entregador.id;
+      }
+    }
 
     // Build the query
     let ordersQuery = supabase
