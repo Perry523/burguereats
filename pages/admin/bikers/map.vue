@@ -56,11 +56,11 @@
     </div>
 
     <!-- DEBUG WINDOW -->
-    <div
+    <!-- <div
       class="bg-gray-100 p-2 text-[10px] uppercase font-mono overflow-auto max-h-32 rounded-lg border border-gray-300"
     >
       <p><b>RAW SYNC DATA:</b> {{ rawPresence }}</p>
-    </div>
+    </div> -->
 
     <div
       class="flex-1 min-h-0 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative relative-z-1"
@@ -135,7 +135,7 @@ onMounted(async () => {
     const { data: initialLocations, error } = await pureSupabase
       .from("biker_locations")
       .select("*");
-      
+
     if (!error && initialLocations) {
       const initialMap: Record<string, any> = {};
       initialLocations.forEach((loc: any) => {
@@ -221,7 +221,7 @@ onMounted(async () => {
         delete markers[existingId];
       }
     }
-  };
+  }
 
   // CRIA O CANAL UMA VEZ PARA OUVIR MUDANÇAS NO BANCO
   trackingChannel = pureSupabase.channel("biker_locations_changes");
@@ -231,12 +231,12 @@ onMounted(async () => {
     { event: "*", schema: "public", table: "biker_locations" },
     (payload: any) => {
       console.log("[POSTGRES_CHANGES]", payload);
-      
+
       const updated = { ...rawPresence.value };
-      
-      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+
+      if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
         updated[payload.new.biker_id] = [payload.new];
-      } else if (payload.eventType === 'DELETE') {
+      } else if (payload.eventType === "DELETE") {
         delete updated[payload.old.biker_id];
       }
 

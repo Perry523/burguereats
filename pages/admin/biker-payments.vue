@@ -200,16 +200,20 @@
           />
         </div>
 
-        <div
-          v-if="isCheckingDate"
-          class="flex items-center gap-2 text-sm text-gray-500"
-        >
+        <div v-if="isCheckingDate" class="flex items-center gap-2 text-sm text-gray-500">
           <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
-          Verificando escala...
+          Verificando...
         </div>
 
         <div v-else-if="form.date && dateChecked">
-          <div v-if="assignedCompanies.length > 0">
+          <div v-if="vinculatedCompanies.length === 0" class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            Você não possui vínculo permanente com nenhum restaurante. Entre em contato com o suporte para ser vinculado.
+          </div>
+          <div v-else>
+            <div v-if="assignedCompanies.length === 0" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
+              Atenção: Você não está escalado para nenhum restaurante nesta data, mas pode realizar o registro para os restaurantes vinculados abaixo.
+            </div>
+            
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >Restaurante <span class="text-red-500">*</span></label
             >
@@ -219,7 +223,7 @@
             >
               <option value="" disabled>Selecione o restaurante...</option>
               <option
-                v-for="c in assignedCompanies"
+                v-for="c in vinculatedCompanies"
                 :key="c.company_id"
                 :value="c.company_id"
               >
@@ -227,17 +231,10 @@
               </option>
             </select>
           </div>
-          <div
-            v-else
-            class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700"
-          >
-            Nenhum restaurante encontrado para esta data. Você precisa estar
-            escalado para adicionar um registro.
-          </div>
         </div>
 
         <div
-          v-if="assignedCompanies.length > 0 && form.company_id"
+          v-if="vinculatedCompanies.length > 0 && form.company_id"
           class="grid grid-cols-2 gap-4"
         >
           <div>
@@ -280,7 +277,7 @@
             Cancelar
           </button>
           <button
-            v-if="assignedCompanies.length > 0 && form.company_id"
+            v-if="vinculatedCompanies.length > 0 && form.company_id"
             @click="submitPayment"
             :disabled="isSubmitting || !form.amount || form.amount <= 0"
             class="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus focus:outline-none disabled:opacity-50 transition-colors"
@@ -314,7 +311,8 @@ const filterDate = ref("");
 const showAddModal = ref(false);
 const showDetailsModal = ref(false);
 const selectedPayment = ref<any>(null);
-const assignedCompanies = ref<any[]>([]);
+const assignedCompanies = ref<any[]>([]); // active escalation warnings
+const vinculatedCompanies = ref<any[]>([]); // bounds options
 const isCheckingDate = ref(false);
 const dateChecked = ref(false);
 const isSubmitting = ref(false);
@@ -395,6 +393,7 @@ const openAddModal = async () => {
     total_deliveries: 0,
   };
   assignedCompanies.value = [];
+  vinculatedCompanies.value = [];
   dateChecked.value = false;
   submitError.value = "";
   showAddModal.value = true;
@@ -410,17 +409,26 @@ const onDateChange = async () => {
 
   isCheckingDate.value = true;
   try {
-    const res = await $fetch<{ success: boolean; data?: any[] }>(
-      `/api/biker-assignments/my-escala?dateFrom=${form.value.date}&dateTo=${form.value.date}`,
-    );
-    const all = (res?.data || []).filter((a: any) => a.status === "confirmado");
-    assignedCompanies.value = all;
-    if (all.length === 1) {
-      form.value.company_id = all[0].company_id;
+    const [escalaRes, vinculacoesRes] = await Promise.all([
+      $fetch<{ success: boolean; data?: any[] }>(`/api/biker-assignments/my-escala?dateFrom=${form.value.date}&dateTo=${form.value.date}`),
+      $fetch<{ success: boolean; data?: any[] }>(`/api/bikers/me/companies`)
+    ]);
+    
+    // Scale tracking
+    const active = (escalaRes?.data || []).filter((a: any) => a.status === "confirmado");
+    assignedCompanies.value = active;
+    
+    // Vinculations (actual options)
+    const bounds = vinculacoesRes?.data || [];
+    vinculatedCompanies.value = bounds;
+
+    if (bounds.length === 1) {
+      form.value.company_id = bounds[0].company_id;
     }
   } catch (e) {
-    console.error("Error checking date:", e);
+    console.error("Error checking assignments:", e);
     assignedCompanies.value = [];
+    vinculatedCompanies.value = [];
   } finally {
     isCheckingDate.value = false;
     dateChecked.value = true;

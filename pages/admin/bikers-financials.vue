@@ -1,99 +1,103 @@
 <template>
-  <div class="space-y-6 pt-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Financeiro Entregadores</h1>
-        <p class="text-sm text-gray-500 mt-1">Gerencie os pagamentos, adiantamentos e saldos dos entregadores</p>
-      </div>
-    </div>
+  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+    <TableBase
+      class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
+      :loading="isLoading"
+      :rows="filteredBikers"
+      :total-items="filteredBikers.length"
+      :columns="columns"
+      v-model:page="page"
+      v-model:per_page="itemsPerPage"
+      hide-edit
+      hide-delete
+      hide-actions
+    >
+      <template #filter>
+        <div class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex items-center justify-between gap-2">
+          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2">
+            Financeiro Entregadores
+          </h1>
 
-    <div v-if="isLoading" class="py-12 text-center text-gray-500">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin mx-auto mb-2" />
-      <p>Carregando dados financeiros...</p>
-    </div>
-
-    <div v-else class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <!-- Search -->
-      <div class="p-4 border-b border-gray-200 bg-gray-50">
-        <div class="relative max-w-sm">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+          <div class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto">
+            <div class="relative w-full max-w-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                v-model="search"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white p-2 pl-10 text-sm focus:border-primary focus:ring-primary shadow-sm"
+                placeholder="Buscar entregador..."
+              />
+            </div>
+            
+            <button
+              @click="loadData"
+              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              title="Atualizar"
+            >
+              <UIcon
+                name="i-heroicons-arrow-path"
+                :class="['h-4 w-4 sm:h-5 sm:w-5', isLoading ? 'animate-spin' : '']"
+              />
+            </button>
           </div>
-          <input
-            v-model="search"
-            type="text"
-            class="block w-full rounded-lg border border-gray-300 bg-white p-2 pl-10 text-sm focus:border-primary focus:ring-primary shadow-sm"
-            placeholder="Buscar entregador..."
-          />
         </div>
-      </div>
+      </template>
 
-      <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-white border-b border-gray-200 text-gray-500 font-medium">
-            <tr>
-              <th class="px-6 py-3">Entregador</th>
-              <th class="px-6 py-3 text-right">Carteira (Total)</th>
-              <th class="px-6 py-3 text-right">Entregas (Taxa R$ 1,00)</th>
-              <th class="px-6 py-3 text-right">Adiantamentos</th>
-              <th class="px-6 py-3 text-right">Valor a Pagar</th>
-              <th class="px-6 py-3 text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-if="filteredBikers.length === 0">
-              <td colspan="6" class="px-6 py-8 text-center text-gray-400">
-                Nenhum entregador encontrado.
-              </td>
-            </tr>
-            <tr v-for="biker in filteredBikers" :key="biker.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4">
-                <p class="font-medium text-gray-900">{{ biker.name }}</p>
-                <p class="text-xs text-gray-500">{{ biker.phone || biker.email }}</p>
-              </td>
-              <td class="px-6 py-4 text-right font-medium text-gray-900">
-                {{ formatCurrency(biker.wallet) }}
-              </td>
-              <td class="px-6 py-4 text-right">
-                <p class="text-gray-900">{{ biker.total_deliveries }} entregas</p>
-                <p class="text-xs text-red-500 font-medium">- {{ formatCurrency(biker.delivery_fee) }}</p>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <span class="text-red-500 font-medium whitespace-nowrap">- {{ formatCurrency(biker.advance_money) }}</span>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <span
-                  class="inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-bold shadow-sm"
-                  :class="biker.net_to_pay >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                >
-                  {{ formatCurrency(biker.net_to_pay) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-center flex items-center justify-center gap-2">
-                <button
-                  @click="openAdvanceModal(biker)"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
-                >
-                  <UIcon name="i-ph-coins-duotone" class="w-4 h-4" />
-                  Adiantamento
-                </button>
-                <button
-                  @click="openPagarModal(biker)"
-                  :disabled="isLiquidating"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
-                  title="Registrar pagamento definitivo e zerar saldo"
-                >
-                  <UIcon name="i-ph-check-circle-duotone" class="w-4 h-4" />
-                  Pagar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+      <!-- Custom Column Slots -->
+      <template #biker="{ row }">
+        <div>
+          <p class="font-medium text-gray-900">{{ row.name }}</p>
+          <p class="text-xs text-gray-500">{{ row.phone || row.email }}</p>
+        </div>
+      </template>
+      
+      <template #wallet="{ row }">
+        <span class="font-medium text-gray-900">{{ formatCurrency(row.wallet) }}</span>
+      </template>
+      
+      <template #deliveries="{ row }">
+        <div>
+          <p class="text-gray-900">{{ row.total_deliveries }} entregas</p>
+          <p class="text-xs text-red-500 font-medium">- {{ formatCurrency(row.delivery_fee) }}</p>
+        </div>
+      </template>
+      
+      <template #advances="{ row }">
+        <span class="text-red-500 font-medium whitespace-nowrap">- {{ formatCurrency(row.advance_money) }}</span>
+      </template>
+      
+      <template #net_to_pay="{ row }">
+        <span
+          class="inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-bold shadow-sm"
+          :class="row.net_to_pay >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+        >
+          {{ formatCurrency(row.net_to_pay) }}
+        </span>
+      </template>
+      
+      <template #custom_actions="{ row }">
+        <div class="flex items-center gap-2">
+          <button
+            @click="openAdvanceModal(row)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+          >
+            <UIcon name="i-ph-coins-duotone" class="w-4 h-4" />
+            Adiantamento
+          </button>
+          <button
+            @click="openPagarModal(row)"
+            :disabled="isLiquidating"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+            title="Registrar pagamento definitivo e zerar saldo"
+          >
+            <UIcon name="i-ph-check-circle-duotone" class="w-4 h-4" />
+            Pagar
+          </button>
+        </div>
+      </template>
+    </TableBase>
     <!-- Advance Money Modal -->
     <BaseDialog v-model="showAdvanceModal" :title="'Adiantamento - ' + (selectedBiker?.name || '')">
       <div class="p-4 space-y-4">
@@ -199,13 +203,24 @@ const isLiquidating = ref(false);
 const bikers = ref<any[]>([]);
 const search = ref("");
 
-// Modal
 const showAdvanceModal = ref(false);
 const showPagarModal = ref(false);
 const selectedBiker = ref<any>(null);
 const advanceForm = ref({ amount: 0 });
 const isSubmitting = ref(false);
 const advanceError = ref("");
+
+const page = ref(1);
+const itemsPerPage = ref(10);
+
+const columns = [
+  { key: "biker", label: "Entregador" },
+  { key: "wallet", label: "Carteira (Total)" },
+  { key: "deliveries", label: "Entregas (Tx R$ 1,00)" },
+  { key: "advances", label: "Adiantamentos" },
+  { key: "net_to_pay", label: "Valor a Pagar" },
+  { key: "custom_actions", label: "Ações" }
+];
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);

@@ -2,7 +2,7 @@ import { useAuthStore } from "~/stores/auth";
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   if (import.meta.client) {
-    const loginRoutes = ["/login", "/register"];
+    const loginRoutes = ["/login", "/register", "/register-biker"];
     const user = useAuthStore().isAuthenticated;
     if (to.path === "/") {
       return true;

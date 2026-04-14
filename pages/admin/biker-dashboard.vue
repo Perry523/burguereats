@@ -129,6 +129,51 @@
         </p>
       </UCard> -->
 
+      <!-- PWA Web Tracking Card -->
+      <UCard v-if="isBikerRole" class="mb-6 bg-white shadow-sm border border-green-200" :class="isTrackingWeb ? 'ring-1 ring-green-400' : ''">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <UIcon name="i-heroicons-map-pin" class="w-5 h-5 flex-shrink-0" :class="isTrackingWeb ? 'text-green-500 animate-pulse' : 'text-gray-400'" />
+              Rastreamento PWA (Navegador)
+            </h3>
+            <p class="text-sm text-gray-500 mt-1 max-w-xl">
+              Compartilhe sua localização em tempo real com o restaurante. <strong>Atenção:</strong> Como é pelo navegador, a atualização pode parar se a tela do celular desligar.
+            </p>
+            <div v-if="lastLocationTime" class="text-xs text-gray-400 mt-2 font-medium">
+              Última sincronização: {{ lastLocationTime.toLocaleTimeString() }}
+            </div>
+            <div v-if="trackingError" class="text-xs text-red-500 mt-2 font-medium">
+              Falha: {{ trackingError }}
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3">
+            <UButton
+              v-if="isTrackingWeb"
+              icon="i-heroicons-arrow-path"
+              color="gray"
+              variant="ghost"
+              class="border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 w-full sm:w-auto justify-center"
+              :loading="isPinging"
+              @click="forcePing"
+            >
+              Forçar Ping
+            </UButton>
+            
+            <UButton
+              :icon="isTrackingWeb ? 'i-heroicons-pause-circle' : 'i-heroicons-play-circle'"
+              :color="isTrackingWeb ? 'red' : 'green'"
+              variant="solid"
+              class="w-full sm:w-auto justify-center"
+              @click="toggleWebTracking"
+            >
+              {{ isTrackingWeb ? 'Pausar Rastreio' : 'Iniciar Rastreio' }}
+            </UButton>
+          </div>
+        </div>
+      </UCard>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Meus ganhos / Saldo total -->
         <UCard class="bg-white shadow-sm border border-gray-200">
@@ -269,8 +314,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import { useAuthStore } from "~/stores/auth";
+
+const supabase = useSupabaseClient();
 
 definePageMeta({
   layout: "admin",
@@ -438,4 +485,89 @@ onMounted(async () => {
 
   await fetchStats();
 });
+
+// --- PWA TRACKING LOGIC ---
+const isTrackingWeb = ref(false);
+const trackingId = ref<number | null>(null);
+const lastLocationTime = ref<Date | null>(null);
+const trackingError = ref<string | null>(null);
+const isPinging = ref(false);
+
+const sendLocationToSupabase = async (pos: GeolocationPosition) => {
+  if (!bikerProfileId.value || bikers.value.length === 0) return;
+  const bikerName = bikers.value[0].name;
+
+  try {
+    trackingError.value = null;
+    await supabase.from("biker_locations").upsert({
+      biker_id: bikerProfileId.value,
+      biker_name: bikerName,
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      speed: pos.coords.speed || 0,
+      heading: pos.coords.heading || 0,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "biker_id" });
+
+    lastLocationTime.value = new Date();
+  } catch (err: any) {
+    console.error("Tracking upsert failed", err);
+    trackingError.value = "Erro de conexão";
+  }
+};
+
+const forcePing = () => {
+  if (!navigator.geolocation) {
+    trackingError.value = "Navegador não suporta GPS.";
+    return;
+  }
+  isPinging.value = true;
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      await sendLocationToSupabase(pos);
+      isPinging.value = false;
+    },
+    (err) => {
+      trackingError.value = err.message;
+      isPinging.value = false;
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+};
+
+const toggleWebTracking = () => {
+  if (isTrackingWeb.value) {
+    // Stop Tracking
+    if (trackingId.value !== null) {
+      navigator.geolocation.clearWatch(trackingId.value);
+      trackingId.value = null;
+    }
+    isTrackingWeb.value = false;
+  } else {
+    // Start Tracking
+    if (!navigator.geolocation) {
+      trackingError.value = "Navegador não suporta GPS.";
+      return;
+    }
+    trackingError.value = null;
+    isTrackingWeb.value = true;
+    forcePing(); // Execute an immediate ping on start!
+    
+    // Register the OS watcher for real movement changes
+    trackingId.value = navigator.geolocation.watchPosition(
+      (pos) => sendLocationToSupabase(pos),
+      (err) => {
+        trackingError.value = err.message;
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+    );
+  }
+};
+
+onUnmounted(() => {
+  if (trackingId.value !== null) {
+    navigator.geolocation.clearWatch(trackingId.value);
+  }
+});
+
 </script>

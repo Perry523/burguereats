@@ -47,7 +47,15 @@
           </div>
 
           <!-- Company Selector for Admins in Sidebar -->
-          <div v-if="authStore.user?.role === 'admin'" class="mt-6 px-1">
+          <div v-if="authStore.user?.role === 'admin'" class="mt-6 px-1 space-y-2">
+            <!-- <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-bold uppercase text-white/40 tracking-wider">Filtrar Empresas</span>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="showOnlyDelivery" class="sr-only peer">
+                <div class="w-7 h-4 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500 relative"></div>
+                <span class="ms-2 text-[10px] font-medium text-white/60 uppercase">Delivery</span>
+              </label>
+            </div> -->
             <div class="relative">
               <div
                 class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center"
@@ -65,7 +73,7 @@
                   Selecionar Empresa
                 </option>
                 <option
-                  v-for="company in companies"
+                  v-for="company in filteredCompaniesList"
                   :key="company.id"
                   :value="company.id"
                   class="bg-slate-900"
@@ -364,6 +372,12 @@ const formatCurrency = (val: number) => {
 
 // Fetch companies directly to avoid SSR hydration bugs
 const companies = ref<any[]>([]);
+const showOnlyDelivery = ref(true);
+
+const filteredCompaniesList = computed(() => {
+  if (!showOnlyDelivery.value) return companies.value;
+  return companies.value.filter((c: any) => c.type === "delivery");
+});
 
 const fetchCompanies = async () => {
   if (authStore.user?.role === "admin") {

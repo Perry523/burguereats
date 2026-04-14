@@ -18,6 +18,9 @@ const options = { ...defaltValues, ...props?.options };
 const { inputRef, setValue, numberValue } = useCurrencyInput(options);
 watch(numberValue, (newValue) => {
   if (newValue === null) setValue(0);
+  if (newValue !== undefined && newValue !== null) {
+    modelValue.value = newValue;
+  }
 });
 
 watch(inputRef, () => {
