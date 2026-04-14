@@ -35,20 +35,20 @@
           <span
             :class="[
               'animate-ping absolute inline-flex h-3 w-3 rounded-full opacity-75',
-              channelStatus === 'SUBSCRIBED' ? 'bg-emerald-400' : 'bg-red-400',
+              channelStatus === 'CONECTADO' ? 'bg-emerald-400' : 'bg-red-400',
             ]"
           ></span>
           <span
             :class="[
               'relative inline-flex rounded-full h-3 w-3',
-              channelStatus === 'SUBSCRIBED' ? 'bg-emerald-500' : 'bg-red-500',
+              channelStatus === 'CONECTADO' ? 'bg-emerald-500' : 'bg-red-500',
             ]"
           ></span>
         </span>
         <span
           class="text-sm font-medium"
           :class="
-            channelStatus === 'SUBSCRIBED' ? 'text-emerald-700' : 'text-red-700'
+            channelStatus === 'CONECTADO' ? 'text-emerald-700' : 'text-red-700'
           "
           >{{ channelStatus }}</span
         >
@@ -247,7 +247,14 @@ onMounted(async () => {
 
   trackingChannel.subscribe(async (status: string) => {
     console.log("[STATUS]", status);
-    channelStatus.value = status;
+    const statusMap: Record<string, string> = {
+      SUBSCRIBED: "CONECTADO",
+      TIMED_OUT: "TEMPO ESGOTADO",
+      CLOSED: "FECHADO",
+      CHANNEL_ERROR: "ERRO DE CONEXÃO",
+    };
+    channelStatus.value = statusMap[status] || status;
+
     if (status === "SUBSCRIBED") {
       console.log("Conectado. Ouvindo a tabela biker_locations...");
     }

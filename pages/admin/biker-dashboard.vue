@@ -399,6 +399,14 @@ const formatDate = (dateString: string) => {
 };
 
 const loadBikerProfile = async () => {
+  // Only allow actual biker-role users to use tracking features.
+  // This prevents admin/manager users (who may have an Entregadores record)
+  // from accidentally writing location data with wrong IDs.
+  if (auth.user?.role !== "biker") {
+    isBikerRole.value = false;
+    return;
+  }
+
   try {
     const res = await $fetch<{
       success: boolean;
@@ -494,13 +502,16 @@ const trackingError = ref<string | null>(null);
 const isPinging = ref(false);
 
 const sendLocationToSupabase = async (pos: GeolocationPosition) => {
-  if (!bikerProfileId.value || bikers.value.length === 0) return;
+  // Use auth.user.id (users table ID), NOT bikerProfileId (Entregadores table ID).
+  // This must match the biker-app mobile tracking which uses user.id from the users table.
+  const userId = auth.user?.id;
+  if (!userId || bikers.value.length === 0) return;
   const bikerName = bikers.value[0].name;
 
   try {
     trackingError.value = null;
     await supabase.from("biker_locations").upsert({
-      biker_id: bikerProfileId.value,
+      biker_id: userId,
       biker_name: bikerName,
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,
