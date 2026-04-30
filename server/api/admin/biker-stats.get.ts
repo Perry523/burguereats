@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
     let companyId = query.companyId as string;
     let bikerId = query.bikerId as string | undefined;
     const dateRange = query.dateRange as string | undefined;
+    const dateFrom = query.dateFrom as string | undefined; // yyyy-mm-dd
+    const dateTo = query.dateTo as string | undefined;     // yyyy-mm-dd
 
     // Enforcement: Managers can only see their own company's stats
     if (auth.role === 'manager') {
@@ -59,31 +61,24 @@ export default defineEventHandler(async (event) => {
 
     // Date Range filter
     const now = dayjs();
-    if (dateRange && dateRange !== "all") {
-      let dateFrom;
-      let dateTo = now.endOf("day").toISOString();
-      
+    if (dateFrom && dateTo) {
+      // Explicit date range from week picker (takes priority)
+      ordersQuery = ordersQuery.gte("created_at", `${dateFrom}T00:00:00`).lte("created_at", `${dateTo}T23:59:59`);
+    } else if (dateRange && dateRange !== "all") {
+      let dfrom: string | null = null;
+      let dto = now.endOf("day").toISOString();
       switch (dateRange) {
         case "today":
-          dateFrom = now.startOf("day").toISOString();
-          break;
+          dfrom = now.startOf("day").toISOString(); break;
         case "yesterday":
-          dateFrom = now.subtract(1, "day").startOf("day").toISOString();
-          dateTo = now.subtract(1, "day").endOf("day").toISOString();
-          break;
+          dfrom = now.subtract(1, "day").startOf("day").toISOString();
+          dto = now.subtract(1, "day").endOf("day").toISOString(); break;
         case "last_week":
-          dateFrom = now.subtract(7, "day").startOf("day").toISOString();
-          break;
+          dfrom = now.subtract(7, "day").startOf("day").toISOString(); break;
         case "last_month":
-          dateFrom = now.subtract(1, "month").startOf("day").toISOString();
-          break;
-        default:
-          dateFrom = null;
+          dfrom = now.subtract(1, "month").startOf("day").toISOString(); break;
       }
-
-      if (dateFrom) {
-        ordersQuery = ordersQuery.gte("created_at", dateFrom).lte("created_at", dateTo);
-      }
+      if (dfrom) ordersQuery = ordersQuery.gte("created_at", dfrom).lte("created_at", dto);
     }
     
     // --- PAYMENTS QUERY FOR ADMIN STATS ---
@@ -99,27 +94,20 @@ export default defineEventHandler(async (event) => {
       paymentsQuery = paymentsQuery.eq("biker_id", bikerId);
     }
     
-    if (dateRange && dateRange !== "all") {
+    if (dateFrom && dateTo) {
+      paymentsQuery = paymentsQuery.gte("date", dateFrom).lte("date", dateTo);
+    } else if (dateRange && dateRange !== "all") {
       let dFromStr = "";
       let dToStr = now.endOf("day").format("YYYY-MM-DD");
       switch (dateRange) {
-        case "today":
-          dFromStr = now.format("YYYY-MM-DD");
-          break;
+        case "today": dFromStr = now.format("YYYY-MM-DD"); break;
         case "yesterday":
           dFromStr = now.subtract(1, "day").format("YYYY-MM-DD");
-          dToStr = dFromStr;
-          break;
-        case "last_week":
-          dFromStr = now.subtract(7, "day").format("YYYY-MM-DD");
-          break;
-        case "last_month":
-          dFromStr = now.subtract(1, "month").format("YYYY-MM-DD");
-          break;
+          dToStr = dFromStr; break;
+        case "last_week": dFromStr = now.subtract(7, "day").format("YYYY-MM-DD"); break;
+        case "last_month": dFromStr = now.subtract(1, "month").format("YYYY-MM-DD"); break;
       }
-      if (dFromStr) {
-        paymentsQuery = paymentsQuery.gte("date", dFromStr).lte("date", dToStr);
-      }
+      if (dFromStr) paymentsQuery = paymentsQuery.gte("date", dFromStr).lte("date", dToStr);
     }
     // ------------------------------------
 
