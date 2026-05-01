@@ -1,5 +1,12 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div
+    class="lg:h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6"
+    :class="
+      auth.user?.role === 'biker'
+        ? 'h-[calc(100vh-128px)]'
+        : 'h-[calc(100vh-64px)]'
+    "
+  >
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -19,7 +26,9 @@
             Histórico de Pagamentos
           </h1>
 
-          <div class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto">
+          <div
+            class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto"
+          >
             <!-- Biker Filter (Admin only) -->
             <select
               v-if="isAdmin"
@@ -55,7 +64,10 @@
             >
               <UIcon
                 name="i-heroicons-arrow-path"
-                :class="['h-4 w-4 sm:h-5 sm:w-5', isLoading ? 'animate-spin' : '']"
+                :class="[
+                  'h-4 w-4 sm:h-5 sm:w-5',
+                  isLoading ? 'animate-spin' : '',
+                ]"
               />
             </button>
           </div>

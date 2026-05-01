@@ -1,5 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div
+    class="h-[calc(100vh-64px)] lg:h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6"
+  >
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -79,8 +81,13 @@
     >
       <div class="p-4 sm:p-6 space-y-4">
         <div class="relative">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <UIcon name="i-heroicons-magnifying-glass" class="h-5 w-5 text-gray-400" />
+          <div
+            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+          >
+            <UIcon
+              name="i-heroicons-magnifying-glass"
+              class="h-5 w-5 text-gray-400"
+            />
           </div>
           <input
             v-model="companySearch"
@@ -90,12 +97,20 @@
           />
         </div>
 
-        <div class="max-h-96 overflow-y-auto space-y-2 border border-gray-100 rounded-xl p-3 bg-gray-50/50">
-          <div v-if="filteredCompanies.length === 0" class="text-center py-8 text-sm text-gray-500">
-            <UIcon name="i-heroicons-building-office" class="w-12 h-12 mx-auto mb-2 opacity-20" />
+        <div
+          class="max-h-96 overflow-y-auto space-y-2 border border-gray-100 rounded-xl p-3 bg-gray-50/50"
+        >
+          <div
+            v-if="filteredCompanies.length === 0"
+            class="text-center py-8 text-sm text-gray-500"
+          >
+            <UIcon
+              name="i-heroicons-building-office"
+              class="w-12 h-12 mx-auto mb-2 opacity-20"
+            />
             <p>Nenhuma empresa encontrada.</p>
           </div>
-          
+
           <div
             v-for="company in filteredCompanies"
             :key="company.id"
@@ -111,23 +126,27 @@
                 class="rounded border-gray-300 text-primary focus:ring-primary h-5 w-5 cursor-pointer"
                 @click.stop
               />
-              <label :for="'company-' + company.id" class="text-sm font-semibold text-gray-700 cursor-pointer group-hover:text-primary transition-colors">
+              <label
+                :for="'company-' + company.id"
+                class="text-sm font-semibold text-gray-700 cursor-pointer group-hover:text-primary transition-colors"
+              >
                 {{ company.name }}
               </label>
             </div>
-            <UIcon 
-              v-if="selectedCompanyIds.includes(company.id)" 
-              name="i-heroicons-check-badge" 
-              class="w-5 h-5 text-primary" 
+            <UIcon
+              v-if="selectedCompanyIds.includes(company.id)"
+              name="i-heroicons-check-badge"
+              class="w-5 h-5 text-primary"
             />
           </div>
         </div>
-        
+
         <div class="flex flex-col gap-4 pt-4 border-t border-gray-100 mt-2">
           <p class="text-xs text-gray-500 text-center italic">
-            Este entregador poderá realizar registros para todas as empresas selecionadas acima.
+            Este entregador poderá realizar registros para todas as empresas
+            selecionadas acima.
           </p>
-          
+
           <div class="flex gap-3 mt-2">
             <button
               @click="showVinculateModal = false"
@@ -140,8 +159,12 @@
               :disabled="isSavingVinculations"
               class="flex-[2] px-4 py-3 text-sm font-semibold text-white bg-primary hover:bg-primary-focus rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <UIcon v-if="isSavingVinculations" name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
-              {{ isSavingVinculations ? 'Salvando...' : 'Salvar Vínculos' }}
+              <UIcon
+                v-if="isSavingVinculations"
+                name="i-heroicons-arrow-path"
+                class="w-5 h-5 animate-spin"
+              />
+              {{ isSavingVinculations ? "Salvando..." : "Salvar Vínculos" }}
             </button>
           </div>
         </div>
@@ -188,7 +211,7 @@ const toast = useToast();
 const filteredCompanies = computed(() => {
   if (!companySearch.value) return allCompanies.value;
   const term = companySearch.value.toLowerCase();
-  return allCompanies.value.filter(c => c.name.toLowerCase().includes(term));
+  return allCompanies.value.filter((c) => c.name.toLowerCase().includes(term));
 });
 
 const companyId = computed(() => {
@@ -222,8 +245,8 @@ const tableActions: any[] = [
     name: "Vincular Empresas",
     icon: "i-heroicons-link",
     action: (row: any) => openVinculateModal(row),
-    show: () => user.value?.role === 'admin'
-  }
+    show: () => user.value?.role === "admin",
+  },
 ];
 
 const fetchBikers = async (companyId: string) => {
@@ -243,9 +266,14 @@ const fetchBikers = async (companyId: string) => {
 
 const fetchAllCompanies = async () => {
   try {
-    const response = await $fetch<{ success: boolean; data: any[] }>("/api/companies");
+    const response = await $fetch<{ success: boolean; data: any[] }>(
+      "/api/companies",
+    );
     if (response?.success) {
-      allCompanies.value = response.data.map(c => ({ id: c.id, name: c.name }));
+      allCompanies.value = response.data.map((c) => ({
+        id: c.id,
+        name: c.name,
+      }));
     }
   } catch (error) {
     console.error("Error fetching companies:", error);
@@ -257,13 +285,15 @@ const openVinculateModal = async (biker: Biker) => {
   selectedCompanyIds.value = [];
   companySearch.value = "";
   showVinculateModal.value = true;
-  
+
   if (allCompanies.value.length === 0) {
     await fetchAllCompanies();
   }
-  
+
   try {
-    const response = await $fetch<{ success: boolean; data: string[] }>(`/api/bikers/${biker.id}/companies`);
+    const response = await $fetch<{ success: boolean; data: string[] }>(
+      `/api/bikers/${biker.id}/companies`,
+    );
     if (response?.success) {
       selectedCompanyIds.value = response.data;
     }
@@ -283,21 +313,27 @@ const toggleCompanySelection = (companyId: string) => {
 
 const saveVinculations = async () => {
   if (!selectedBiker.value) return;
-  
+
   isSavingVinculations.value = true;
   try {
-    const response = await $fetch(`/api/bikers/${selectedBiker.value.id}/companies`, {
-      method: 'post',
-      body: { companyIds: selectedCompanyIds.value }
-    });
-    
+    const response = await $fetch(
+      `/api/bikers/${selectedBiker.value.id}/companies`,
+      {
+        method: "post",
+        body: { companyIds: selectedCompanyIds.value },
+      },
+    );
+
     if (response) {
-      toast.add({ color: 'primary', title: 'Vínculos atualizados com sucesso' });
+      toast.add({
+        color: "primary",
+        title: "Vínculos atualizados com sucesso",
+      });
       showVinculateModal.value = false;
     }
   } catch (error) {
     console.error("Error saving vinculations:", error);
-    toast.add({ color: 'error', title: 'Erro ao salvar vínculos' });
+    toast.add({ color: "error", title: "Erro ao salvar vínculos" });
   } finally {
     isSavingVinculations.value = false;
   }

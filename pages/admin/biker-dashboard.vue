@@ -2,9 +2,7 @@
   <div
     class="h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
   >
-    <div
-      class="flex flex-row items-center justify-between mt-2 mb-6 gap-2"
-    >
+    <div class="flex flex-row items-center justify-between mt-2 md:mb-4 gap-2">
       <div class="hidden lg:block">
         <h1 class="text-3xl font-bold text-gray-800">
           {{ isBikerRole ? "Meu Painel" : "Painel de Entregadores" }}
@@ -18,32 +16,121 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto">
-        <select
-          v-if="!isBikerRole"
-          v-model="selectedBiker"
-          class="flex-1 lg:flex-initial rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[120px] sm:min-w-[200px]"
-          :disabled="isLoading"
+      <!-- Filter Bar -->
+      <div
+        class="mb-4 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex-1 lg:flex-initial lg:ml-auto max-w-full lg:max-w-2xl"
+      >
+        <!-- Top row: selects -->
+        <div
+          class="flex items-stretch divide-x divide-gray-100 border-b border-gray-100"
         >
-          <option value="all">Todos</option>
-          <option v-for="biker in bikers" :key="biker.id" :value="biker.id">
-            {{ biker.name }}
-          </option>
-        </select>
-
-        <select
-          v-model="selectedDate"
-          class="flex-1 lg:flex-initial rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[120px] sm:min-w-[180px]"
-          :disabled="isLoading"
-        >
-          <option
-            v-for="opt in dateRangeOptions"
-            :key="opt.value"
-            :value="opt.value"
+          <!-- Biker Filter -->
+          <label
+            v-if="!isBikerRole"
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-0 hover:bg-gray-50/70 transition-colors cursor-pointer group"
           >
-            {{ opt.label }}
-          </option>
-        </select>
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"
+            >
+              <UIcon
+                name="i-ph-person-simple-bike-duotone"
+                class="w-4 h-4 text-emerald-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Entregador
+              </p>
+              <select
+                v-model="selectedBiker"
+                :disabled="isLoading"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
+              >
+                <option value="all">Todos</option>
+                <option
+                  v-for="biker in bikers"
+                  :key="biker.id"
+                  :value="biker.id"
+                >
+                  {{ biker.name }}
+                </option>
+              </select>
+            </div>
+            <UIcon
+              name="i-heroicons-chevron-up-down"
+              class="w-4 h-4 text-gray-300 group-hover:text-gray-400 shrink-0"
+            />
+          </label>
+        </div>
+
+        <!-- Bottom row: week picker + refresh -->
+        <div class="flex items-center gap-1 px-3 py-2">
+          <!-- Prev week -->
+          <button
+            @click="shiftWeek(-1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            title="Semana anterior"
+          >
+            <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+          </button>
+
+          <!-- Month + Week selects, inline -->
+          <div class="flex-1 flex items-center justify-center gap-1">
+            <span
+              class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0"
+            >
+              <UIcon
+                name="i-heroicons-calendar-days"
+                class="w-3.5 h-3.5 text-sky-500"
+              />
+            </span>
+            <select
+              v-model="pickerMonth"
+              @change="onMonthChange"
+              class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+            >
+              <option v-for="(m, i) in months" :key="i" :value="i">
+                {{ m }}
+              </option>
+            </select>
+            <span class="text-gray-300 text-xs">·</span>
+            <select
+              v-model="pickerWeek"
+              @change="onWeekChange"
+              class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[180px] truncate"
+            >
+              <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
+                {{ w.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Next week -->
+          <button
+            @click="shiftWeek(1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            title="Próxima semana"
+          >
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          </button>
+
+          <!-- Divider -->
+          <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+          <!-- Refresh -->
+          <button
+            @click="fetchStats"
+            :title="isLoading ? 'Carregando…' : 'Atualizar'"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-primary transition-colors"
+          >
+            <UIcon
+              name="i-heroicons-arrow-path"
+              :class="['w-4 h-4', { 'animate-spin': isLoading }]"
+            />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -129,60 +216,21 @@
         </p>
       </UCard> -->
 
-      <!-- PWA Web Tracking Card -->
-      <UCard v-if="isBikerRole" class="mb-6 bg-white shadow-sm border border-green-200" :class="isTrackingWeb ? 'ring-1 ring-green-400' : ''">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <UIcon name="i-heroicons-map-pin" class="w-5 h-5 flex-shrink-0" :class="isTrackingWeb ? 'text-green-500 animate-pulse' : 'text-gray-400'" />
-              Rastreamento PWA (Navegador)
-            </h3>
-            <p class="text-sm text-gray-500 mt-1 max-w-xl">
-              Compartilhe sua localização em tempo real com o restaurante. <strong>Atenção:</strong> Como é pelo navegador, a atualização pode parar se a tela do celular desligar.
-            </p>
-            <div v-if="lastLocationTime" class="text-xs text-gray-400 mt-2 font-medium">
-              Última sincronização: {{ lastLocationTime.toLocaleTimeString() }}
-            </div>
-            <div v-if="trackingError" class="text-xs text-red-500 mt-2 font-medium">
-              Falha: {{ trackingError }}
-            </div>
-          </div>
-
-          <div class="flex flex-col sm:flex-row items-center gap-3">
-            <UButton
-              v-if="isTrackingWeb"
-              icon="i-heroicons-arrow-path"
-              color="gray"
-              variant="ghost"
-              class="border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 w-full sm:w-auto justify-center"
-              :loading="isPinging"
-              @click="forcePing"
-            >
-              Forçar Ping
-            </UButton>
-            
-            <UButton
-              :icon="isTrackingWeb ? 'i-heroicons-pause-circle' : 'i-heroicons-play-circle'"
-              :color="isTrackingWeb ? 'red' : 'green'"
-              variant="solid"
-              class="w-full sm:w-auto justify-center"
-              @click="toggleWebTracking"
-            >
-              {{ isTrackingWeb ? 'Pausar Rastreio' : 'Iniciar Rastreio' }}
-            </UButton>
-          </div>
-        </div>
-      </UCard>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Meus ganhos / Saldo total -->
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Saldo Total (Bruto)</p>
+              <p class="text-gray-500 text-sm font-medium">
+                Saldo Total (Bruto)
+              </p>
               <div class="flex items-baseline gap-2 mt-1">
                 <p class="text-3xl font-bold text-gray-900">
-                  {{ stats.financial ? formatCurrency(stats.financial.wallet) : formatCurrency(0) }}
+                  {{
+                    stats.financial
+                      ? formatCurrency(stats.financial.wallet)
+                      : formatCurrency(0)
+                  }}
                 </p>
               </div>
             </div>
@@ -196,18 +244,33 @@
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Descontos Pendentes</p>
+              <p class="text-gray-500 text-sm font-medium">
+                Descontos Pendentes
+              </p>
               <div class="mt-1">
                 <p class="text-3xl font-bold text-red-600">
-                  {{ stats.financial ? formatCurrency(stats.financial.advances + stats.financial.totalFees) : formatCurrency(0) }}
+                  {{
+                    stats.financial
+                      ? formatCurrency(
+                          stats.financial.advances + stats.financial.totalFees,
+                        )
+                      : formatCurrency(0)
+                  }}
                 </p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider" v-if="stats.financial">
-                  {{ formatCurrency(stats.financial.advances) }} vales + {{ formatCurrency(stats.financial.totalFees) }} taxas
+                <p
+                  class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider"
+                  v-if="stats.financial"
+                >
+                  {{ formatCurrency(stats.financial.advances) }} vales +
+                  {{ formatCurrency(stats.financial.totalFees) }} taxas
                 </p>
               </div>
             </div>
             <div class="p-3 bg-red-50 rounded-lg">
-              <UIcon name="i-ph-trend-down-duotone" class="w-8 h-8 text-red-400" />
+              <UIcon
+                name="i-ph-trend-down-duotone"
+                class="w-8 h-8 text-red-400"
+              />
             </div>
           </div>
         </UCard>
@@ -216,9 +279,15 @@
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-gray-500 text-sm font-medium">Líquido Disponível</p>
+              <p class="text-gray-500 text-sm font-medium">
+                Líquido Disponível
+              </p>
               <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
-                {{ stats.financial ? formatCurrency(stats.financial.netPay) : formatCurrency(0) }}
+                {{
+                  stats.financial
+                    ? formatCurrency(stats.financial.netPay)
+                    : formatCurrency(0)
+                }}
               </p>
             </div>
             <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
@@ -335,15 +404,113 @@ const companyId = computed(() => {
 
 const isLoading = ref(true);
 const selectedBiker = ref("all");
-const selectedDate = ref("all");
 
-const dateRangeOptions = [
-  { label: "Todos os períodos", value: "all" },
-  { label: "Hoje", value: "today" },
-  { label: "Ontem", value: "yesterday" },
-  { label: "Última semana", value: "last_week" },
-  { label: "Último mês", value: "last_month" },
+// ── Week Range Picker ──────────────────────────────────────────────
+const months = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
+
+function getMondayOf(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const today = new Date();
+const initMonday = getMondayOf(today);
+const initSunday = new Date(initMonday);
+initSunday.setDate(initSunday.getDate() + 6);
+
+const weekRange = ref({
+  from: toISODate(initMonday),
+  to: toISODate(initSunday),
+});
+const pickerMonth = ref(initMonday.getMonth());
+const pickerWeek = ref("");
+
+const weeksInMonth = computed(() => {
+  const year = new Date().getFullYear();
+  const weeks: { label: string; from: Date; to: Date }[] = [];
+  const cursor = new Date(year, pickerMonth.value, 1);
+  let mon = getMondayOf(cursor);
+  for (let i = 0; i < 6; i++) {
+    const sun = new Date(mon);
+    sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() > pickerMonth.value && mon.getFullYear() >= year) break;
+    if (sun.getMonth() < pickerMonth.value) {
+      mon.setDate(mon.getDate() + 7);
+      continue;
+    }
+    const label = `Semana ${i + 1} (${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")})`;
+    weeks.push({ label, from: new Date(mon), to: new Date(sun) });
+    mon = new Date(mon);
+    mon.setDate(mon.getDate() + 7);
+  }
+  return weeks;
+});
+
+function onMonthChange() {
+  if (weeksInMonth.value.length) {
+    const w = weeksInMonth.value[0];
+    pickerWeek.value = w.label;
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    fetchStats();
+  }
+}
+
+function onWeekChange() {
+  const w = weeksInMonth.value.find((x) => x.label === pickerWeek.value);
+  if (w) {
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    fetchStats();
+  }
+}
+
+function shiftWeek(dir: 1 | -1) {
+  const [fy, fm, fd] = weekRange.value.from.split("-").map(Number);
+  const from = new Date(fy, fm - 1, fd);
+  from.setDate(from.getDate() + dir * 7);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 6);
+  weekRange.value = { from: toISODate(from), to: toISODate(to) };
+  pickerMonth.value = from.getMonth();
+  const match = weeksInMonth.value.find(
+    (w) => toISODate(w.from) === weekRange.value.from,
+  );
+  if (match) pickerWeek.value = match.label;
+  else pickerWeek.value = "";
+  fetchStats();
+}
+
+const initWeekLabel =
+  weeksInMonth.value.find((w) => toISODate(w.from) === weekRange.value.from)
+    ?.label ??
+  weeksInMonth.value[0]?.label ??
+  "";
+pickerWeek.value = initWeekLabel;
+if (!initWeekLabel && weeksInMonth.value.length) {
+  const w = weeksInMonth.value[0];
+  weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+  pickerWeek.value = w.label;
+}
+// ──────────────────────────────────────────────────────────────────
 
 const bikers = ref<any[]>([]);
 const stats = ref({
@@ -459,8 +626,8 @@ const fetchStats = async () => {
     if (effectiveBikerId && effectiveBikerId !== "all") {
       url += `&bikerId=${effectiveBikerId}`;
     }
-    if (selectedDate.value && selectedDate.value !== "all") {
-      url += `&dateRange=${selectedDate.value}`;
+    if (weekRange.value.from && weekRange.value.to) {
+      url += `&dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`;
     }
 
     const res = await $fetch<{ success: boolean; data: any }>(url);
@@ -474,7 +641,7 @@ const fetchStats = async () => {
   }
 };
 
-watch([selectedBiker, selectedDate], () => {
+watch([selectedBiker], () => {
   fetchStats();
 });
 
@@ -493,92 +660,4 @@ onMounted(async () => {
 
   await fetchStats();
 });
-
-// --- PWA TRACKING LOGIC ---
-const isTrackingWeb = ref(false);
-const trackingId = ref<number | null>(null);
-const lastLocationTime = ref<Date | null>(null);
-const trackingError = ref<string | null>(null);
-const isPinging = ref(false);
-
-const sendLocationToSupabase = async (pos: GeolocationPosition) => {
-  // Use auth.user.id (users table ID), NOT bikerProfileId (Entregadores table ID).
-  // This must match the biker-app mobile tracking which uses user.id from the users table.
-  const userId = auth.user?.id;
-  if (!userId || bikers.value.length === 0) return;
-  const bikerName = bikers.value[0].name;
-
-  try {
-    trackingError.value = null;
-    await supabase.from("biker_locations").upsert({
-      biker_id: userId,
-      biker_name: bikerName,
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
-      speed: pos.coords.speed || 0,
-      heading: pos.coords.heading || 0,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "biker_id" });
-
-    lastLocationTime.value = new Date();
-  } catch (err: any) {
-    console.error("Tracking upsert failed", err);
-    trackingError.value = "Erro de conexão";
-  }
-};
-
-const forcePing = () => {
-  if (!navigator.geolocation) {
-    trackingError.value = "Navegador não suporta GPS.";
-    return;
-  }
-  isPinging.value = true;
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      await sendLocationToSupabase(pos);
-      isPinging.value = false;
-    },
-    (err) => {
-      trackingError.value = err.message;
-      isPinging.value = false;
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
-};
-
-const toggleWebTracking = () => {
-  if (isTrackingWeb.value) {
-    // Stop Tracking
-    if (trackingId.value !== null) {
-      navigator.geolocation.clearWatch(trackingId.value);
-      trackingId.value = null;
-    }
-    isTrackingWeb.value = false;
-  } else {
-    // Start Tracking
-    if (!navigator.geolocation) {
-      trackingError.value = "Navegador não suporta GPS.";
-      return;
-    }
-    trackingError.value = null;
-    isTrackingWeb.value = true;
-    forcePing(); // Execute an immediate ping on start!
-    
-    // Register the OS watcher for real movement changes
-    trackingId.value = navigator.geolocation.watchPosition(
-      (pos) => sendLocationToSupabase(pos),
-      (err) => {
-        trackingError.value = err.message;
-      },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
-    );
-  }
-};
-
-onUnmounted(() => {
-  if (trackingId.value !== null) {
-    navigator.geolocation.clearWatch(trackingId.value);
-  }
-});
-
 </script>

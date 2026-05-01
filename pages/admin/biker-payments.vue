@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-[calc(100vh-122px)] flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -35,7 +35,7 @@
                 class="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
               />
             </div>
-            
+
             <button
               v-if="filterDate"
               @click="filterDate = ''"
@@ -53,7 +53,10 @@
             >
               <UIcon
                 name="i-heroicons-arrow-path"
-                :class="['h-4 w-4 sm:h-5 sm:w-5', isLoading ? 'animate-spin' : '']"
+                :class="[
+                  'h-4 w-4 sm:h-5 sm:w-5',
+                  isLoading ? 'animate-spin' : '',
+                ]"
               />
             </button>
 
@@ -104,6 +107,18 @@
 
       <!-- Ver mais action -->
       <template #additional-actions="{ item }">
+        <li v-if="!item.is_paid" @click="editPayment(item)">
+          <a class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150 cursor-pointer">
+            <UIcon name="i-heroicons-pencil-square" class="w-5 h-5 text-gray-400" />
+            Editar
+          </a>
+        </li>
+        <li v-if="!item.is_paid" @click="deletePayment(item)">
+          <a class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer">
+            <UIcon name="i-heroicons-trash" class="w-5 h-5 text-red-500 hover:text-red-600" />
+            Excluir
+          </a>
+        </li>
         <li @click="viewDetails(item)">
           <a
             class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-primary hover:text-primary-focus hover:bg-primary/5 rounded-lg transition-colors duration-150 cursor-pointer"
@@ -184,8 +199,8 @@
       </div>
     </BaseDialog>
 
-    <!-- Modal Adicionar Registro -->
-    <BaseDialog v-model="showAddModal" title="Adicionar Registro">
+    <!-- Modal Adicionar/Editar Registro -->
+    <BaseDialog v-model="showAddModal" :title="editingPaymentId ? 'Editar Registro' : 'Adicionar Registro'">
       <div class="p-4 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -200,20 +215,24 @@
           />
         </div>
 
-        <div v-if="isCheckingDate" class="flex items-center gap-2 text-sm text-gray-500">
+        <div
+          v-if="isCheckingDate"
+          class="flex items-center gap-2 text-sm text-gray-500"
+        >
           <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
           Verificando...
         </div>
 
         <div v-else-if="form.date && dateChecked">
-          <div v-if="vinculatedCompanies.length === 0" class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            Você não possui vínculo permanente com nenhum restaurante. Entre em contato com o suporte para ser vinculado.
+          <div
+            v-if="vinculatedCompanies.length === 0"
+            class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+          >
+            Você não possui vínculo permanente com nenhum restaurante. Entre em
+            contato com o suporte para ser vinculado.
           </div>
           <div v-else>
-            <div v-if="assignedCompanies.length === 0" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
-              Atenção: Você não está escalado para nenhum restaurante nesta data, mas pode realizar o registro para os restaurantes vinculados abaixo.
-            </div>
-            
+
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >Restaurante <span class="text-red-500">*</span></label
             >
@@ -311,12 +330,12 @@ const filterDate = ref("");
 const showAddModal = ref(false);
 const showDetailsModal = ref(false);
 const selectedPayment = ref<any>(null);
-const assignedCompanies = ref<any[]>([]); // active escalation warnings
 const vinculatedCompanies = ref<any[]>([]); // bounds options
 const isCheckingDate = ref(false);
 const dateChecked = ref(false);
 const isSubmitting = ref(false);
 const submitError = ref("");
+const editingPaymentId = ref<string | null>(null);
 
 const todayStr = () => {
   const d = new Date();
@@ -386,13 +405,13 @@ const fetchPayments = async () => {
 };
 
 const openAddModal = async () => {
+  editingPaymentId.value = null;
   form.value = {
     date: todayStr(),
     company_id: "",
     amount: 0,
     total_deliveries: 0,
   };
-  assignedCompanies.value = [];
   vinculatedCompanies.value = [];
   dateChecked.value = false;
   submitError.value = "";
@@ -400,34 +419,58 @@ const openAddModal = async () => {
   await onDateChange();
 };
 
-const onDateChange = async () => {
-  form.value.company_id = "";
-  assignedCompanies.value = [];
+const editPayment = async (payment: any) => {
+  editingPaymentId.value = payment.id;
+  form.value = {
+    date: payment.date,
+    company_id: payment.company_id,
+    amount: payment.amount,
+    total_deliveries: payment.total_deliveries || 0,
+  };
+  vinculatedCompanies.value = [];
+  dateChecked.value = false;
+  submitError.value = "";
+  showAddModal.value = true;
+  await onDateChange(true);
+};
+
+const deletePayment = async (payment: any) => {
+  if (!confirm("Tem certeza que deseja excluir este registro?")) return;
+
+  try {
+    const res = await $fetch<{ success: boolean }>(`/api/biker-payments/record/${payment.id}`, {
+      method: "DELETE",
+    });
+
+    if (res.success) {
+      toast.add({ color: "success", title: "Registro excluído com sucesso!" });
+      await fetchPayments();
+    }
+  } catch (error: any) {
+    console.error("Delete error", error);
+    toast.add({ color: "error", title: error?.data?.statusMessage || "Erro ao excluir registro" });
+  }
+};
+
+const onDateChange = async (preserveCompany = false) => {
+  if (!preserveCompany) {
+    form.value.company_id = "";
+  }
   dateChecked.value = false;
 
   if (!form.value.date) return;
 
   isCheckingDate.value = true;
   try {
-    const [escalaRes, vinculacoesRes] = await Promise.all([
-      $fetch<{ success: boolean; data?: any[] }>(`/api/biker-assignments/my-escala?dateFrom=${form.value.date}&dateTo=${form.value.date}`),
-      $fetch<{ success: boolean; data?: any[] }>(`/api/bikers/me/companies`)
-    ]);
-    
-    // Scale tracking
-    const active = (escalaRes?.data || []).filter((a: any) => a.status === "confirmado");
-    assignedCompanies.value = active;
-    
-    // Vinculations (actual options)
-    const bounds = vinculacoesRes?.data || [];
+    const res = await $fetch<{ success: boolean; data?: any[] }>(`/api/bikers/me/companies`);
+    const bounds = res?.data || [];
     vinculatedCompanies.value = bounds;
 
-    if (bounds.length === 1) {
+    if (bounds.length === 1 && !preserveCompany) {
       form.value.company_id = bounds[0].company_id;
     }
   } catch (e) {
-    console.error("Error checking assignments:", e);
-    assignedCompanies.value = [];
+    console.error("Error checking vinculations:", e);
     vinculatedCompanies.value = [];
   } finally {
     isCheckingDate.value = false;
@@ -439,10 +482,16 @@ const submitPayment = async () => {
   isSubmitting.value = true;
   submitError.value = "";
   try {
+    const url = editingPaymentId.value 
+      ? `/api/biker-payments/record/${editingPaymentId.value}`
+      : "/api/biker-payments";
+      
+    const method = editingPaymentId.value ? "PUT" : "POST";
+
     const res = await $fetch<{ success: boolean; data?: { wallet: number } }>(
-      "/api/biker-payments",
+      url,
       {
-        method: "POST",
+        method,
         body: {
           date: form.value.date,
           company_id: form.value.company_id,
@@ -453,12 +502,10 @@ const submitPayment = async () => {
     );
 
     if (res.success) {
-      if (auth.user) {
-        auth.user.wallet = res.data?.wallet ?? (auth.user.wallet || 0);
-      }
+      // Re-fetch everything because wallet could have changed
       toast.add({
         color: "success",
-        title: "Registro adicionado com sucesso!",
+        title: editingPaymentId.value ? "Registro atualizado!" : "Registro adicionado com sucesso!",
       });
       showAddModal.value = false;
       await fetchPayments();

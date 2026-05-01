@@ -1,137 +1,84 @@
 <template>
   <div class="space-y-6 pt-2">
-
-    <div v-if="isLoading" class="py-12 text-center text-gray-500">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin mx-auto mb-2" />
-      <p>Carregando escala...</p>
+    <!-- Header Info -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sm:p-6">
+      <div class="flex items-center gap-4">
+        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <UIcon name="i-ph-buildings-duotone" class="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-gray-900">Empresas Vinculadas</h1>
+          <p class="text-sm text-gray-500">
+            Você está habilitado para realizar entregas e registrar pagamentos nas empresas abaixo.
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div v-else class="space-y-4">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="py-12 text-center text-gray-500">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin mx-auto mb-2" />
+      <p>Carregando empresas...</p>
+    </div>
+
+    <!-- Companies List -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="day in days"
-        :key="day.date"
-        class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+        v-for="company in companies"
+        :key="company.company_id"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4 hover:border-primary/30 hover:shadow-md transition-all"
       >
-        <!-- Day Header -->
-        <div class="flex items-center justify-between px-6 py-3 bg-gray-50 border-b border-gray-200">
-          <div class="flex items-center gap-3">
-            <div
-              :class="[
-                'h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold',
-                day.isToday ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-              ]"
-            >
-              {{ day.dayNum }}
-            </div>
-            <div>
-              <p class="text-sm font-semibold text-gray-900">
-                {{ day.label }}
-                <span v-if="day.isToday" class="ml-1.5 text-xs font-medium text-primary">(Hoje)</span>
-              </p>
-              <p class="text-xs text-gray-500">{{ day.fullDate }}</p>
-            </div>
-          </div>
-          <span
-            :class="[
-              'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-              day.assignments.length > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
-            ]"
-          >
-            {{ day.assignments.length }} {{ day.assignments.length === 1 ? 'escala' : 'escalas' }}
+        <div class="h-12 w-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+          <img v-if="company.company_logo" :src="company.company_logo" class="w-full h-full object-cover" />
+          <UIcon v-else name="i-ph-storefront-duotone" class="w-6 h-6 text-gray-400" />
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900">{{ company.company_name }}</h3>
+          <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 mt-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+            Vinculado
           </span>
         </div>
+      </div>
 
-        <!-- Assignments -->
-        <div v-if="day.assignments.length === 0" class="px-6 py-4 text-center text-gray-400 text-sm">
-          Sem escala para este dia.
+      <!-- Empty State -->
+      <div
+        v-if="companies.length === 0"
+        class="col-span-full py-12 px-4 border-2 border-dashed border-gray-200 rounded-xl text-center"
+      >
+        <div class="mx-auto h-12 w-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+          <UIcon name="i-ph-link-break-duotone" class="h-6 w-6 text-gray-400" />
         </div>
-        <div v-else class="divide-y divide-gray-100">
-          <div
-            v-for="a in day.assignments"
-            :key="a.id"
-            class="flex items-center justify-between px-6 py-3"
-          >
-            <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <UIcon name="i-ph-storefront-duotone" class="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-900">{{ a.company_name }}</p>
-                <p v-if="a.hours" class="text-xs text-gray-500">{{ a.hours }}</p>
-              </div>
-            </div>
-            <span
-              :class="[
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                a.status === 'confirmado' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              ]"
-            >
-              {{ a.status === 'confirmado' ? 'Confirmado' : 'Cancelado' }}
-            </span>
-          </div>
-        </div>
+        <h3 class="text-sm font-semibold text-gray-900">Nenhuma empresa vinculada</h3>
+        <p class="mt-1 text-sm text-gray-500 max-w-sm mx-auto">
+          Você ainda não foi vinculado a nenhuma empresa. Peça ao administrador para realizar o seu vínculo.
+        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useAuthStore } from '~/stores/auth';
+
 definePageMeta({
   layout: "admin",
 });
 
 const auth = useAuthStore();
+const isLoading = ref(true);
+const companies = ref<any[]>([]);
 
-const isLoading = ref(false);
-const allAssignments = ref<any[]>([]);
-
-const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-
-const toDateStr = (d: Date) => {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-};
-
-const formatFullDate = (d: Date) => {
-  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-};
-
-const todayDate = new Date();
-const todayStr = toDateStr(todayDate);
-
-// Build 7-day range (today + 6 days)
-const dateRange = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date(todayDate);
-  d.setDate(d.getDate() + i);
-  return d;
-});
-
-const dateFrom = toDateStr(dateRange[0]);
-const dateTo = toDateStr(dateRange[6]);
-
-const days = computed(() => {
-  return dateRange.map(d => {
-    const dateStr = toDateStr(d);
-    return {
-      date: dateStr,
-      dayNum: d.getDate(),
-      label: dayNames[d.getDay()],
-      fullDate: formatFullDate(d),
-      isToday: dateStr === todayStr,
-      assignments: allAssignments.value.filter(a => a.date === dateStr),
-    };
-  });
-});
-
-const fetchEscala = async () => {
+const fetchCompanies = async () => {
   isLoading.value = true;
   try {
-    const res = await $fetch<{ success: boolean; data?: any[] }>(
-      `/api/biker-assignments/my-escala?dateFrom=${dateFrom}&dateTo=${dateTo}`
-    );
-    allAssignments.value = res?.data || [];
+    const res = await $fetch<{ success: boolean; data?: any[] }>("/api/bikers/me/companies");
+    if (res?.success) {
+      companies.value = res.data || [];
+    }
   } catch (error) {
-    console.error('Error fetching escala:', error);
-    allAssignments.value = [];
+    console.error("Error fetching vinculated companies:", error);
+    companies.value = [];
   } finally {
     isLoading.value = false;
   }
@@ -139,6 +86,6 @@ const fetchEscala = async () => {
 
 onMounted(async () => {
   if (!auth.user) await auth.getCurrentUser();
-  await fetchEscala();
+  await fetchCompanies();
 });
 </script>

@@ -1,95 +1,159 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 overflow-auto">
+  <div
+    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] lg:h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 overflow-auto"
+  >
     <!-- Stat Cards + Filters -->
     <div class="shrink-0 mb-5">
-      <!-- Filter Row -->
-      <div class="flex flex-wrap items-center gap-2 mb-4">
-        <!-- Company Filter (admin only) -->
-        <select
-          v-if="auth.user?.role === 'admin'"
-          v-model="selectedCompany"
-          class="rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[140px] sm:min-w-[180px]"
-          :disabled="isLoading"
-        >
-          <option value="all">Todas as Empresas</option>
-          <option v-for="c in companies" :key="c.id" :value="c.id">
-            {{ c.name }}
-          </option>
-        </select>
-
-        <!-- Biker Filter -->
-        <select
-          v-model="selectedBiker"
-          class="rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[130px] sm:min-w-[170px]"
-          :disabled="isLoading"
-        >
-          <option value="all">Todos Entregadores</option>
-          <option v-for="biker in bikers" :key="biker.id" :value="biker.id">
-            {{ biker.name }}
-          </option>
-        </select>
-
-        <!-- Week Range Picker -->
+      <!-- Filter Bar -->
+      <div
+        class="mb-4 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
+      >
+        <!-- Top row: selects -->
         <div
-          class="flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-sm px-2 py-1"
+          class="flex items-stretch divide-x divide-gray-100 border-b border-gray-100"
         >
+          <!-- Company Filter (admin only) -->
+          <label
+            v-if="auth.user?.role === 'admin'"
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-0 hover:bg-gray-50/70 transition-colors cursor-pointer group"
+          >
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center"
+            >
+              <UIcon
+                name="i-ph-storefront-duotone"
+                class="w-4 h-4 text-violet-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Empresa
+              </p>
+              <select
+                v-model="selectedCompany"
+                :disabled="isLoading"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
+              >
+                <option value="all">Todas as Empresas</option>
+                <option v-for="c in companies" :key="c.id" :value="c.id">
+                  {{ c.name }}
+                </option>
+              </select>
+            </div>
+            <UIcon
+              name="i-heroicons-chevron-up-down"
+              class="w-4 h-4 text-gray-300 group-hover:text-gray-400 shrink-0"
+            />
+          </label>
+
+          <!-- Biker Filter -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-0 hover:bg-gray-50/70 transition-colors cursor-pointer group"
+          >
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"
+            >
+              <UIcon
+                name="i-ph-person-simple-bike-duotone"
+                class="w-4 h-4 text-emerald-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Entregador
+              </p>
+              <select
+                v-model="selectedBiker"
+                :disabled="isLoading"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
+              >
+                <option value="all">Todos</option>
+                <option
+                  v-for="biker in bikers"
+                  :key="biker.id"
+                  :value="biker.id"
+                >
+                  {{ biker.name }}
+                </option>
+              </select>
+            </div>
+            <UIcon
+              name="i-heroicons-chevron-up-down"
+              class="w-4 h-4 text-gray-300 group-hover:text-gray-400 shrink-0"
+            />
+          </label>
+        </div>
+
+        <!-- Bottom row: week picker + refresh -->
+        <div class="flex items-center gap-1 px-3 py-2">
           <!-- Prev week -->
           <button
             @click="shiftWeek(-1)"
-            class="p-1 rounded hover:bg-gray-100 text-gray-500"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
             title="Semana anterior"
           >
             <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
           </button>
 
-          <!-- Month selector -->
-          <select
-            v-model="pickerMonth"
-            @change="onMonthChange"
-            class="text-xs sm:text-sm text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer font-medium"
-          >
-            <option v-for="(m, i) in months" :key="i" :value="i">
-              {{ m }}
-            </option>
-          </select>
-
-          <!-- Week selector -->
-          <select
-            v-model="pickerWeek"
-            @change="onWeekChange"
-            class="text-xs sm:text-sm text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
-          >
-            <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
-              {{ w.label }}
-            </option>
-          </select>
-
-          <!-- Date display -->
-          <!-- <span class="text-xs text-gray-500 whitespace-nowrap hidden sm:inline">
-            {{ formatShort(weekRange.from) }} – {{ formatShort(weekRange.to) }}
-          </span> -->
+          <!-- Month + Week selects, inline -->
+          <div class="flex-1 flex items-center justify-center gap-1">
+            <span
+              class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0"
+            >
+              <UIcon
+                name="i-heroicons-calendar-days"
+                class="w-3.5 h-3.5 text-sky-500"
+              />
+            </span>
+            <select
+              v-model="pickerMonth"
+              @change="onMonthChange"
+              class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+            >
+              <option v-for="(m, i) in months" :key="i" :value="i">
+                {{ m }}
+              </option>
+            </select>
+            <span class="text-gray-300 text-xs">·</span>
+            <select
+              v-model="pickerWeek"
+              @change="onWeekChange"
+              class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[180px] truncate"
+            >
+              <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
+                {{ w.label }}
+              </option>
+            </select>
+          </div>
 
           <!-- Next week -->
           <button
             @click="shiftWeek(1)"
-            class="p-1 rounded hover:bg-gray-100 text-gray-500"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
             title="Próxima semana"
           >
             <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
           </button>
-        </div>
 
-        <!-- Refresh -->
-        <button
-          @click="fetchStats"
-          class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          title="Atualizar"
-        >
-          <UIcon
-            name="i-heroicons-arrow-path"
-            :class="['h-4 w-4 sm:h-5 sm:w-5', isLoading ? 'animate-spin' : '']"
-          />
-        </button>
+          <!-- Divider -->
+          <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+          <!-- Refresh -->
+          <button
+            @click="fetchStats"
+            :title="isLoading ? 'Carregando…' : 'Atualizar'"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-primary transition-colors"
+          >
+            <UIcon
+              name="i-heroicons-arrow-path"
+              :class="['w-4 h-4', isLoading ? 'animate-spin text-primary' : '']"
+            />
+          </button>
+        </div>
       </div>
 
       <!-- Biker Profile Card (when specific biker selected) -->
@@ -155,96 +219,136 @@
         </div>
       </div>
 
-      <!-- Admin 4 Metric Cards -->
+      <!-- Admin Metric Cards -->
       <div
         v-if="auth.user?.role === 'admin'"
-        class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"
       >
         <div
-          class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 font-medium">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
                 Qtd Entregas
               </p>
-              <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+              <p class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 truncate">
                 {{ stats.adminStats?.pendingDeliveriesCount || 0 }}
               </p>
             </div>
             <div
-              class="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0"
+              class="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0"
             >
               <UIcon
                 name="i-ph-package-duotone"
-                class="w-6 h-6 text-blue-500"
+                class="w-7 h-7 text-blue-500"
               />
             </div>
           </div>
         </div>
 
         <div
-          class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 font-medium">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
                 Adiantado
               </p>
-              <p class="text-2xl sm:text-3xl font-bold text-red-600 mt-1">
+              <p class="text-3xl sm:text-4xl font-bold text-red-600 mt-2 truncate">
                 {{ formatCurrency(stats.adminStats?.totalAdvances || 0) }}
               </p>
             </div>
             <div
-              class="h-11 w-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0"
+              class="h-14 w-14 rounded-2xl bg-red-50 flex items-center justify-center shrink-0"
             >
               <UIcon
                 name="i-ph-arrow-circle-down-duotone"
-                class="w-6 h-6 text-red-500"
+                class="w-7 h-7 text-red-500"
               />
             </div>
           </div>
         </div>
 
         <div
-          class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 font-medium">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
                 Total Bruto
               </p>
-              <p class="text-2xl sm:text-3xl font-bold text-orange-600 mt-1">
+              <p class="text-3xl sm:text-4xl font-bold text-orange-600 mt-2 truncate">
                 {{ formatCurrency(stats.adminStats?.totalGross || 0) }}
               </p>
             </div>
             <div
-              class="h-11 w-11 rounded-xl bg-orange-50 flex items-center justify-center shrink-0"
+              class="h-14 w-14 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0"
             >
               <UIcon
                 name="i-ph-coins-duotone"
-                class="w-6 h-6 text-orange-500"
+                class="w-7 h-7 text-orange-500"
               />
             </div>
           </div>
         </div>
 
         <div
-          class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 font-medium">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
                 A Pagar
               </p>
-              <p class="text-2xl sm:text-3xl font-bold text-green-600 mt-1">
+              <p class="text-3xl sm:text-4xl font-bold text-green-600 mt-2 truncate">
                 {{ formatCurrency(stats.adminStats?.totalNet || 0) }}
               </p>
             </div>
             <div
-              class="h-11 w-11 rounded-xl bg-green-50 flex items-center justify-center shrink-0"
+              class="h-14 w-14 rounded-2xl bg-green-50 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-ph-money-duotone" class="w-6 h-6 text-green-500" />
+              <UIcon name="i-ph-money-duotone" class="w-7 h-7 text-green-500" />
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
+                Entregadores
+              </p>
+              <p class="text-3xl sm:text-4xl font-bold text-emerald-600 mt-2 truncate">
+                {{ bikers.length }}
+              </p>
+            </div>
+            <div
+              class="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0"
+            >
+              <UIcon name="i-ph-motorcycle-duotone" class="w-7 h-7 text-emerald-500" />
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">
+                Empresas
+              </p>
+              <p class="text-3xl sm:text-4xl font-bold text-violet-600 mt-2 truncate">
+                {{ companies.length }}
+              </p>
+            </div>
+            <div
+              class="h-14 w-14 rounded-2xl bg-violet-50 flex items-center justify-center shrink-0"
+            >
+              <UIcon name="i-ph-storefront-duotone" class="w-7 h-7 text-violet-500" />
             </div>
           </div>
         </div>
@@ -327,96 +431,19 @@
 
     <!-- Table Section -->
     <div
-      class="flex-1 min-h-0 bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col"
+      class="flex-1 min-h-0 bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col overflow-hidden"
+      v-if="auth.user?.role === 'manager'"
     >
       <!-- Table Header -->
-      <div class="px-4 sm:px-6 pt-4 pb-3 border-b border-gray-200">
+      <div class="px-4 sm:px-6 pt-4 pb-3 border-b border-gray-200 shrink-0">
         <h2 class="text-base font-semibold text-gray-900">
-          {{
-            auth.user?.role === "admin"
-              ? "Registros Pendentes"
-              : "Histórico de Entregas"
-          }}
+          Histórico de Entregas
         </h2>
       </div>
 
-      <!-- Admin Table: Pending Registers -->
-      <div v-if="auth.user?.role === 'admin'" class="overflow-auto flex-1">
-        <table class="min-w-full divide-y divide-gray-200 relative">
-          <thead class="bg-gray-50 sm:bg-gray-100 sticky top-0 z-10 shadow-sm">
-            <tr>
-              <th
-                class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800 text-left"
-              >
-                Data Ref.
-              </th>
-              <th
-                class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800 text-left"
-              >
-                Entregador
-              </th>
-              <th
-                class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800 text-center"
-              >
-                Entregas
-              </th>
-              <th
-                class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 sm:text-gray-800 text-left"
-              >
-                Valor
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200 bg-white">
-            <tr
-              v-for="reg in stats.adminStats?.pendingRegisters"
-              :key="reg.id"
-              class="hover:bg-gray-50 transition-colors"
-            >
-              <td
-                class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-700 font-medium"
-              >
-                {{ formatDate(reg.date) }}
-              </td>
-              <td
-                class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900 font-medium"
-              >
-                {{ getBikerName(reg.biker_id) || "Entregador Oculto" }}
-              </td>
-              <td
-                class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-center"
-              >
-                <span
-                  class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-primary"
-                >
-                  {{ reg.total_deliveries }}
-                </span>
-              </td>
-              <td
-                class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-semibold text-green-600"
-              >
-                {{ formatCurrency(reg.amount) }}
-              </td>
-            </tr>
-            <tr v-if="!stats.adminStats?.pendingRegisters?.length">
-              <td
-                colspan="4"
-                class="px-6 py-12 text-center text-sm text-gray-500"
-              >
-                <UIcon
-                  name="i-heroicons-check-circle"
-                  class="w-10 h-10 mx-auto text-green-400 mb-2"
-                />
-                Nenhum registro pendente de pagamento.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
       <!-- Manager Table: Recent Deliveries -->
-      <div v-else class="overflow-auto flex-1">
-        <table class="min-w-full divide-y divide-gray-200 relative">
+      <div class="flex-1 min-h-0 overflow-auto">
+        <table class="min-w-[600px] w-full divide-y divide-gray-200 relative">
           <thead class="bg-gray-50 sm:bg-gray-100 sticky top-0 z-10 shadow-sm">
             <tr>
               <th

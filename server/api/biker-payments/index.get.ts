@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     // Find the Entregadores record for this user
     const { data: bikerRecord, error: bikerErr } = await supabase
       .from("Entregadores")
-      .select("id, wallet")
+      .select("id, advance_money")
       .eq("userId", auth.id)
       .single();
 
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       return { success: true, data: { wallet: 0, payments: [] } };
     }
 
-    // Fetch payments
+    // Fetch all payments
     const { data: payments, error: payErr } = await supabase
       .from("biker_payments")
       .select("*")
@@ -33,6 +33,14 @@ export default defineEventHandler(async (event) => {
       .order("date", { ascending: false });
 
     if (payErr) throw payErr;
+
+    // Compute wallet: sum of unpaid payments minus advance_money (adiantamentos)
+    const openPaymentsTotal = (payments || [])
+      .filter((p: any) => !p.is_paid)
+      .reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+
+    const advanceMoney = Number(bikerRecord.advance_money) || 0;
+    const computedWallet = openPaymentsTotal - advanceMoney;
 
     // Enrich with company names
     const companyIds = [...new Set((payments || []).map((p: any) => p.company_id))];
@@ -56,7 +64,9 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       data: {
-        wallet: Number(bikerRecord.wallet) || 0,
+        wallet: computedWallet,
+        openPaymentsTotal,
+        advanceMoney,
         payments: enriched,
       },
     };

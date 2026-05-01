@@ -47,7 +47,10 @@
           </div>
 
           <!-- Company Selector for Admins in Sidebar -->
-          <div v-if="authStore.user?.role === 'admin'" class="mt-6 px-1 space-y-2">
+          <div
+            v-if="authStore.user?.role === 'admin'"
+            class="mt-6 px-1 space-y-2"
+          >
             <!-- <div class="flex items-center justify-between mb-2">
               <span class="text-[10px] font-bold uppercase text-white/40 tracking-wider">Filtrar Empresas</span>
               <label class="inline-flex items-center cursor-pointer">
@@ -159,7 +162,7 @@
                   formatCurrency(bikerWallet)
                 }}</span>
               </div>
-
+              <PwaTracker v-if="isBiker" />
               <Notifications />
               <div class="hidden text-right sm:block">
                 <p class="text-sm font-semibold text-slate-900">
@@ -178,7 +181,7 @@
         <main
           :class="[
             'flex-1 lg:overflow-auto px-2 py-2 sm:px-6 lg:px-8',
-            isBiker ? 'pb-24 lg:pb-6' : 'pb-6',
+            isBiker ? '' : 'pb-6',
           ]"
         >
           <div class="mx-auto w-full max-w-6xl space-y-6">
@@ -189,13 +192,13 @@
         <!-- Bottom Navigation for Bikers (Mobile Only) - Glued to Bottom -->
         <nav
           v-if="isBiker"
-          class="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-slate-200 bg-white/95 px-2 pb-safe backdrop-blur-xl lg:hidden"
+          class="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-slate-200 bg-white/95 px-2 pb-safe backdrop-blur-xl lg:hidden"
         >
           <NuxtLink
             v-for="item in bikerBottomNav"
             :key="item.to"
             :to="item.to"
-            class="group relative flex flex-1 flex-col items-center justify-center gap-1 transition-all duration-300"
+            class="group relative flex flex-1 flex-col items-center justify-center transition-all duration-300"
             :class="[
               isRouteActive(item.to)
                 ? 'text-primary'
@@ -204,7 +207,7 @@
           >
             <div
               :class="[
-                'flex h-9 w-12 items-center justify-center rounded-xl transition-all duration-300',
+                'flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-300',
                 isRouteActive(item.to) ? 'bg-primary/10' : 'bg-transparent',
               ]"
             >
@@ -235,10 +238,18 @@ if (!authStore.user) {
 
 const adminNavItems = [
   { label: "Dashboard", to: "/admin", icon: "i-ph-chart-pie-duotone" },
-  { label: "Entregadores", to: "/admin/bikers", icon: "i-ph-users-four-duotone" },
-  { label: "Financeiro Moto", to: "/admin/bikers-financials", icon: "i-ph-coins-duotone" },
+  {
+    label: "Entregadores",
+    to: "/admin/bikers",
+    icon: "i-ph-users-four-duotone",
+  },
+  {
+    label: "Financeiro Moto",
+    to: "/admin/bikers-financials",
+    icon: "i-ph-coins-duotone",
+  },
   { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
-  { label: "Escala", to: "/admin/biker-assignments", icon: "i-ph-calendar-check-duotone" },
+  // { label: "Escala", to: "/admin/biker-assignments", icon: "i-ph-calendar-check-duotone" },
   { label: "Empresas", to: "/admin/companies", icon: "i-ph-buildings-duotone" },
   { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
@@ -249,16 +260,32 @@ const managerNavItems = [
   { label: "Pratos", to: "/admin/dishes", icon: "i-ph-bowl-food-duotone" },
   { label: "Produtos", to: "/admin/products", icon: "i-ph-package-duotone" },
   { label: "Categorias", to: "/admin/categories", icon: "i-ph-tag-duotone" },
-  { label: "Entregadores", to: "/admin/bikers", icon: "i-ph-users-four-duotone" },
+  {
+    label: "Entregadores",
+    to: "/admin/bikers",
+    icon: "i-ph-users-four-duotone",
+  },
   { label: "Empresa", to: "/admin/empresa", icon: "i-ph-storefront-duotone" },
   { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
 
 const bikerNavItems = [
-  { label: "Dashboard", to: "/admin/biker-dashboard", icon: "i-ph-chart-pie-duotone" },
+  {
+    label: "Dashboard",
+    to: "/admin/biker-dashboard",
+    icon: "i-ph-chart-pie-duotone",
+  },
   { label: "Entregas", to: "/admin/deliveries", icon: "i-ph-moped-duotone" },
-  { label: "Escala", to: "/admin/biker-escala", icon: "i-ph-calendar-check-duotone" },
-  { label: "Registros", to: "/admin/biker-payments", icon: "i-ph-wallet-duotone" },
+  {
+    label: "Escala",
+    to: "/admin/biker-escala",
+    icon: "i-ph-calendar-check-duotone",
+  },
+  {
+    label: "Registros",
+    to: "/admin/biker-payments",
+    icon: "i-ph-wallet-duotone",
+  },
   { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
   { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];

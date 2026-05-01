@@ -135,30 +135,33 @@ export default defineEventHandler(async (event) => {
     if (bikerId && bikerId !== "all") {
       const { data: b } = await supabase
         .from("Entregadores")
-        .select("wallet, advance_money")
+        .select("advance_money")
         .eq("id", bikerId)
         .single();
       
       if (b) {
-        // Unpaid delivery fee sum from biker_payments
+        // Sum all unpaid biker_payments (open balance)
         const { data: unpaidPayments } = await supabase
           .from("biker_payments")
-          .select("total_deliveries")
+          .select("amount, total_deliveries")
           .eq("biker_id", bikerId)
           .eq("is_paid", false);
         
+        let openPaymentsTotal = 0;
         let unpaidDeliveriesCount = 0;
-        (unpaidPayments || []).forEach(p => unpaidDeliveriesCount += (Number(p.total_deliveries) || 0));
+        (unpaidPayments || []).forEach(p => {
+          openPaymentsTotal += Number(p.amount) || 0;
+          unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
+        });
         
-        const wallet = Number(b.wallet) || 0;
         const advances = Number(b.advance_money) || 0;
         const totalFees = unpaidDeliveriesCount * 1;
         
         financial = {
-          wallet,
+          wallet: openPaymentsTotal,      // gross open payments
           advances,
           totalFees,
-          netPay: wallet - advances - totalFees
+          netPay: openPaymentsTotal - advances - totalFees
         };
       }
     }
