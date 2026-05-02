@@ -140,56 +140,67 @@ export default defineEventHandler(async (event) => {
         .single();
       
       if (b) {
-        // ── GLOBAL totals: ALL unpaid payments (no date filter) ──
-        const { data: allUnpaid } = await supabase
+        // ── Payments for the selected range (paid + unpaid) ──
+        let paymentsQueryBuilder = supabase
           .from("biker_payments")
-          .select("amount, total_deliveries")
-          .eq("biker_id", bikerId)
-          .eq("is_paid", false);
+          .select("id, amount, total_deliveries, is_paid, date, company_id")
+          .eq("biker_id", bikerId);
 
+        if (dateFrom && dateTo) {
+          paymentsQueryBuilder = paymentsQueryBuilder.gte("date", dateFrom).lte("date", dateTo);
+        }
+
+        const { data: rawPayments, error: payErr } = await paymentsQueryBuilder;
+        if (payErr) console.error("payments query error:", payErr);
+
+        const sortedPayments = (rawPayments || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        // Enrich with company names
+        const companyIds = [...new Set(sortedPayments.map((p: any) => p.company_id).filter(Boolean))];
+        let companyMap: Record<string, string> = {};
+        if (companyIds.length > 0) {
+          const { data: companies } = await supabase
+            .from("Company")
+            .select("id, name")
+            .in("id", companyIds);
+          if (companies) {
+            for (const c of companies) companyMap[c.id] = c.name;
+          }
+        }
+
+        const weekPayments = sortedPayments.map((p: any) => ({
+          ...p,
+          company_name: companyMap[p.company_id] || "Desconhecida",
+        }));
+
+        // Compute totals from the week's records
         let openPaymentsTotal = 0;
         let unpaidDeliveriesCount = 0;
-        (allUnpaid || []).forEach(p => {
-          openPaymentsTotal += Number(p.amount) || 0;
-          unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
+        let paidTotal = 0;
+        let paidCount = 0;
+
+        weekPayments.forEach(p => {
+          if (p.is_paid) {
+            paidTotal += Number(p.amount) || 0;
+            paidCount++;
+          } else {
+            openPaymentsTotal += Number(p.amount) || 0;
+            unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
+          }
         });
 
         const advances = Number(b.advance_money) || 0;
         const totalFees = unpaidDeliveriesCount * 1;
-
-        // ── WEEK-scoped payments (paid + unpaid) for the selected range ──
-        let weekPayments: any[] = [];
-        let weekPaid = false;
-        let paidTotal = 0;
-
-        if (dateFrom && dateTo) {
-          const { data: wp } = await supabase
-            .from("biker_payments")
-            .select("id, amount, total_deliveries, is_paid, date, company_id, company_name")
-            .eq("biker_id", bikerId)
-            .gte("date", dateFrom)
-            .lte("date", dateTo);
-
-          weekPayments = (wp || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-          let paidCount = 0;
-          weekPayments.forEach(p => {
-            if (p.is_paid) {
-              paidTotal += Number(p.amount) || 0;
-              paidCount++;
-            }
-          });
-          weekPaid = weekPayments.length > 0 && paidCount === weekPayments.length;
-        }
+        const weekPaid = weekPayments.length > 0 && paidCount === weekPayments.length;
 
         financial = {
-          wallet: openPaymentsTotal,      // gross open payments (ALL unpaid, global)
+          wallet: openPaymentsTotal,      // gross unpaid for this period
           advances,
           totalFees,
           netPay: openPaymentsTotal - advances - totalFees,
-          weekPaid,                        // true if all records in this week are paid
-          paidTotal,                       // total already paid this week
-          weekPayments,                    // records for the selected week
+          weekPaid,
+          paidTotal,
+          weekPayments,
         };
       }
     }
