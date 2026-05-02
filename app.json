@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "ee1e6f9d-6c05-4607-be3b-17c10c86f730"
+      }
+    },
+    "android": {
+      "package": "com.perry523.integraplus"
+    }
+  }
+}
