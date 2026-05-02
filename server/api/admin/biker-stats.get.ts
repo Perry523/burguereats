@@ -140,45 +140,56 @@ export default defineEventHandler(async (event) => {
         .single();
       
       if (b) {
-        // ── Week-scoped payments (paid + unpaid) for the selected range ──
-        let weekPaymentsQuery = supabase
+        // ── GLOBAL totals: ALL unpaid payments (no date filter) ──
+        const { data: allUnpaid } = await supabase
           .from("biker_payments")
-          .select("id, amount, total_deliveries, is_paid, date, company_id, company_name")
-          .eq("biker_id", bikerId);
-        
-        if (dateFrom && dateTo) {
-          weekPaymentsQuery = weekPaymentsQuery.gte("date", dateFrom).lte("date", dateTo);
-        }
-
-        const { data: weekPayments } = await weekPaymentsQuery;
+          .select("amount, total_deliveries")
+          .eq("biker_id", bikerId)
+          .eq("is_paid", false);
 
         let openPaymentsTotal = 0;
         let unpaidDeliveriesCount = 0;
-        let paidPaymentsTotal = 0;
-        let paidCount = 0;
-
-        (weekPayments || []).forEach(p => {
-          if (p.is_paid) {
-            paidPaymentsTotal += Number(p.amount) || 0;
-            paidCount++;
-          } else {
-            openPaymentsTotal += Number(p.amount) || 0;
-            unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
-          }
+        (allUnpaid || []).forEach(p => {
+          openPaymentsTotal += Number(p.amount) || 0;
+          unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
         });
-        
+
         const advances = Number(b.advance_money) || 0;
         const totalFees = unpaidDeliveriesCount * 1;
-        const allPaid = (weekPayments || []).length > 0 && paidCount === (weekPayments || []).length;
-        
+
+        // ── WEEK-scoped payments (paid + unpaid) for the selected range ──
+        let weekPayments: any[] = [];
+        let weekPaid = false;
+        let paidTotal = 0;
+
+        if (dateFrom && dateTo) {
+          const { data: wp } = await supabase
+            .from("biker_payments")
+            .select("id, amount, total_deliveries, is_paid, date, company_id, company_name")
+            .eq("biker_id", bikerId)
+            .gte("date", dateFrom)
+            .lte("date", dateTo);
+
+          weekPayments = (wp || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+          let paidCount = 0;
+          weekPayments.forEach(p => {
+            if (p.is_paid) {
+              paidTotal += Number(p.amount) || 0;
+              paidCount++;
+            }
+          });
+          weekPaid = weekPayments.length > 0 && paidCount === weekPayments.length;
+        }
+
         financial = {
-          wallet: openPaymentsTotal,      // gross open payments (unpaid only)
+          wallet: openPaymentsTotal,      // gross open payments (ALL unpaid, global)
           advances,
           totalFees,
           netPay: openPaymentsTotal - advances - totalFees,
-          weekPaid: allPaid,              // true if all records in this week are paid
-          paidTotal: paidPaymentsTotal,   // total already paid this week
-          weekPayments: (weekPayments || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+          weekPaid,                        // true if all records in this week are paid
+          paidTotal,                       // total already paid this week
+          weekPayments,                    // records for the selected week
         };
       }
     }
