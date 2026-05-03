@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] lg:h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 overflow-auto"
+    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] h-full flex flex-col pt-0 md:pt-6 overflow-auto"
   >
     <!-- Stat Cards + Filters -->
     <div class="shrink-0 mb-5">
@@ -88,52 +88,49 @@
           </label>
         </div>
 
-        <!-- Bottom row: week picker + refresh -->
-        <div class="flex items-center gap-1 px-3 py-2">
+        <!-- Bottom row: week picker -->
+        <div class="flex items-center gap-1 sm:gap-2 px-3 py-2 border-t border-gray-100">
           <!-- Prev week -->
           <button
             @click="shiftWeek(-1)"
-            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
             title="Semana anterior"
           >
             <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
           </button>
 
-          <!-- Month + Week selects, inline -->
-          <div class="flex-1 flex items-center justify-center gap-1">
-            <span
-              class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0"
-            >
-              <UIcon
-                name="i-heroicons-calendar-days"
-                class="w-3.5 h-3.5 text-sky-500"
-              />
-            </span>
-            <select
-              v-model="pickerMonth"
-              @change="onMonthChange"
-              class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
-            >
-              <option v-for="(m, i) in months" :key="i" :value="i">
-                {{ m }}
-              </option>
-            </select>
-            <span class="text-gray-300 text-xs">·</span>
-            <select
-              v-model="pickerWeek"
-              @change="onWeekChange"
-              class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[180px] truncate"
-            >
-              <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
-                {{ w.label }}
-              </option>
-            </select>
+          <!-- Month + Week selects -->
+          <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
+            <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+              <span class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0 hidden sm:flex">
+                <UIcon name="i-heroicons-calendar-days" class="w-3.5 h-3.5 text-sky-500" />
+              </span>
+              <select
+                v-model="pickerMonth"
+                @change="onMonthChange"
+                class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+              >
+                <option v-for="(m, i) in months" :key="i" :value="i">
+                  {{ m }}
+                </option>
+              </select>
+              <span class="text-gray-300 text-xs">·</span>
+              <select
+                v-model="pickerWeek"
+                @change="onWeekChange"
+                class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
+              >
+                <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
+                  {{ w.label }}
+                </option>
+              </select>
+            </div>
           </div>
 
           <!-- Next week -->
           <button
             @click="shiftWeek(1)"
-            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
             title="Próxima semana"
           >
             <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
@@ -232,7 +229,9 @@
               <p class="text-sm font-medium text-gray-500 truncate">
                 Qtd Entregas
               </p>
-              <p class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 truncate">
+              <p
+                class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 truncate"
+              >
                 {{ stats.adminStats?.pendingDeliveriesCount || 0 }}
               </p>
             </div>
@@ -255,7 +254,9 @@
               <p class="text-sm font-medium text-gray-500 truncate">
                 Adiantado
               </p>
-              <p class="text-3xl sm:text-4xl font-bold text-red-600 mt-2 truncate">
+              <p
+                class="text-3xl sm:text-4xl font-bold text-red-600 mt-2 truncate"
+              >
                 {{ formatCurrency(stats.adminStats?.totalAdvances || 0) }}
               </p>
             </div>
@@ -278,7 +279,9 @@
               <p class="text-sm font-medium text-gray-500 truncate">
                 Total Bruto
               </p>
-              <p class="text-3xl sm:text-4xl font-bold text-orange-600 mt-2 truncate">
+              <p
+                class="text-3xl sm:text-4xl font-bold text-orange-600 mt-2 truncate"
+              >
                 {{ formatCurrency(stats.adminStats?.totalGross || 0) }}
               </p>
             </div>
@@ -298,10 +301,10 @@
         >
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-gray-500 truncate">
-                A Pagar
-              </p>
-              <p class="text-3xl sm:text-4xl font-bold text-green-600 mt-2 truncate">
+              <p class="text-sm font-medium text-gray-500 truncate">A Pagar</p>
+              <p
+                class="text-3xl sm:text-4xl font-bold text-green-600 mt-2 truncate"
+              >
                 {{ formatCurrency(stats.adminStats?.totalNet || 0) }}
               </p>
             </div>
@@ -321,14 +324,19 @@
               <p class="text-sm font-medium text-gray-500 truncate">
                 Entregadores
               </p>
-              <p class="text-3xl sm:text-4xl font-bold text-emerald-600 mt-2 truncate">
+              <p
+                class="text-3xl sm:text-4xl font-bold text-emerald-600 mt-2 truncate"
+              >
                 {{ bikers.length }}
               </p>
             </div>
             <div
               class="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-ph-motorcycle-duotone" class="w-7 h-7 text-emerald-500" />
+              <UIcon
+                name="i-ph-motorcycle-duotone"
+                class="w-7 h-7 text-emerald-500"
+              />
             </div>
           </div>
         </div>
@@ -338,17 +346,20 @@
         >
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-gray-500 truncate">
-                Empresas
-              </p>
-              <p class="text-3xl sm:text-4xl font-bold text-violet-600 mt-2 truncate">
+              <p class="text-sm font-medium text-gray-500 truncate">Empresas</p>
+              <p
+                class="text-3xl sm:text-4xl font-bold text-violet-600 mt-2 truncate"
+              >
                 {{ companies.length }}
               </p>
             </div>
             <div
               class="h-14 w-14 rounded-2xl bg-violet-50 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-ph-storefront-duotone" class="w-7 h-7 text-violet-500" />
+              <UIcon
+                name="i-ph-storefront-duotone"
+                class="w-7 h-7 text-violet-500"
+              />
             </div>
           </div>
         </div>
@@ -635,7 +646,7 @@ const weeksInMonth = computed(() => {
       mon.setDate(mon.getDate() + 7);
       continue;
     }
-    const label = `Semana ${i + 1} (${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")})`;
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
     weeks.push({ label, from: new Date(mon), to: new Date(sun) });
     mon = new Date(mon);
     mon.setDate(mon.getDate() + 7);

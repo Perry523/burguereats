@@ -8,8 +8,9 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
-    const { biker_id } = body;
+    const { biker_id, dateFrom, dateTo } = body;
     if (!biker_id) throw createError({ statusCode: 400, statusMessage: "Missing biker_id" });
+    if (!dateFrom || !dateTo) throw createError({ statusCode: 400, statusMessage: "Missing dateFrom/dateTo" });
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -25,27 +26,34 @@ export default defineEventHandler(async (event) => {
 
     if (bikerErr || !biker) throw createError({ statusCode: 404, statusMessage: "Biker not found" });
 
-    // 2. Fetch unpaid total_deliveries
+    // 2. Fetch unpaid payments ONLY for the specified week
     const { data: payments, error: payErr } = await supabase
       .from("biker_payments")
-      .select("id, total_deliveries")
+      .select("id, amount, total_deliveries")
       .eq("biker_id", biker_id)
-      .eq("is_paid", false);
+      .eq("is_paid", false)
+      .gte("date", dateFrom)
+      .lte("date", dateTo);
 
     if (payErr) throw payErr;
 
-    let unpaidDeliveries = 0;
+    let weekWallet = 0;
+    let weekDeliveries = 0;
     const unpaidIds: string[] = [];
     for (const p of (payments || [])) {
-      unpaidDeliveries += Number(p.total_deliveries) || 0;
+      weekWallet += Number(p.amount) || 0;
+      weekDeliveries += Number(p.total_deliveries) || 0;
       unpaidIds.push(p.id);
     }
 
-    // Calculations
-    const walletTotal = Number(biker.wallet) || 0;
+    if (unpaidIds.length === 0) {
+      throw createError({ statusCode: 400, statusMessage: "Nenhum registro pendente nesta semana" });
+    }
+
+    // Calculations scoped to this week
     const advanceMoney = Number(biker.advance_money) || 0;
-    const deliveryFee = unpaidDeliveries * 1; // R$ 1.00 per delivery
-    const netPaid = walletTotal - advanceMoney - deliveryFee;
+    const deliveryFee = weekDeliveries * 1; // R$ 1.00 per delivery
+    const netPaid = weekWallet - advanceMoney - deliveryFee;
 
     // 3. Create the payout receipt
     const { data: payout, error: insertErr } = await supabase
@@ -55,25 +63,29 @@ export default defineEventHandler(async (event) => {
         amount_paid: netPaid,
         discounts: advanceMoney,
         delivery_fee_total: deliveryFee,
-        type: 'settlement'
+        type: 'settlement',
+        week_from: dateFrom,
+        week_to: dateTo,
       }])
       .select()
       .single();
 
     if (insertErr) {
-        console.error("Error inserting to biker_payouts:", insertErr);
-        throw createError({ statusCode: 500, statusMessage: "Erro ao gerar recibo de pagamento" });
+      console.error("Error inserting to biker_payouts:", insertErr);
+      throw createError({ statusCode: 500, statusMessage: "Erro ao gerar recibo de pagamento" });
     }
 
-    // 4. Reset biker wallet and advance_money
+    // 4. Subtract the week's wallet from the biker's global wallet, and reset advance_money
+    const currentWallet = Number(biker.wallet) || 0;
+    const newWallet = Math.max(0, currentWallet - weekWallet);
     const { error: resetErr } = await supabase
       .from("Entregadores")
-      .update({ wallet: 0, advance_money: 0 })
+      .update({ wallet: newWallet, advance_money: 0 })
       .eq("id", biker_id);
 
     if (resetErr) throw resetErr;
 
-    // 5. Mark daily payments as paid so delivery fee isn't charged again
+    // 5. Mark ONLY this week's payments as paid
     if (unpaidIds.length > 0) {
       const { error: markErr } = await supabase
         .from("biker_payments")

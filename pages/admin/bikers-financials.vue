@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="h-[calc(100vh-64px)] lg:h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6"
-  >
+  <div class="h-[calc(100vh-64px)] h-full flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -15,36 +13,76 @@
       hide-actions
     >
       <template #filter>
-        <div
-          class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex items-center justify-between gap-2"
-        >
-          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2">
+        <div class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0">
+          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0">
             Financeiro Entregadores
           </h1>
 
-          <div
-            class="flex items-center gap-2 flex-1 lg:flex-initial lg:ml-auto"
-          >
-            <div class="relative w-full max-w-sm">
-              <div
-                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-              >
-                <UIcon
-                  name="i-heroicons-magnifying-glass"
-                  class="h-5 w-5 text-gray-400"
-                />
-              </div>
-              <input
-                v-model="search"
-                type="text"
-                class="block w-full rounded-lg border border-gray-300 bg-white p-2 pl-10 text-sm focus:border-primary focus:ring-primary shadow-sm"
-                placeholder="Buscar entregador..."
-              />
+          <!-- Search -->
+          <div class="relative w-full sm:w-32 md:w-48 shrink-0 sm:shrink">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+              <UIcon name="i-heroicons-magnifying-glass" class="h-4 w-4 text-gray-400" />
             </div>
+            <input
+              v-model="search"
+              type="text"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
+              placeholder="Buscar entregador..."
+            />
+          </div>
+
+          <!-- Pagination and Week Controls wrapper for mobile -->
+          <div class="flex items-center gap-1 sm:gap-2 w-full sm:w-auto flex-1">
+            <!-- Prev arrow -->
+            <button
+              @click="shiftWeek(-1)"
+              class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+              title="Semana anterior"
+            >
+              <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+            </button>
+
+            <!-- Week selects -->
+            <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
+              <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+                <select
+                  v-model="pickerMonth"
+                  @change="onMonthChange"
+                  class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+                >
+                  <option v-for="(m, i) in months" :key="i" :value="i">
+                    {{ m }}
+                  </option>
+                </select>
+                <span class="text-gray-300 text-xs">·</span>
+                <select
+                  v-model="pickerWeek"
+                  @change="onWeekChange"
+                  class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
+                >
+                  <option
+                    v-for="w in weeksInMonth"
+                    :key="w.label"
+                    :value="w.label"
+                  >
+                    {{ w.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Next arrow -->
+            <button
+              @click="shiftWeek(1)"
+              class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+              title="Próxima semana"
+            >
+              <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+            </button>
 
             <button
               @click="loadData"
-              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
               title="Atualizar"
             >
               <UIcon
@@ -114,7 +152,7 @@
             @click="openPagarModal(row)"
             :disabled="isLiquidating"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
-            title="Registrar pagamento definitivo e zerar saldo"
+            title="Registrar pagamento da semana"
           >
             <UIcon name="i-ph-check-circle-duotone" class="w-4 h-4" />
             Pagar
@@ -176,13 +214,36 @@
       :title="'Confirmar Pagamento - ' + (selectedBiker?.name || '')"
     >
       <div class="p-4 space-y-4">
+        <!-- Week scope indicator -->
+        <div
+          class="bg-sky-50 border border-sky-200 rounded-xl p-3 flex items-center gap-3"
+        >
+          <div
+            class="w-9 h-9 rounded-lg bg-sky-100 flex items-center justify-center shrink-0"
+          >
+            <UIcon
+              name="i-heroicons-calendar-days"
+              class="w-5 h-5 text-sky-600"
+            />
+          </div>
+          <div>
+            <p class="text-xs text-sky-600 font-bold uppercase tracking-wider">
+              Período a ser pago
+            </p>
+            <p class="text-sm font-semibold text-sky-900">
+              {{ formatDateBR(weekRange.from) }} –
+              {{ formatDateBR(weekRange.to) }}
+            </p>
+          </div>
+        </div>
+
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p class="text-sm text-blue-800 font-medium mb-2">
-            Resumo da Liquidação:
+            Resumo da Liquidação (somente esta semana):
           </p>
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">Carteira (Bruto):</span>
+              <span class="text-gray-600">Bruto da Semana:</span>
               <span class="font-bold text-gray-900">{{
                 formatCurrency(selectedBiker?.wallet)
               }}</span>
@@ -205,9 +266,10 @@
         </div>
 
         <p class="text-xs text-gray-500 italic">
-          Ao confirmar, o sistema registrará um recibo de pagamento no
-          histórico, zerará a carteira e os adiantamentos deste entregador. Esta
-          ação não pode ser desfeita.
+          Ao confirmar, o sistema registrará um recibo de pagamento, marcará
+          <strong>somente os registros desta semana</strong> como pagos e
+          descontará o valor da carteira global. Esta ação não pode ser
+          desfeita.
         </p>
 
         <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -260,9 +322,116 @@ const advanceError = ref("");
 const page = ref(1);
 const itemsPerPage = ref(10);
 
+// ── Week Range Picker ──────────────────────────────────────────────
+const months = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function getMondayOf(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const today = new Date();
+const initMonday = getMondayOf(today);
+const initSunday = new Date(initMonday);
+initSunday.setDate(initSunday.getDate() + 6);
+
+const weekRange = ref({
+  from: toISODate(initMonday),
+  to: toISODate(initSunday),
+});
+const pickerMonth = ref(initMonday.getMonth());
+const pickerWeek = ref("");
+
+const weeksInMonth = computed(() => {
+  const year = new Date().getFullYear();
+  const weeks: { label: string; from: Date; to: Date }[] = [];
+  const cursor = new Date(year, pickerMonth.value, 1);
+  let mon = getMondayOf(cursor);
+  for (let i = 0; i < 6; i++) {
+    const sun = new Date(mon);
+    sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() > pickerMonth.value && mon.getFullYear() >= year) break;
+    if (sun.getMonth() < pickerMonth.value) {
+      mon.setDate(mon.getDate() + 7);
+      continue;
+    }
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
+    weeks.push({ label, from: new Date(mon), to: new Date(sun) });
+    mon = new Date(mon);
+    mon.setDate(mon.getDate() + 7);
+  }
+  return weeks;
+});
+
+function onMonthChange() {
+  if (weeksInMonth.value.length) {
+    const w = weeksInMonth.value[0];
+    pickerWeek.value = w.label;
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    loadData();
+  }
+}
+
+function onWeekChange() {
+  const w = weeksInMonth.value.find((x) => x.label === pickerWeek.value);
+  if (w) {
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    loadData();
+  }
+}
+
+function shiftWeek(dir: 1 | -1) {
+  const [fy, fm, fd] = weekRange.value.from.split("-").map(Number);
+  const from = new Date(fy, fm - 1, fd);
+  from.setDate(from.getDate() + dir * 7);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 6);
+  weekRange.value = { from: toISODate(from), to: toISODate(to) };
+  pickerMonth.value = from.getMonth();
+  const match = weeksInMonth.value.find(
+    (w) => toISODate(w.from) === weekRange.value.from,
+  );
+  if (match) pickerWeek.value = match.label;
+  else pickerWeek.value = "";
+  loadData();
+}
+
+const initWeekLabel =
+  weeksInMonth.value.find((w) => toISODate(w.from) === weekRange.value.from)
+    ?.label ??
+  weeksInMonth.value[0]?.label ??
+  "";
+pickerWeek.value = initWeekLabel;
+if (!initWeekLabel && weeksInMonth.value.length) {
+  const w = weeksInMonth.value[0];
+  weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+  pickerWeek.value = w.label;
+}
+// ──────────────────────────────────────────────────────────────────
+
 const columns = [
   { key: "biker", label: "Entregador", sm: true },
-  { key: "wallet", label: "Carteira (Total)" },
+  { key: "wallet", label: "Bruto (Semana)" },
   { key: "deliveries", label: "Entregas (Tx R$ 1,00)" },
   { key: "advances", label: "Adiantamentos" },
   { key: "net_to_pay", label: "Valor a Pagar", sm: true },
@@ -274,6 +443,12 @@ const formatCurrency = (val: number) => {
     style: "currency",
     currency: "BRL",
   }).format(val || 0);
+};
+
+const formatDateBR = (dateStr: string) => {
+  if (!dateStr) return "-";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
 };
 
 const sortedBikers = computed(() => {
@@ -304,7 +479,7 @@ const loadData = async () => {
   isLoading.value = true;
   try {
     const res = await $fetch<{ success: boolean; data?: any[] }>(
-      "/api/biker-payments/financials",
+      `/api/biker-payments/financials?dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`,
     );
     bikers.value = res?.data || [];
   } catch (error) {
@@ -354,12 +529,11 @@ const saveAdvance = async () => {
 };
 
 const openPagarModal = (biker: any) => {
-  if (
-    biker.wallet <= 0 &&
-    biker.advance_money <= 0 &&
-    biker.total_deliveries <= 0
-  ) {
-    toast.add({ color: "error", title: "Nada para pagar." });
+  if (biker.wallet <= 0) {
+    toast.add({
+      color: "error",
+      title: "Nenhum registro pendente nesta semana.",
+    });
     return;
   }
   selectedBiker.value = biker;
@@ -373,13 +547,17 @@ const confirmPayment = async () => {
   try {
     const res = await $fetch<{ success: boolean }>("/api/biker-payouts", {
       method: "POST",
-      body: { biker_id: selectedBiker.value.id },
+      body: {
+        biker_id: selectedBiker.value.id,
+        dateFrom: weekRange.value.from,
+        dateTo: weekRange.value.to,
+      },
     });
 
     if (res.success) {
       toast.add({
         color: "success",
-        title: "Pagamento registrado e saldo zerado com sucesso!",
+        title: "Pagamento da semana registrado com sucesso!",
       });
       showPagarModal.value = false;
       await loadData();

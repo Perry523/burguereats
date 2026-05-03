@@ -1,12 +1,5 @@
 <template>
-  <div
-    class="lg:h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6"
-    :class="
-      auth.user?.role === 'biker'
-        ? 'h-[calc(100vh-128px)]'
-        : 'h-[calc(100vh-64px)]'
-    "
-  >
+  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -76,7 +69,13 @@
 
       <!-- Date -->
       <template #date="{ row }">
-        <span class="text-gray-900">{{ formatDateBR(row.created_at) }}</span>
+        <div v-if="row.type === 'settlement' && row.week_from && row.week_to" class="flex flex-col">
+          <span class="text-xs font-semibold text-gray-900">{{ formatShortDate(row.week_from) }} – {{ formatShortDate(row.week_to) }}</span>
+          <span class="text-[10px] text-gray-500">Pagou: {{ formatDateBR(row.created_at).split(' ')[0] }}</span>
+        </div>
+        <div v-else>
+          <span class="text-xs font-semibold text-gray-900">{{ formatDateBR(row.created_at).split(' ')[0] }}</span>
+        </div>
       </template>
 
       <!-- Type (Tipo) -->
@@ -150,11 +149,21 @@
         >
           <div>
             <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">
-              Data e Hora
+              Período Referência
             </p>
-            <p class="text-gray-900 font-medium">
-              {{ formatDateBR(selectedPayout.created_at) }}
-            </p>
+            <div v-if="selectedPayout.type === 'settlement' && selectedPayout.week_from && selectedPayout.week_to">
+              <p class="text-sm text-gray-900 font-medium">
+                {{ formatFullDate(selectedPayout.week_from) }} até {{ formatFullDate(selectedPayout.week_to) }}
+              </p>
+              <p class="text-[11px] text-gray-500 mt-0.5">
+                Liquidado em: {{ formatDateBR(selectedPayout.created_at) }}
+              </p>
+            </div>
+            <div v-else>
+              <p class="text-sm text-gray-900 font-medium">
+                {{ formatDateBR(selectedPayout.created_at) }}
+              </p>
+            </div>
           </div>
           <div class="text-right">
             <span
@@ -289,6 +298,18 @@ const formatDateBR = (dateStr: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatShortDate = (dateStr: string) => {
+  if (!dateStr) return "-";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}`;
+};
+
+const formatFullDate = (dateStr: string) => {
+  if (!dateStr) return "-";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
 };
 
 const viewDetails = (payout: any) => {

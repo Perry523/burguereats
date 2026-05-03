@@ -1,57 +1,54 @@
 <template>
-  <div
-    class="min-h-dvh lg:h-dvh w-full bg-slate-100 lg:bg-slate-950 lg:overflow-hidden"
-  >
-    <div class="relative flex h-full flex-col lg:flex-row">
-      <div
-        v-if="isSidebarOpen"
-        class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
-        @click="closeSidebar"
-      ></div>
+  <div class="h-svh w-full bg-slate-100 lg:bg-slate-950 lg:overflow-hidden">
+    <div
+      v-if="isSidebarOpen"
+      class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+      @click="closeSidebar"
+    ></div>
 
-      <aside
-        :class="[
-          'fixed inset-y-0 left-0 z-[70] flex w-72 flex-col border-r border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:z-0 lg:translate-x-0 lg:flex',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-        ]"
-      >
-        <div class="border-b border-white/10 p-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <img
-                v-if="companyLogo"
-                :src="companyLogo"
-                alt="Company Logo"
-                class="h-12 w-12 rounded-2xl object-cover"
-              />
-              <div
-                v-else
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold uppercase"
-              >
-                {{ companyInitials }}
-              </div>
-              <div class="space-y-1">
-                <p class="text-sm font-semibold text-white">
-                  {{ companyName }}
-                </p>
-                <p class="text-xs text-white/50">{{ companyEmail }}</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:bg-white/10 lg:hidden"
-              @click="closeSidebar"
+    <aside
+      :class="[
+        'fixed inset-y-0 left-0 z-[70] flex w-72 flex-col border-r border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:z-0 lg:translate-x-0 lg:flex',
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
+      ]"
+    >
+      <div class="border-b border-white/10 p-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <img
+              v-if="companyLogo"
+              :src="companyLogo"
+              alt="Company Logo"
+              class="h-12 w-12 rounded-2xl object-cover"
+            />
+            <div
+              v-else
+              class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold uppercase"
             >
-              <UIcon name="i-ph-x" class="h-5 w-5" />
-            </button>
+              {{ companyInitials }}
+            </div>
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-white">
+                {{ companyName }}
+              </p>
+              <p class="text-xs text-white/50">{{ companyEmail }}</p>
+            </div>
           </div>
-
-          <!-- Company Selector for Admins in Sidebar -->
-          <div
-            v-if="authStore.user?.role === 'admin'"
-            class="mt-6 px-1 space-y-2"
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:bg-white/10 lg:hidden"
+            @click="closeSidebar"
           >
-            <!-- <div class="flex items-center justify-between mb-2">
+            <UIcon name="i-ph-x" class="h-5 w-5" />
+          </button>
+        </div>
+
+        <!-- Company Selector for Admins in Sidebar -->
+        <div
+          v-if="authStore.user?.role === 'admin'"
+          class="mt-6 px-1 space-y-2"
+        >
+          <!-- <div class="flex items-center justify-between mb-2">
               <span class="text-[10px] font-bold uppercase text-white/40 tracking-wider">Filtrar Empresas</span>
               <label class="inline-flex items-center cursor-pointer">
                 <input type="checkbox" v-model="showOnlyDelivery" class="sr-only peer">
@@ -59,169 +56,168 @@
                 <span class="ms-2 text-[10px] font-medium text-white/60 uppercase">Delivery</span>
               </label>
             </div> -->
-            <div class="relative">
-              <div
-                class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center"
+          <div class="relative">
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center"
+            >
+              <UIcon
+                name="i-ph-storefront-duotone"
+                class="h-5 w-5 text-white/50"
+              />
+            </div>
+            <select
+              v-model="authStore.activeCompanyId"
+              class="w-full h-11 bg-white/5 border border-white/10 rounded-md text-white sm:text-sm pl-10 pr-10 focus:ring-2 focus:ring-primary-500 appearance-none"
+            >
+              <option value="" disabled class="bg-slate-900">
+                Selecionar Empresa
+              </option>
+              <option
+                v-for="company in filteredCompaniesList"
+                :key="company.id"
+                :value="company.id"
+                class="bg-slate-900"
               >
-                <UIcon
-                  name="i-ph-storefront-duotone"
-                  class="h-5 w-5 text-white/50"
-                />
-              </div>
-              <select
-                v-model="authStore.activeCompanyId"
-                class="w-full h-11 bg-white/5 border border-white/10 rounded-md text-white sm:text-sm pl-10 pr-10 focus:ring-2 focus:ring-primary-500 appearance-none"
-              >
-                <option value="" disabled class="bg-slate-900">
-                  Selecionar Empresa
-                </option>
-                <option
-                  v-for="company in filteredCompaniesList"
-                  :key="company.id"
-                  :value="company.id"
-                  class="bg-slate-900"
-                >
-                  {{ company.name }}
-                </option>
-              </select>
-              <div
-                class="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center"
-              >
-                <UIcon
-                  name="i-heroicons-chevron-down-20-solid"
-                  class="h-5 w-5 text-white/50"
-                />
-              </div>
+                {{ company.name }}
+              </option>
+            </select>
+            <div
+              class="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <UIcon
+                name="i-heroicons-chevron-down-20-solid"
+                class="h-5 w-5 text-white/50"
+              />
             </div>
           </div>
         </div>
-        <nav class="flex-1 space-y-2 overflow-y-auto p-6">
-          <NuxtLink
-            v-for="item in navItems"
-            :key="item.to"
-            :to="item.to"
-            @click="closeSidebar"
-            :class="[
-              'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
-              isRouteActive(item.to)
-                ? 'bg-white text-slate-900 shadow-lg'
-                : 'text-white/70 hover:bg-white/10 hover:text-white',
-            ]"
-          >
-            <UIcon :name="item.icon" class="h-5 w-5" />
-            <span>{{ item.label }}</span>
-          </NuxtLink>
-        </nav>
-        <div class="border-t border-white/10 p-6">
-          <UButton
-            @click="handleLogout"
-            class="w-full justify-center"
-            icon="i-ph-sign-out-duotone"
-          >
-            Sair
-          </UButton>
-        </div>
-      </aside>
-
-      <div class="flex flex-1 flex-col bg-slate-50 min-h-0 relative lg:ml-0">
-        <header
-          class="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur"
-        >
-          <div
-            class="flex items-center justify-between px-3 lg:py-3 py-1 sm:px-6 lg:px-8"
-          >
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                class="inline-flex items-center justify-center rounded-full bg-white p-2 text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-100 lg:hidden"
-                @click="toggleSidebar"
-              >
-                <span class="sr-only">Abrir menu</span>
-                <UIcon name="i-ph-list" class="h-5 w-5" />
-              </button>
-              <div>
-                <h1 class="text-lg font-semibold text-slate-900 sm:text-xl">
-                  {{ activeNavLabel }}
-                </h1>
-                <!-- <p class="text-xs text-slate-500 sm:text-sm">
-                  {{ currentCompanyName }}
-                </p> -->
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <!-- Wallet Display -->
-              <div
-                v-if="isBiker"
-                class="hidden sm:flex flex-col items-end mr-2 bg-green-50 px-3 py-1 rounded-lg border border-green-100"
-              >
-                <span
-                  class="text-[10px] font-bold text-green-600 uppercase tracking-wider leading-none"
-                  >Carteira</span
-                >
-                <span class="text-sm font-bold text-green-700 leading-tight">{{
-                  formatCurrency(bikerWallet)
-                }}</span>
-              </div>
-              <PwaTracker v-if="isBiker" />
-              <Notifications />
-              <div class="hidden text-right sm:block">
-                <p class="text-sm font-semibold text-slate-900">
-                  {{ userName }}
-                </p>
-                <p class="text-xs text-slate-500">{{ userEmail }}</p>
-              </div>
-              <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/90 text-xs font-semibold uppercase text-white sm:h-11 sm:w-11"
-              >
-                {{ userInitials }}
-              </div>
-            </div>
-          </div>
-        </header>
-        <main
+      </div>
+      <nav class="flex-1 space-y-2 overflow-y-auto p-6">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          @click="closeSidebar"
           :class="[
-            'flex-1 lg:overflow-auto px-2 py-2 sm:px-6 lg:px-8',
-            isBiker ? '' : 'pb-6',
+            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
+            isRouteActive(item.to)
+              ? 'bg-white text-slate-900 shadow-lg'
+              : 'text-white/70 hover:bg-white/10 hover:text-white',
           ]"
         >
-          <div class="mx-auto w-full max-w-6xl space-y-6">
-            <slot />
-          </div>
-        </main>
-
-        <!-- Bottom Navigation for Bikers (Mobile Only) - Glued to Bottom -->
-        <nav
-          v-if="isBiker"
-          class="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-slate-200 bg-white/95 px-2 pb-safe backdrop-blur-xl lg:hidden"
+          <UIcon :name="item.icon" class="h-5 w-5" />
+          <span>{{ item.label }}</span>
+        </NuxtLink>
+      </nav>
+      <div class="border-t border-white/10 p-6">
+        <UButton
+          @click="handleLogout"
+          class="w-full justify-center"
+          icon="i-ph-sign-out-duotone"
         >
-          <NuxtLink
-            v-for="item in bikerBottomNav"
-            :key="item.to"
-            :to="item.to"
-            class="group relative flex flex-1 flex-col items-center justify-center transition-all duration-300"
+          Sair
+        </UButton>
+      </div>
+    </aside>
+
+    <div class="flex h-svh flex-col bg-slate-50 min-h-0 relative lg:ml-0">
+      <header
+        class="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur"
+      >
+        <div
+          class="flex items-center justify-between px-3 lg:py-3 py-1 sm:px-6 lg:px-8"
+        >
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-full bg-white p-2 text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-100 lg:hidden"
+              @click="toggleSidebar"
+            >
+              <span class="sr-only">Abrir menu</span>
+              <UIcon name="i-ph-list" class="h-5 w-5" />
+            </button>
+            <div>
+              <h1 class="text-lg font-semibold text-slate-900 sm:text-xl">
+                {{ activeNavLabel }}
+              </h1>
+              <!-- <p class="text-xs text-slate-500 sm:text-sm">
+                  {{ currentCompanyName }}
+                </p> -->
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <!-- Wallet Display -->
+            <div
+              v-if="isBiker"
+              class="hidden sm:flex flex-col items-end mr-2 bg-green-50 px-3 py-1 rounded-lg border border-green-100"
+            >
+              <span
+                class="text-[10px] font-bold text-green-600 uppercase tracking-wider leading-none"
+                >Carteira</span
+              >
+              <span class="text-sm font-bold text-green-700 leading-tight">{{
+                formatCurrency(bikerWallet)
+              }}</span>
+            </div>
+            <PwaTracker v-if="isBiker" />
+            <Notifications />
+            <div class="hidden text-right sm:block">
+              <p class="text-sm font-semibold text-slate-900">
+                {{ userName }}
+              </p>
+              <p class="text-xs text-slate-500">{{ userEmail }}</p>
+            </div>
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/90 text-xs font-semibold uppercase text-white sm:h-11 sm:w-11"
+            >
+              {{ userInitials }}
+            </div>
+          </div>
+        </div>
+      </header>
+      <main
+        :class="[
+          ' lg:overflow-auto px-2 py-2 sm:px-6 lg:px-8',
+          isBiker ? 'h-[calc(100vh-105px)]' : 'h-[calc(100vh-50px)] ',
+        ]"
+      >
+        <div class="mx-auto h-full w-full max-w-6xl space-y-6">
+          <slot />
+        </div>
+      </main>
+
+      <!-- Bottom Navigation for Bikers (Mobile Only) - Glued to Bottom -->
+      <nav
+        v-if="isBiker"
+        class="flex h-14 items-center justify-around border-t border-slate-200 bg-white/95 px-2 pb-safe backdrop-blur-xl lg:hidden"
+      >
+        <NuxtLink
+          v-for="item in bikerBottomNav"
+          :key="item.to"
+          :to="item.to"
+          class="group relative flex flex-1 flex-col items-center justify-center transition-all duration-300"
+          :class="[
+            isRouteActive(item.to)
+              ? 'text-primary'
+              : 'text-slate-400 hover:text-slate-600',
+          ]"
+        >
+          <div
             :class="[
-              isRouteActive(item.to)
-                ? 'text-primary'
-                : 'text-slate-400 hover:text-slate-600',
+              'flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-300',
+              isRouteActive(item.to) ? 'bg-primary/10' : 'bg-transparent',
             ]"
           >
-            <div
-              :class="[
-                'flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-300',
-                isRouteActive(item.to) ? 'bg-primary/10' : 'bg-transparent',
-              ]"
-            >
-              <UIcon :name="item.icon" class="h-6 w-6" />
-            </div>
-            <span
-              class="text-[10px] font-bold uppercase tracking-tight transition-opacity duration-300"
-              :class="[isRouteActive(item.to) ? 'opacity-100' : 'opacity-70']"
-            >
-              {{ item.label }}
-            </span>
-          </NuxtLink>
-        </nav>
-      </div>
+            <UIcon :name="item.icon" class="h-6 w-6" />
+          </div>
+          <span
+            class="text-[10px] font-bold uppercase tracking-tight transition-opacity duration-300"
+            :class="[isRouteActive(item.to) ? 'opacity-100' : 'opacity-70']"
+          >
+            {{ item.label }}
+          </span>
+        </NuxtLink>
+      </nav>
     </div>
   </div>
 </template>
@@ -247,6 +243,11 @@ const adminNavItems = [
     label: "Financeiro Moto",
     to: "/admin/bikers-financials",
     icon: "i-ph-coins-duotone",
+  },
+  {
+    label: "Resumo da Semana",
+    to: "/admin/weekly-summary",
+    icon: "i-ph-calendar-check-duotone",
   },
   { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
   // { label: "Escala", to: "/admin/biker-assignments", icon: "i-ph-calendar-check-duotone" },

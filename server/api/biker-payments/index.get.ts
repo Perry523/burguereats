@@ -4,48 +4,56 @@ export default defineEventHandler(async (event) => {
   try {
     const auth = requireAuth(event);
 
-    if (auth.role !== "biker") {
-      throw createError({ statusCode: 403, statusMessage: "Bikers only" });
+    if (auth.role !== "biker" && auth.role !== "admin" && auth.role !== "manager") {
+      throw createError({ statusCode: 403, statusMessage: "Unauthorized" });
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the Entregadores record for this user
-    const { data: bikerRecord, error: bikerErr } = await supabase
-      .from("Entregadores")
-      .select("id, advance_money")
-      .eq("userId", auth.id)
-      .single();
+    let bikerRecord = null;
+    let computedWallet = 0;
+    let openPaymentsTotal = 0;
+    let advanceMoney = 0;
+    let paymentsQuery = supabase.from("biker_payments").select("*").order("date", { ascending: false });
 
-    if (bikerErr || !bikerRecord) {
-      return { success: true, data: { wallet: 0, payments: [] } };
+    // If biker, scope to only their payments and compute wallet
+    if (auth.role === "biker") {
+      const { data: bRecord, error: bikerErr } = await supabase
+        .from("Entregadores")
+        .select("id, advance_money")
+        .eq("userId", auth.id)
+        .single();
+
+      if (bikerErr || !bRecord) {
+        return { success: true, data: { wallet: 0, payments: [] } };
+      }
+      bikerRecord = bRecord;
+      paymentsQuery = paymentsQuery.eq("biker_id", bikerRecord.id);
     }
 
-    // Fetch all payments
-    const { data: payments, error: payErr } = await supabase
-      .from("biker_payments")
-      .select("*")
-      .eq("biker_id", bikerRecord.id)
-      .order("date", { ascending: false });
-
+    // Fetch payments
+    const { data: payments, error: payErr } = await paymentsQuery;
     if (payErr) throw payErr;
 
-    // Compute wallet: sum of unpaid payments minus advance_money (adiantamentos)
-    const openPaymentsTotal = (payments || [])
-      .filter((p: any) => !p.is_paid)
-      .reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+    // For bikers, compute the current wallet status
+    if (auth.role === "biker" && bikerRecord) {
+      openPaymentsTotal = (payments || [])
+        .filter((p: any) => !p.is_paid)
+        .reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
 
-    const advanceMoney = Number(bikerRecord.advance_money) || 0;
-    const computedWallet = openPaymentsTotal - advanceMoney;
+      advanceMoney = Number(bikerRecord.advance_money) || 0;
+      computedWallet = openPaymentsTotal - advanceMoney;
+    }
 
-    // Enrich with company names
+    // Enrich with company names and biker names
     const companyIds = [...new Set((payments || []).map((p: any) => p.company_id))];
+    const bikerIds = [...new Set((payments || []).map((p: any) => p.biker_id))];
+    
     let companyMap: Record<string, string> = {};
-
     if (companyIds.length > 0) {
       const { data: companies } = await supabase
         .from("Company")
@@ -56,9 +64,21 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    let bikerMap: Record<string, string> = {};
+    if (auth.role !== "biker" && bikerIds.length > 0) {
+      const { data: bikers } = await supabase
+        .from("Entregadores")
+        .select("id, name")
+        .in("id", bikerIds);
+      if (bikers) {
+        for (const b of bikers) bikerMap[b.id] = b.name;
+      }
+    }
+
     const enriched = (payments || []).map((p: any) => ({
       ...p,
       company_name: companyMap[p.company_id] || "Desconhecida",
+      biker_name: auth.role === "biker" ? auth.name : (bikerMap[p.biker_id] || "Desconhecido"),
     }));
 
     return {

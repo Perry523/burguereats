@@ -28,6 +28,8 @@ export default defineEventHandler(async (event) => {
         type,
         date,
         created_at,
+        week_from,
+        week_to,
         Entregadores (
           id,
           name,
@@ -92,6 +94,8 @@ export default defineEventHandler(async (event) => {
       type: p.type || "settlement",
       date: p.date,
       created_at: p.created_at,
+      week_from: p.week_from,
+      week_to: p.week_to,
       biker_name: p.Entregadores?.name || "Desconhecido"
     }));
 

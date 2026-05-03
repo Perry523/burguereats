@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
     <!-- Re-use the bikers list behind the modal -->
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
@@ -335,13 +335,13 @@ const fetchBikers = async (companyId: string) => {
 
 const loadBikerDetail = async () => {
   if (!bikerId.value) return;
-  
+
   isLoadingBiker.value = true;
   biker.value = null; // Reset current biker while loading
   try {
     // 1. Give a small delay to allow the list to populate if needed
     await nextTick();
-    
+
     // 2. Try finding in the local list first for responsiveness
     const foundInList = bikers.value.find((b) => b.id === bikerId.value);
     if (foundInList) {
@@ -373,7 +373,7 @@ watch(
         await fetchBikers(newCompanyId || "");
       }
     }
-    
+
     // 2. Always try to load the detail if we have an ID
     if (newBikerId) {
       await loadBikerDetail();

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-122px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -13,56 +13,77 @@
     >
       <template #filter>
         <div
-          class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex items-center justify-between gap-2"
+          class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0"
         >
-          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2">
-            Meus Registros
+          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0">
+            {{ auth.user?.role === 'admin' ? 'Registros' : 'Meus Registros' }}
           </h1>
 
-          <div class="flex items-center gap-2 flex-1">
-            <div class="relative flex-1 max-w-[160px]">
-              <div
-                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5"
-              >
-                <UIcon
-                  name="i-heroicons-calendar"
-                  class="h-4 w-4 text-gray-400"
-                />
-              </div>
-              <input
-                type="date"
-                v-model="filterDate"
-                class="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
-              />
+          <!-- Search (admin only) -->
+          <div v-if="auth.user?.role === 'admin'" class="relative w-full sm:w-32 md:w-48 shrink-0 sm:shrink">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+              <UIcon name="i-heroicons-magnifying-glass" class="h-4 w-4 text-gray-400" />
             </div>
-
-            <button
-              v-if="filterDate"
-              @click="filterDate = ''"
-              class="text-xs text-slate-500 underline hover:text-slate-700 whitespace-nowrap"
-            >
-              Limpar
-            </button>
+            <input
+              v-model="search"
+              type="text"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
+              placeholder="Empresa ou entregador..."
+            />
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
+          <!-- Controls wrapper for mobile -->
+          <div class="flex items-center gap-1 sm:gap-2 w-full sm:w-auto flex-1">
+            <!-- Prev arrow -->
             <button
-              @click="fetchPayments"
-              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              title="Atualizar"
+              @click="shiftWeek(-1)"
+              class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+              title="Semana anterior"
             >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                :class="[
-                  'h-4 w-4 sm:h-5 sm:w-5',
-                  isLoading ? 'animate-spin' : '',
-                ]"
-              />
+              <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+            </button>
+
+            <!-- Week selects -->
+            <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
+              <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+                <select
+                  v-model="pickerMonth"
+                  @change="onMonthChange"
+                  class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+                >
+                  <option v-for="(m, i) in months" :key="i" :value="i">
+                    {{ m }}
+                  </option>
+                </select>
+                <span class="text-gray-300 text-xs">·</span>
+                <select
+                  v-model="pickerWeek"
+                  @change="onWeekChange"
+                  class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
+                >
+                  <option
+                    v-for="w in weeksInMonth"
+                    :key="w.label"
+                    :value="w.label"
+                  >
+                    {{ w.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Next arrow -->
+            <button
+              @click="shiftWeek(1)"
+              class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+              title="Próxima semana"
+            >
+              <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
             </button>
 
             <button
               @click="openAddModal"
-              class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 shadow-sm whitespace-nowrap"
+              class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 shadow-sm whitespace-nowrap shrink-0"
             >
               <UIcon name="i-heroicons-plus" class="h-4 w-4 sm:h-5 sm:w-5" />
               <span class="hidden sm:inline">Adicionar</span>
@@ -83,8 +104,13 @@
             />
           </div>
           <div>
-            <p class="font-medium text-gray-900">{{ row.company_name }}</p>
-            <p class="text-[11px] text-gray-500">
+            <p v-if="auth.user?.role === 'admin'" class="font-bold text-gray-900 leading-tight">
+              {{ row.biker_name }}
+            </p>
+            <p class="font-medium text-gray-700 leading-tight" :class="auth.user?.role === 'admin' ? 'text-[11px]' : ''">
+              {{ row.company_name }}
+            </p>
+            <p class="text-[10px] text-gray-500 mt-0.5">
               {{ formatDateBR(row.date) }}
             </p>
           </div>
@@ -108,14 +134,24 @@
       <!-- Ver mais action -->
       <template #additional-actions="{ item }">
         <li v-if="!item.is_paid" @click="editPayment(item)">
-          <a class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150 cursor-pointer">
-            <UIcon name="i-heroicons-pencil-square" class="w-5 h-5 text-gray-400" />
+          <a
+            class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150 cursor-pointer"
+          >
+            <UIcon
+              name="i-heroicons-pencil-square"
+              class="w-5 h-5 text-gray-400"
+            />
             Editar
           </a>
         </li>
         <li v-if="!item.is_paid" @click="deletePayment(item)">
-          <a class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer">
-            <UIcon name="i-heroicons-trash" class="w-5 h-5 text-red-500 hover:text-red-600" />
+          <a
+            class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer"
+          >
+            <UIcon
+              name="i-heroicons-trash"
+              class="w-5 h-5 text-red-500 hover:text-red-600"
+            />
             Excluir
           </a>
         </li>
@@ -200,7 +236,10 @@
     </BaseDialog>
 
     <!-- Modal Adicionar/Editar Registro -->
-    <BaseDialog v-model="showAddModal" :title="editingPaymentId ? 'Editar Registro' : 'Adicionar Registro'">
+    <BaseDialog
+      v-model="showAddModal"
+      :title="editingPaymentId ? 'Editar Registro' : 'Adicionar Registro'"
+    >
       <div class="p-4 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -232,7 +271,6 @@
             contato com o suporte para ser vinculado.
           </div>
           <div v-else>
-
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >Restaurante <span class="text-red-500">*</span></label
             >
@@ -322,9 +360,9 @@ const toast = useToast();
 
 const payments = ref<any[]>([]);
 const isLoading = ref(false);
+const search = ref("");
 const page = ref(1);
 const itemsPerPage = ref(10);
-const filterDate = ref("");
 
 // Modal state
 const showAddModal = ref(false);
@@ -355,6 +393,113 @@ const form = ref({
   total_deliveries: 0,
 });
 
+// ── Week Range Picker ──────────────────────────────────────────────
+const months = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function getMondayOf(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const today = new Date();
+const initMonday = getMondayOf(today);
+const initSunday = new Date(initMonday);
+initSunday.setDate(initSunday.getDate() + 6);
+
+const weekRange = ref({
+  from: toISODate(initMonday),
+  to: toISODate(initSunday),
+});
+const pickerMonth = ref(initMonday.getMonth());
+const pickerWeek = ref("");
+
+const weeksInMonth = computed(() => {
+  const year = new Date().getFullYear();
+  const weeks: { label: string; from: Date; to: Date }[] = [];
+  const cursor = new Date(year, pickerMonth.value, 1);
+  let mon = getMondayOf(cursor);
+  for (let i = 0; i < 6; i++) {
+    const sun = new Date(mon);
+    sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() > pickerMonth.value && mon.getFullYear() >= year) break;
+    if (sun.getMonth() < pickerMonth.value) {
+      mon.setDate(mon.getDate() + 7);
+      continue;
+    }
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
+    weeks.push({ label, from: new Date(mon), to: new Date(sun) });
+    mon = new Date(mon);
+    mon.setDate(mon.getDate() + 7);
+  }
+  return weeks;
+});
+
+function onMonthChange() {
+  if (weeksInMonth.value.length) {
+    const w = weeksInMonth.value[0];
+    pickerWeek.value = w.label;
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    fetchPayments();
+  }
+}
+
+function onWeekChange() {
+  const w = weeksInMonth.value.find((x) => x.label === pickerWeek.value);
+  if (w) {
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    fetchPayments();
+  }
+}
+
+function shiftWeek(dir: 1 | -1) {
+  const [fy, fm, fd] = weekRange.value.from.split("-").map(Number);
+  const from = new Date(fy, fm - 1, fd);
+  from.setDate(from.getDate() + dir * 7);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 6);
+  weekRange.value = { from: toISODate(from), to: toISODate(to) };
+  pickerMonth.value = from.getMonth();
+  const match = weeksInMonth.value.find(
+    (w) => toISODate(w.from) === weekRange.value.from,
+  );
+  if (match) pickerWeek.value = match.label;
+  else pickerWeek.value = "";
+  fetchPayments();
+}
+
+const initWeekLabel =
+  weeksInMonth.value.find((w) => toISODate(w.from) === weekRange.value.from)
+    ?.label ??
+  weeksInMonth.value[0]?.label ??
+  "";
+pickerWeek.value = initWeekLabel;
+if (!initWeekLabel && weeksInMonth.value.length) {
+  const w = weeksInMonth.value[0];
+  weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+  pickerWeek.value = w.label;
+}
+// ──────────────────────────────────────────────────────────────────
+
 const columns = [
   { key: "company_name", label: "Restaurante", sm: true },
   { key: "total_deliveries", label: "Volume" },
@@ -380,8 +525,25 @@ const formatDateBR = (dateStr: string) => {
 };
 
 const filteredPayments = computed(() => {
-  if (!filterDate.value) return payments.value;
-  return payments.value.filter((p) => p.date === filterDate.value);
+  let list = payments.value;
+  
+  if (weekRange.value.from && weekRange.value.to) {
+    list = list.filter((p) => {
+      if (!p.date) return true;
+      return p.date >= weekRange.value.from && p.date <= weekRange.value.to;
+    });
+  }
+
+  if (search.value) {
+    const term = search.value.toLowerCase();
+    list = list.filter((p) => {
+      const cName = p.company_name?.toLowerCase() || "";
+      const bName = p.biker_name?.toLowerCase() || "";
+      return cName.includes(term) || bName.includes(term);
+    });
+  }
+
+  return list;
 });
 
 const fetchPayments = async () => {
@@ -438,9 +600,12 @@ const deletePayment = async (payment: any) => {
   if (!confirm("Tem certeza que deseja excluir este registro?")) return;
 
   try {
-    const res = await $fetch<{ success: boolean }>(`/api/biker-payments/record/${payment.id}`, {
-      method: "DELETE",
-    });
+    const res = await $fetch<{ success: boolean }>(
+      `/api/biker-payments/record/${payment.id}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     if (res.success) {
       toast.add({ color: "success", title: "Registro excluído com sucesso!" });
@@ -448,7 +613,10 @@ const deletePayment = async (payment: any) => {
     }
   } catch (error: any) {
     console.error("Delete error", error);
-    toast.add({ color: "error", title: error?.data?.statusMessage || "Erro ao excluir registro" });
+    toast.add({
+      color: "error",
+      title: error?.data?.statusMessage || "Erro ao excluir registro",
+    });
   }
 };
 
@@ -462,7 +630,9 @@ const onDateChange = async (preserveCompany = false) => {
 
   isCheckingDate.value = true;
   try {
-    const res = await $fetch<{ success: boolean; data?: any[] }>(`/api/bikers/me/companies`);
+    const res = await $fetch<{ success: boolean; data?: any[] }>(
+      `/api/bikers/me/companies`,
+    );
     const bounds = res?.data || [];
     vinculatedCompanies.value = bounds;
 
@@ -482,10 +652,10 @@ const submitPayment = async () => {
   isSubmitting.value = true;
   submitError.value = "";
   try {
-    const url = editingPaymentId.value 
+    const url = editingPaymentId.value
       ? `/api/biker-payments/record/${editingPaymentId.value}`
       : "/api/biker-payments";
-      
+
     const method = editingPaymentId.value ? "PUT" : "POST";
 
     const res = await $fetch<{ success: boolean; data?: { wallet: number } }>(
@@ -505,7 +675,9 @@ const submitPayment = async () => {
       // Re-fetch everything because wallet could have changed
       toast.add({
         color: "success",
-        title: editingPaymentId.value ? "Registro atualizado!" : "Registro adicionado com sucesso!",
+        title: editingPaymentId.value
+          ? "Registro atualizado!"
+          : "Registro adicionado com sucesso!",
       });
       showAddModal.value = false;
       await fetchPayments();

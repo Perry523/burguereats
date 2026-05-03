@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="h-[calc(100vh-64px)] lg:h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6"
-  >
+  <div class="h-[calc(100vh-64px)] h-full flex flex-col gap-4 pt-0 md:pt-6">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -141,7 +139,7 @@ watch(search, () => {
 
 const columns = [
   { key: "logo", label: "Empresa", sm: true },
-  { key: "email", label: "Email", sm: true },
+  { key: "email", label: "Email" },
   { key: "type", label: "Tipo" },
   { key: "created_at", label: "Data de Criação" },
 ];

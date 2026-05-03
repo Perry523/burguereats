@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-[calc(100vh-128px)] flex flex-col pt-0 md:pt-6 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
+    class="h-full flex flex-col pt-0 md:pt-6 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
   >
     <div class="flex flex-row items-center justify-between mt-2 md:mb-4 gap-2">
       <div class="hidden lg:block">

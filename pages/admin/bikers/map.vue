@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <NuxtLink to="/admin/bikers">

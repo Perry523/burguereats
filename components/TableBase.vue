@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col w-full">
-    <div class="">
-      <div class="flex justify-between items-center">
+    <div class="shrink-0">
+      <div class="w-full">
         <slot name="filter">
           <div class="flex items-center">
             <div />

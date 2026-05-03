@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-128px)] flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
     <div
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200 flex flex-col"
     >
@@ -9,9 +9,7 @@
           <div
             class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap items-center justify-between gap-2"
           >
-            <h1
-              class="text-xl font-bold text-gray-900 hidden lg:block mr-2"
-            >
+            <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2">
               Escala de Entregadores
             </h1>
 
@@ -73,9 +71,7 @@
       <!-- Scrollable Content -->
       <div class="overflow-auto flex-1 bg-white">
         <!-- Table-like header -->
-        <div
-          class="bg-gray-50 sm:bg-gray-100 sticky top-0 z-10 shadow-sm"
-        >
+        <div class="bg-gray-50 sm:bg-gray-100 sticky top-0 z-10 shadow-sm">
           <div
             class="grid grid-cols-[1fr_auto_auto_auto] items-center px-4 sm:px-6 py-3"
           >
@@ -107,10 +103,7 @@
             Nenhuma empresa encontrada para os filtros selecionados.
           </div>
 
-          <div
-            v-for="company in companiesWithAssignments"
-            :key="company.id"
-          >
+          <div v-for="company in companiesWithAssignments" :key="company.id">
             <!-- Company row -->
             <div
               class="grid grid-cols-[1fr_auto_auto_auto] items-center px-4 sm:px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -120,26 +113,16 @@
               <div class="flex items-center gap-3 min-w-0">
                 <div
                   class="h-9 w-9 rounded-full shrink-0 flex items-center justify-center"
-                  :class="
-                    company.isOpen
-                      ? 'bg-primary/10'
-                      : 'bg-gray-100'
-                  "
+                  :class="company.isOpen ? 'bg-primary/10' : 'bg-gray-100'"
                 >
                   <UIcon
                     name="i-ph-storefront-duotone"
                     class="w-4 h-4"
-                    :class="
-                      company.isOpen
-                        ? 'text-primary'
-                        : 'text-gray-400'
-                    "
+                    :class="company.isOpen ? 'text-primary' : 'text-gray-400'"
                   />
                 </div>
                 <div class="min-w-0">
-                  <p
-                    class="text-sm font-semibold text-gray-900 truncate"
-                  >
+                  <p class="text-sm font-semibold text-gray-900 truncate">
                     {{ company.name }}
                   </p>
                   <p
@@ -154,16 +137,11 @@
 
               <!-- Hours (desktop) -->
               <div class="w-24 sm:w-32 text-center hidden sm:block">
-                <span
-                  v-if="company.todayHours"
-                  class="text-sm text-gray-700"
-                >
+                <span v-if="company.todayHours" class="text-sm text-gray-700">
                   {{ company.todayHours.open_time }} -
                   {{ company.todayHours.close_time }}
                 </span>
-                <span v-else class="text-xs text-gray-400 italic"
-                  >Fechada</span
-                >
+                <span v-else class="text-xs text-gray-400 italic">Fechada</span>
               </div>
 
               <!-- Count badge -->
@@ -177,11 +155,7 @@
                   ]"
                 >
                   {{ company.assignments.length }}
-                  {{
-                    company.assignments.length === 1
-                      ? "moto"
-                      : "motos"
-                  }}
+                  {{ company.assignments.length === 1 ? "moto" : "motos" }}
                 </span>
               </div>
 
@@ -250,9 +224,7 @@
                       ]"
                     >
                       {{
-                        a.status === "confirmado"
-                          ? "Confirmado"
-                          : "Cancelado"
+                        a.status === "confirmado" ? "Confirmado" : "Cancelado"
                       }}
                     </span>
                     <button
@@ -283,14 +255,16 @@
       <div
         class="mt-auto flex flex-row items-center justify-between border-t border-gray-200 pt-2 pb-2 px-2 sm:pt-3 sm:pb-3 sm:px-6 gap-2"
       >
-        <div
-          class="text-[10px] sm:text-sm text-gray-500"
-        >
+        <div class="text-[10px] sm:text-sm text-gray-500">
           {{ companiesWithAssignments.length }}
           {{ companiesWithAssignments.length === 1 ? "empresa" : "empresas" }}
           •
           {{ totalAssignments }}
-          {{ totalAssignments === 1 ? "entregador escalado" : "entregadores escalados" }}
+          {{
+            totalAssignments === 1
+              ? "entregador escalado"
+              : "entregadores escalados"
+          }}
         </div>
         <div class="text-[10px] sm:text-sm text-gray-400">
           {{ formattedDate }}
@@ -305,8 +279,8 @@
     >
       <div class="p-4 space-y-4">
         <p class="text-sm text-gray-600">
-          Selecione o entregador e a data para vincular. O sistema
-          verificará conflitos de horário automaticamente.
+          Selecione o entregador e a data para vincular. O sistema verificará
+          conflitos de horário automaticamente.
         </p>
 
         <div>
@@ -449,7 +423,11 @@ const companiesWithAssignments = computed(() => {
   return list
     .map((c) => {
       const hours = c.operating_hours?.[dayIdx];
-      const isOpen = !!(hours?.enabled && hours?.open_time && hours?.close_time);
+      const isOpen = !!(
+        hours?.enabled &&
+        hours?.open_time &&
+        hours?.close_time
+      );
       return {
         ...c,
         todayHours: isOpen ? hours : null,
