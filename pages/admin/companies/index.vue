@@ -68,6 +68,19 @@
         </span>
       </template>
 
+      <template #status="{ row }">
+        <span
+          :class="[
+            'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium',
+            row.isActive !== false
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800',
+          ]"
+        >
+          {{ row.isActive !== false ? "Ativa" : "Inativa" }}
+        </span>
+      </template>
+
       <template #created_at="{ row }">
         <span class="text-sm text-gray-500">
           {{ formatDate(row.createdAt) }}
@@ -88,6 +101,7 @@ definePageMeta({
 
 const auth = useAuthStore();
 const router = useRouter();
+const toast = useToast();
 
 interface Company {
   id: string;
@@ -97,6 +111,7 @@ interface Company {
   type: string;
   logo: string;
   createdAt: string;
+  isActive: boolean;
 }
 
 const companies = ref<Company[]>([]);
@@ -141,6 +156,7 @@ const columns = [
   { key: "logo", label: "Empresa", sm: true },
   { key: "email", label: "Email" },
   { key: "type", label: "Tipo" },
+  { key: "status", label: "Status" },
   { key: "created_at", label: "Data de Criação" },
 ];
 
@@ -148,7 +164,46 @@ const goToEdit = (id: string) => {
   router.push(`/admin/companies/${id}`);
 };
 
-const tableActions: any[] = [];
+const toggleCompanyStatus = async (company: Company) => {
+  const action = company.isActive !== false ? "INATIVAR" : "ATIVAR";
+  const msg =
+    company.isActive !== false
+      ? `Tem certeza que deseja INATIVAR a empresa ${company.name}? O responsável não poderá mais fazer login.`
+      : `Tem certeza que deseja ATIVAR a empresa ${company.name}?`;
+
+  if (!confirm(msg)) return;
+
+  try {
+    const response = await $fetch<{ success: boolean; isActive: boolean }>(
+      `/api/companies/${company.id}/toggle`,
+      { method: "POST" },
+    );
+
+    if (response?.success) {
+      company.isActive = response.isActive;
+      toast.add({
+        color: "success",
+        title: `Empresa ${response.isActive ? "ativada" : "inativada"} com sucesso`,
+      });
+    }
+  } catch (error) {
+    console.error("Error toggling company status:", error);
+    toast.add({ color: "error", title: "Erro ao alterar status da empresa" });
+  }
+};
+
+const tableActions: any[] = [
+  {
+    name: "Ver / Editar",
+    action: (row: any) => goToEdit(row.id),
+  },
+  {
+    name: (row: any) => (row.isActive !== false ? "Inativar" : "Ativar"),
+    icon: (row: any) =>
+      row.isActive !== false ? "i-heroicons-no-symbol" : "i-heroicons-check-circle",
+    action: (row: any) => toggleCompanyStatus(row),
+  },
+];
 
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";

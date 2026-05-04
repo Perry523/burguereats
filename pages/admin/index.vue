@@ -243,7 +243,7 @@
               <p
                 class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 truncate"
               >
-                {{ stats.adminStats?.pendingDeliveriesCount || 0 }}
+                {{ stats.adminStats?.totalDeliveriesCount || 0 }}
               </p>
             </div>
             <div
@@ -314,7 +314,8 @@
             <div class="min-w-0 flex-1">
               <p class="text-sm font-medium text-gray-500 truncate">A Pagar</p>
               <p
-                class="text-3xl sm:text-4xl font-bold text-green-600 mt-2 truncate"
+                class="text-3xl sm:text-4xl font-bold mt-2 truncate"
+                :class="(stats.adminStats?.totalNet || 0) < 0 ? 'text-red-600' : 'text-green-600'"
               >
                 {{ formatCurrency(stats.adminStats?.totalNet || 0) }}
               </p>

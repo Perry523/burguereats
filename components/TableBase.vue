@@ -146,7 +146,11 @@
                       <a
                         class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150"
                       >
-                        {{ action.name }}
+                        {{
+                          typeof action.name === "function"
+                            ? action.name(item)
+                            : action.name
+                        }}
                       </a>
                     </li>
                     <slot name="additional-actions" :item="item" />

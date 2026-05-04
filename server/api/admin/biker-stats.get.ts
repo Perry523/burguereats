@@ -84,8 +84,7 @@ export default defineEventHandler(async (event) => {
     // --- PAYMENTS QUERY FOR ADMIN STATS ---
     let paymentsQuery = supabase
       .from("biker_payments")
-      .select("*")
-      .eq("is_paid", false);
+      .select("*");
 
     if (companyId) {
       paymentsQuery = paymentsQuery.eq("company_id", companyId);
@@ -220,27 +219,44 @@ export default defineEventHandler(async (event) => {
     };
 
     // --- PROCESS PAYMENTS STATS FOR ADMIN ---
-    const { data: pendingPayments } = await paymentsQuery;
+    const { data: allPayments } = await paymentsQuery;
+    let totalDeliveriesCount = 0;
     let pendingDeliveriesCount = 0;
+    let totalGrossAmount = 0;
     let totalPendingAmount = 0;
     let totalAdvances = 0;
+    let pendingAdvances = 0;
 
-    (pendingPayments || []).forEach(p => {
+    (allPayments || []).forEach(p => {
       if (p.is_advance) {
-        totalAdvances += Number(p.amount) || 0;
+        const amount = Number(p.amount) || 0;
+        totalAdvances += amount;
+        if (!p.is_paid) {
+          pendingAdvances += amount;
+        }
       } else {
-        pendingDeliveriesCount += Number(p.total_deliveries) || 0;
-        totalPendingAmount += Number(p.amount) || 0;
+        const deliveries = Number(p.total_deliveries) || 0;
+        const amount = Number(p.amount) || 0;
+        
+        totalDeliveriesCount += deliveries;
+        totalGrossAmount += amount;
+
+        if (!p.is_paid) {
+          pendingDeliveriesCount += deliveries;
+          totalPendingAmount += amount;
+        }
       }
     });
 
     stats.adminStats = {
+      totalDeliveriesCount,
       pendingDeliveriesCount,
-      totalGross: totalPendingAmount,
+      totalGross: totalGrossAmount,
       totalAdvances,
+      pendingAdvances,
       totalServiceFee: pendingDeliveriesCount * 1,
-      totalNet: totalPendingAmount - (pendingDeliveriesCount * 1) - totalAdvances,
-      pendingRegisters: (pendingPayments || []).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10)
+      totalNet: totalPendingAmount - (pendingDeliveriesCount * 1) - pendingAdvances,
+      pendingRegisters: (allPayments || []).filter(p => !p.is_paid).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10)
     };
     // ----------------------------------------
 
