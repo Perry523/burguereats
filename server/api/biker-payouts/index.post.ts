@@ -17,19 +17,19 @@ export default defineEventHandler(async (event) => {
     if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. Fetch current biker stats
+    // 1. Verify biker exists
     const { data: biker, error: bikerErr } = await supabase
       .from("Entregadores")
-      .select("id, wallet, advance_money")
+      .select("id, wallet")
       .eq("id", biker_id)
       .single();
 
     if (bikerErr || !biker) throw createError({ statusCode: 404, statusMessage: "Biker not found" });
 
-    // 2. Fetch unpaid payments ONLY for the specified week
+    // 2. Fetch ALL unpaid biker_payments for the week (normal records + advances)
     const { data: payments, error: payErr } = await supabase
       .from("biker_payments")
-      .select("id, amount, total_deliveries")
+      .select("id, amount, total_deliveries, is_advance")
       .eq("biker_id", biker_id)
       .eq("is_paid", false)
       .gte("date", dateFrom)
@@ -37,25 +37,35 @@ export default defineEventHandler(async (event) => {
 
     if (payErr) throw payErr;
 
+    // Separate normal records from advance records
+    const normalPayments = (payments || []).filter((p) => !p.is_advance);
+    const advancePayments = (payments || []).filter((p) => p.is_advance);
+
+    if (normalPayments.length === 0) {
+      throw createError({ statusCode: 400, statusMessage: "Nenhum registro pendente nesta semana" });
+    }
+
+    // 3. Calculate week totals from the records themselves
     let weekWallet = 0;
     let weekDeliveries = 0;
     const unpaidIds: string[] = [];
-    for (const p of (payments || [])) {
+
+    for (const p of normalPayments) {
       weekWallet += Number(p.amount) || 0;
       weekDeliveries += Number(p.total_deliveries) || 0;
       unpaidIds.push(p.id);
     }
 
-    if (unpaidIds.length === 0) {
-      throw createError({ statusCode: 400, statusMessage: "Nenhum registro pendente nesta semana" });
+    let advanceMoney = 0;
+    for (const a of advancePayments) {
+      advanceMoney += Number(a.amount) || 0;
+      unpaidIds.push(a.id); // Mark advance records as paid too
     }
 
-    // Calculations scoped to this week
-    const advanceMoney = Number(biker.advance_money) || 0;
     const deliveryFee = weekDeliveries * 1; // R$ 1.00 per delivery
     const netPaid = weekWallet - advanceMoney - deliveryFee;
 
-    // 3. Create the payout receipt
+    // 4. Create the payout receipt (settlement)
     const { data: payout, error: insertErr } = await supabase
       .from("biker_payouts")
       .insert([{
@@ -75,24 +85,24 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: "Erro ao gerar recibo de pagamento" });
     }
 
-    // 4. Subtract the week's wallet from the biker's global wallet, and reset advance_money
+    // 5. Subtract the week's gross from the biker's global wallet
     const currentWallet = Number(biker.wallet) || 0;
     const newWallet = Math.max(0, currentWallet - weekWallet);
-    const { error: resetErr } = await supabase
+    const { error: walletErr } = await supabase
       .from("Entregadores")
-      .update({ wallet: newWallet, advance_money: 0 })
+      .update({ wallet: newWallet })
       .eq("id", biker_id);
 
-    if (resetErr) throw resetErr;
+    if (walletErr) throw walletErr;
 
-    // 5. Mark ONLY this week's payments as paid
+    // 6. Mark ALL this week's records (normal + advances) as paid
     if (unpaidIds.length > 0) {
       const { error: markErr } = await supabase
         .from("biker_payments")
         .update({ is_paid: true })
         .in("id", unpaidIds);
-        
-      if (markErr) console.error("Could not mark payments as paid", markErr);
+
+      if (markErr) console.error("Could not mark payments as paid:", markErr);
     }
 
     return { success: true, payout };

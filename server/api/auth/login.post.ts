@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Check if account is active
+    // Check if admin account is active
     if ((userType === 'admin' || userType === 'manager') && !userData.isActive) {
       throw createError({
         statusCode: 403,
@@ -108,7 +108,30 @@ export default defineEventHandler(async (event) => {
         .select("*")
         .eq("id", companyId)
         .single();
+      
+      if (companyData && companyData.isActive === false) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: "Company is inactive",
+        });
+      }
       company = companyData;
+    }
+
+    // For bikers, verify if the Entregadores record is active
+    if (userType === 'biker') {
+      const { data: bikerRecord } = await supabase
+        .from("Entregadores")
+        .select("isActive")
+        .eq("userId", userData.id)
+        .single();
+      
+      if (bikerRecord && bikerRecord.isActive === false) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: "Account is inactive",
+        });
+      }
     }
 
     const token = jwt.sign(

@@ -245,7 +245,38 @@ const tableActions: any[] = [
     action: (row: any) => openVinculateModal(row),
     show: () => user.value?.role === "admin",
   },
+  {
+    name: (row: any) => row.isActive ? "Inativar" : "Ativar",
+    icon: (row: any) => row.isActive ? "i-heroicons-no-symbol" : "i-heroicons-check-circle",
+    action: (row: any) => toggleBikerStatus(row),
+    show: () => user.value?.role === "admin",
+  },
 ];
+
+const toggleBikerStatus = async (biker: Biker) => {
+  const confirmMessage = biker.isActive 
+    ? `Tem certeza que deseja INATIVAR o entregador ${biker.name}? Ele não poderá mais fazer login.`
+    : `Tem certeza que deseja ATIVAR o entregador ${biker.name}?`;
+  
+  if (!confirm(confirmMessage)) return;
+
+  try {
+    const response = await $fetch<{ success: boolean; isActive: boolean }>(`/api/bikers/${biker.id}/toggle`, {
+      method: 'POST'
+    });
+    
+    if (response?.success) {
+      biker.isActive = response.isActive;
+      toast.add({ 
+        color: "success", 
+        title: `Entregador ${response.isActive ? 'ativado' : 'inativado'} com sucesso` 
+      });
+    }
+  } catch (error) {
+    console.error("Error toggling biker status:", error);
+    toast.add({ color: "error", title: "Erro ao alterar status" });
+  }
+};
 
 const fetchBikers = async (companyId: string) => {
   isLoading.value = true;

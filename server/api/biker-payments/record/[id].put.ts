@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     // Ensure it's not paid
     const { data: currentPayment, error: checkErr } = await supabase
       .from("biker_payments")
-      .select("is_paid, biker_id")
+      .select("is_paid, is_advance, biker_id")
       .eq("id", id)
       .single();
 
@@ -28,6 +28,10 @@ export default defineEventHandler(async (event) => {
 
     if (currentPayment.is_paid) {
       throw createError({ statusCode: 400, statusMessage: "Cannot edit a paid record" });
+    }
+
+    if (currentPayment.is_advance) {
+      throw createError({ statusCode: 400, statusMessage: "Cannot edit an advance record" });
     }
 
     // Admins can edit any, bikers can only edit their own

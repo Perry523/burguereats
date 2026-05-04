@@ -265,6 +265,21 @@
           </div>
         </div>
 
+        <!-- PIX Key -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+            <UIcon name="i-ph-bank" class="w-5 h-5 text-indigo-600" />
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <p class="text-xs text-indigo-600 font-bold uppercase tracking-wider">
+              Chave PIX do Entregador
+            </p>
+            <p class="text-sm font-semibold text-indigo-900 truncate">
+              {{ selectedBiker?.pix_key || 'Não informada' }}
+            </p>
+          </div>
+        </div>
+
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p class="text-sm text-blue-800 font-medium mb-2">
             Resumo da Liquidação (somente esta semana):
@@ -535,11 +550,12 @@ const saveAdvance = async () => {
 
   try {
     const res = await $fetch<{ success: boolean }>(
-      `/api/biker-payments/${selectedBiker.value.id}`,
+      `/api/biker-payments/advance`,
       {
-        method: "PUT",
+        method: "POST",
         body: {
-          advance_money: Number(advanceForm.value.amount),
+          biker_id: selectedBiker.value.id,
+          amount: Number(advanceForm.value.amount),
           date: advanceForm.value.date,
         },
       },
@@ -548,7 +564,7 @@ const saveAdvance = async () => {
     if (res.success) {
       toast.add({
         color: "success",
-        title: "Adiantamento lançado e salvo no recibo de pagamentos!",
+        title: "Adiantamento lançado como registro da semana!",
       });
       showAdvanceModal.value = false;
       await loadData(); // Refresh the list

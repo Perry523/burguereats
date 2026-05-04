@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
         email: normalizedEmail,
         phone: body.phone,
         password_hash: hashedPassword,
+        pix_key: body.pix_key || null,
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

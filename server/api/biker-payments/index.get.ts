@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     if (auth.role === "biker") {
       const { data: bRecord, error: bikerErr } = await supabase
         .from("Entregadores")
-        .select("id, advance_money")
+        .select("id")
         .eq("userId", auth.id)
         .single();
 
@@ -41,16 +41,21 @@ export default defineEventHandler(async (event) => {
 
     // For bikers, compute the current wallet status
     if (auth.role === "biker" && bikerRecord) {
-      openPaymentsTotal = (payments || [])
-        .filter((p: any) => !p.is_paid)
+      const openNormalTotal = (payments || [])
+        .filter((p: any) => !p.is_paid && !p.is_advance)
         .reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
 
-      advanceMoney = Number(bikerRecord.advance_money) || 0;
-      computedWallet = openPaymentsTotal - advanceMoney;
+      const openAdvanceTotal = (payments || [])
+        .filter((p: any) => !p.is_paid && p.is_advance)
+        .reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+
+      advanceMoney = openAdvanceTotal;
+      openPaymentsTotal = openNormalTotal;
+      computedWallet = openNormalTotal - openAdvanceTotal;
     }
 
     // Enrich with company names and biker names
-    const companyIds = [...new Set((payments || []).map((p: any) => p.company_id))];
+    const companyIds = [...new Set((payments || []).map((p: any) => p.company_id).filter(Boolean))];
     const bikerIds = [...new Set((payments || []).map((p: any) => p.biker_id))];
     
     let companyMap: Record<string, string> = {};
@@ -77,7 +82,7 @@ export default defineEventHandler(async (event) => {
 
     const enriched = (payments || []).map((p: any) => ({
       ...p,
-      company_name: companyMap[p.company_id] || "Desconhecida",
+      company_name: p.is_advance ? "Adiantamento" : (companyMap[p.company_id] || "Desconhecida"),
       biker_name: auth.role === "biker" ? auth.name : (bikerMap[p.biker_id] || "Desconhecido"),
     }));
 
