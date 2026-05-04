@@ -807,6 +807,8 @@ const loadBikers = async () => {
   }
 };
 
+let isFirstLoad = true;
+
 const fetchStats = async () => {
   if (!companyId.value && auth.user?.role !== "admin") return;
 
@@ -827,6 +829,23 @@ const fetchStats = async () => {
     url += `&dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`;
 
     const res = await $fetch<{ success: boolean; data: any }>(url);
+
+    if (isFirstLoad && res.success && res.data) {
+      const d = res.data;
+      const hasData =
+        d.totalDeliveries > 0 ||
+        (d.recentDeliveries && d.recentDeliveries.length > 0) ||
+        (d.adminStats && (d.adminStats.pendingDeliveriesCount > 0 || d.adminStats.totalGross > 0));
+
+      if (!hasData) {
+        isFirstLoad = false;
+        shiftWeek(-1);
+        return;
+      }
+    }
+
+    isFirstLoad = false;
+
     if (res.success && res.data) stats.value = res.data;
   } catch (error) {
     console.error("Error fetching stats:", error);

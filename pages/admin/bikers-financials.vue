@@ -535,12 +535,28 @@ watch(search, () => {
   page.value = 1;
 });
 
+let isFirstLoad = true;
+
 const loadData = async () => {
   isLoading.value = true;
   try {
     const res = await $fetch<{ success: boolean; data?: any[] }>(
       `/api/biker-payments/financials?dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`,
     );
+    
+    if (isFirstLoad && res.success && res.data) {
+      // Check if there is any financial activity this week
+      const hasActivity = res.data.some(
+        (b) => b.wallet > 0 || b.total_deliveries > 0 || b.advance_money > 0
+      );
+      if (!hasActivity) {
+        isFirstLoad = false;
+        shiftWeek(-1);
+        return;
+      }
+    }
+
+    isFirstLoad = false;
     bikers.value = res?.data || [];
   } catch (error) {
     console.error("Error fetching financials:", error);

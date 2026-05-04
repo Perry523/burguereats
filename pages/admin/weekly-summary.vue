@@ -435,6 +435,8 @@ const getDayStyle = (day: string) => {
   return styles[day] || "bg-gray-100 text-gray-700";
 };
 
+let isFirstLoad = true;
+
 const fetchSummary = async () => {
   isLoading.value = true;
   try {
@@ -444,6 +446,17 @@ const fetchSummary = async () => {
     }
 
     const res = await $fetch<{ success: boolean; data: any }>(url);
+
+    if (isFirstLoad && res.success && res.data) {
+      if (res.data.totalRecords === 0) {
+        isFirstLoad = false;
+        shiftWeek(-1);
+        return;
+      }
+    }
+
+    isFirstLoad = false;
+
     if (res.success && res.data) {
       summary.value = res.data;
       if (res.data.companies?.length) {
