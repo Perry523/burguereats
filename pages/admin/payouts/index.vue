@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:py-4">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -35,24 +35,9 @@
               </option>
             </select>
 
-            <!-- Date range filter -->
-            <select
-              v-model="selectedDate"
-              class="flex-1 lg:flex-initial rounded-lg border border-gray-300 bg-white p-2 text-xs sm:text-sm text-gray-700 shadow-sm focus:border-primary focus:ring-primary min-w-[120px] sm:min-w-[160px]"
-              :disabled="isLoading"
-            >
-              <option
-                v-for="opt in dateRangeOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-
             <button
               @click="fetchPayouts"
-              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
               title="Atualizar"
             >
               <UIcon
@@ -65,16 +50,88 @@
             </button>
           </div>
         </div>
+
+        <!-- Week picker row -->
+        <div
+          class="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 pb-2 border-t border-gray-100 pt-2"
+        >
+          <!-- Prev week -->
+          <button
+            @click="shiftWeek(-1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+            title="Semana anterior"
+          >
+            <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+          </button>
+
+          <!-- Month + Week selects -->
+          <div
+            class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0"
+          >
+            <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+              <span
+                class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0 hidden sm:flex"
+              >
+                <UIcon
+                  name="i-heroicons-calendar-days"
+                  class="w-3.5 h-3.5 text-sky-500"
+                />
+              </span>
+              <select
+                v-model="pickerMonth"
+                @change="onMonthChange"
+                class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+              >
+                <option v-for="(m, i) in months" :key="i" :value="i">
+                  {{ m }}
+                </option>
+              </select>
+              <span class="text-gray-300 text-xs">·</span>
+              <select
+                v-model="pickerWeek"
+                @change="onWeekChange"
+                class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
+              >
+                <option
+                  v-for="w in weeksInMonth"
+                  :key="w.label"
+                  :value="w.label"
+                >
+                  {{ w.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Next week -->
+          <button
+            @click="shiftWeek(1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+            title="Próxima semana"
+          >
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          </button>
+        </div>
       </template>
 
       <!-- Date -->
       <template #date="{ row }">
-        <div v-if="row.type === 'settlement' && row.week_from && row.week_to" class="flex flex-col">
-          <span class="text-xs font-semibold text-gray-900">{{ formatShortDate(row.week_from) }} – {{ formatShortDate(row.week_to) }}</span>
-          <span class="text-[10px] text-gray-500">Pagou: {{ formatDateBR(row.created_at).split(' ')[0] }}</span>
+        <div
+          v-if="row.type === 'settlement' && row.week_from && row.week_to"
+          class="flex flex-col"
+        >
+          <span class="text-xs font-semibold text-gray-900"
+            >{{ formatShortDate(row.week_from) }} –
+            {{ formatShortDate(row.week_to) }}</span
+          >
+          <span class="text-[10px] text-gray-500"
+            >Pagou: {{ formatDateBR(row.created_at).split(" ")[0] }}</span
+          >
         </div>
         <div v-else>
-          <span class="text-xs font-semibold text-gray-900">{{ formatDateBR(row.created_at).split(' ')[0] }}</span>
+          <span class="text-xs font-semibold text-gray-900">{{
+            formatDateBR(row.created_at).split(" ")[0]
+          }}</span>
         </div>
       </template>
 
@@ -94,7 +151,11 @@
 
       <!-- Entregador -->
       <template #biker_name="{ row }">
-        <span class="font-medium text-gray-900">{{ row.biker_name }}</span>
+        <div>
+          <div class="font-medium text-gray-900">
+            {{ row.biker_name }}
+          </div>
+        </div>
       </template>
 
       <!-- Amount -->
@@ -151,9 +212,16 @@
             <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">
               Período Referência
             </p>
-            <div v-if="selectedPayout.type === 'settlement' && selectedPayout.week_from && selectedPayout.week_to">
+            <div
+              v-if="
+                selectedPayout.type === 'settlement' &&
+                selectedPayout.week_from &&
+                selectedPayout.week_to
+              "
+            >
               <p class="text-sm text-gray-900 font-medium">
-                {{ formatFullDate(selectedPayout.week_from) }} até {{ formatFullDate(selectedPayout.week_to) }}
+                {{ formatFullDate(selectedPayout.week_from) }} até
+                {{ formatFullDate(selectedPayout.week_to) }}
               </p>
               <p class="text-[11px] text-gray-500 mt-0.5">
                 Liquidado em: {{ formatDateBR(selectedPayout.created_at) }}
@@ -252,16 +320,119 @@ const bikers = ref<any[]>([]);
 const page = ref(1);
 const itemsPerPage = ref(10);
 
-const selectedDate = ref("all");
 const selectedBiker = ref("all");
 
-const dateRangeOptions = [
-  { label: "Todos os períodos", value: "all" },
-  { label: "Hoje", value: "today" },
-  { label: "Ontem", value: "yesterday" },
-  { label: "Última semana", value: "last_week" },
-  { label: "Último mês", value: "last_month" },
+// ── Week Range Picker ──────────────────────────────────────────────
+const months = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
+
+function getMondayOf(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const today = new Date();
+const initMonday = getMondayOf(today);
+const initSunday = new Date(initMonday);
+initSunday.setDate(initSunday.getDate() + 6);
+
+const weekRange = ref({
+  from: toISODate(initMonday),
+  to: toISODate(initSunday),
+});
+const pickerMonth = ref(initMonday.getMonth());
+const initLabel = `${String(initMonday.getDate()).padStart(2, "0")}/${String(initMonday.getMonth() + 1).padStart(2, "0")} – ${String(initSunday.getDate()).padStart(2, "0")}/${String(initSunday.getMonth() + 1).padStart(2, "0")}`;
+const pickerWeek = ref(initLabel);
+
+const weeksInMonth = computed(() => {
+  const year = new Date().getFullYear();
+  const weeks: { label: string; from: Date; to: Date }[] = [];
+  const cursor = new Date(year, pickerMonth.value, 1);
+  let mon = getMondayOf(cursor);
+  for (let i = 0; i < 6; i++) {
+    const sun = new Date(mon);
+    sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() > pickerMonth.value && mon.getFullYear() >= year) break;
+    if (sun.getMonth() < pickerMonth.value) {
+      mon.setDate(mon.getDate() + 7);
+      continue;
+    }
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
+    weeks.push({ label, from: new Date(mon), to: new Date(sun) });
+    mon = new Date(mon);
+    mon.setDate(mon.getDate() + 7);
+  }
+  return weeks;
+});
+
+function onMonthChange() {
+  if (weeksInMonth.value.length) {
+    const w = weeksInMonth.value[0];
+    pickerWeek.value = w.label;
+    weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
+    fetchPayouts();
+  }
+}
+
+function onWeekChange() {
+  const found = weeksInMonth.value.find((w) => w.label === pickerWeek.value);
+  if (found) {
+    weekRange.value = { from: toISODate(found.from), to: toISODate(found.to) };
+    fetchPayouts();
+  }
+}
+
+function shiftWeek(offset: number) {
+  const mon = new Date(weekRange.value.from + "T00:00:00");
+  mon.setDate(mon.getDate() + offset * 7);
+  pickerMonth.value = mon.getMonth();
+  const sun = new Date(mon);
+  sun.setDate(sun.getDate() + 6);
+  weekRange.value = { from: toISODate(mon), to: toISODate(sun) };
+
+  const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
+  pickerWeek.value = label;
+
+  fetchPayouts();
+}
+
+watch(
+  weeksInMonth,
+  (newVal) => {
+    if (
+      !newVal.find((w) => w.label === pickerWeek.value) &&
+      newVal.length > 0
+    ) {
+      pickerWeek.value = newVal[0].label;
+      weekRange.value = {
+        from: toISODate(newVal[0].from),
+        to: toISODate(newVal[0].to),
+      };
+    }
+  },
+  { immediate: true },
+);
+// ───────────────────────────────────────────────────────────────────
 
 const showDetailsModal = ref(false);
 const selectedPayout = ref<any>(null);
@@ -269,15 +440,15 @@ const selectedPayout = ref<any>(null);
 const isAdmin = computed(() => auth.user?.role === "admin");
 
 const columns = computed(() => {
-  const cols: any = [
-    { key: "date", label: "Data", sm: true },
-    { key: "type", label: "Tipo" },
-  ];
+  const cols: any = [{ key: "date", label: "Data", sm: true }];
   if (isAdmin.value) {
-    cols.push({ key: "biker_name", label: "Entregador" });
+    cols.push({ key: "biker_name", label: "Entregador", sm: true });
   }
-  cols.push({ key: "discounts_total", label: "Descontos Aplicados" });
-  cols.push({ key: "amount_paid", label: "Valor", sm: true });
+  cols.push(
+    { key: "type", label: "Tipo" },
+    { key: "discounts_total", label: "Descontos Aplicados" },
+    { key: "amount_paid", label: "Valor", sm: true },
+  );
   return cols;
 });
 
@@ -332,7 +503,7 @@ const fetchBikers = async () => {
 const fetchPayouts = async () => {
   isLoading.value = true;
   try {
-    let url = `/api/biker-payouts?dateRange=${selectedDate.value}`;
+    let url = `/api/biker-payouts?dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`;
     if (isAdmin.value && selectedBiker.value !== "all") {
       url += `&bikerId=${selectedBiker.value}`;
     }
@@ -345,7 +516,7 @@ const fetchPayouts = async () => {
   }
 };
 
-watch([selectedDate, selectedBiker], () => {
+watch([selectedBiker], () => {
   fetchPayouts();
 });
 

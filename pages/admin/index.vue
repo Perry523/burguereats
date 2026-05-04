@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] h-full flex flex-col pt-0 md:pt-6 overflow-auto"
+    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] h-full flex flex-col pt-0 md:py-4 overflow-auto"
   >
     <!-- Stat Cards + Filters -->
     <div class="shrink-0 mb-5">
@@ -89,7 +89,9 @@
         </div>
 
         <!-- Bottom row: week picker -->
-        <div class="flex items-center gap-1 sm:gap-2 px-3 py-2 border-t border-gray-100">
+        <div
+          class="flex items-center gap-1 sm:gap-2 px-3 py-2 border-t border-gray-100"
+        >
           <!-- Prev week -->
           <button
             @click="shiftWeek(-1)"
@@ -100,10 +102,17 @@
           </button>
 
           <!-- Month + Week selects -->
-          <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
+          <div
+            class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0"
+          >
             <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
-              <span class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0 hidden sm:flex">
-                <UIcon name="i-heroicons-calendar-days" class="w-3.5 h-3.5 text-sky-500" />
+              <span
+                class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0 hidden sm:flex"
+              >
+                <UIcon
+                  name="i-heroicons-calendar-days"
+                  class="w-3.5 h-3.5 text-sky-500"
+                />
               </span>
               <select
                 v-model="pickerMonth"
@@ -120,7 +129,11 @@
                 @change="onWeekChange"
                 class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
               >
-                <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
+                <option
+                  v-for="w in weeksInMonth"
+                  :key="w.label"
+                  :value="w.label"
+                >
                   {{ w.label }}
                 </option>
               </select>
@@ -629,7 +642,8 @@ const weekRange = ref({
   to: toISODate(initSunday),
 });
 const pickerMonth = ref(initMonday.getMonth());
-const pickerWeek = ref("");
+const initLabel = `${String(initMonday.getDate()).padStart(2, "0")}/${String(initMonday.getMonth() + 1).padStart(2, "0")} – ${String(initSunday.getDate()).padStart(2, "0")}/${String(initSunday.getMonth() + 1).padStart(2, "0")}`;
+const pickerWeek = ref(initLabel);
 
 /** Compute Mon–Sun weeks in pickerMonth year */
 const weeksInMonth = computed(() => {

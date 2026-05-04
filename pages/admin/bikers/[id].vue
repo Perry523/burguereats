@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:py-4">
     <!-- Re-use the bikers list behind the modal -->
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"

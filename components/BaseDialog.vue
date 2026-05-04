@@ -14,9 +14,11 @@
           </div>
           <div
             @click="emit('update:modelValue', false)"
-            class="absolute z-20 right-4 top-4 text-xl cursor-pointer"
+            class="absolute z-20 right-1 top-1 text-xl cursor-pointer"
           >
-            <XCircleIcon class="w-9 h-9 text-gray-400 hover:text-gray-600 transition-colors" />
+            <XCircleIcon
+              class="w-9 h-9 text-gray-400 hover:text-gray-600 transition-colors"
+            />
           </div>
           <slot name="default" />
         </div>
@@ -69,7 +71,7 @@ const emit = defineEmits(["update:modelValue", "close"]);
       max-height: 100svh !important;
       margin: 0 !important;
       border-radius: 0 !important;
-      padding-top: 3.5rem !important; /* Space for X button */
+      padding-top: 2rem !important; /* Space for X button */
     }
   }
 }
@@ -83,8 +85,14 @@ const emit = defineEmits(["update:modelValue", "close"]);
 }
 
 @keyframes slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 html {

@@ -48,6 +48,8 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error;
 
+    const createdAt = body.date ? new Date(body.date + "T12:00:00Z").toISOString() : new Date().toISOString();
+
     // 3. Create a payout record of type 'advance'
     const { error: payoutErr } = await supabase
       .from("biker_payouts")
@@ -56,7 +58,8 @@ export default defineEventHandler(async (event) => {
         amount_paid: newAdvance,
         discounts: 0,
         delivery_fee_total: 0,
-        type: 'advance'
+        type: 'advance',
+        created_at: createdAt
       }]);
 
     if (payoutErr) console.error("Could not register advance payout:", payoutErr);

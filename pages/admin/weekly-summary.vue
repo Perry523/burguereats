@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-full flex flex-col pt-0 md:pt-6 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
+    class="h-full flex flex-col pt-0 md:py-4 max-w-6xl mx-auto w-full px-2 sm:px-6 lg:px-8 overflow-auto"
   >
     <!-- Filters -->
     <div class="flex flex-col gap-3 mb-4">

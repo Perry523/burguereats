@@ -1,8 +1,10 @@
 <template>
-  <div class="h-svh w-full bg-slate-100 lg:bg-slate-950 lg:overflow-hidden">
+  <div
+    class="h-svh md:flex w-full bg-slate-100 lg:bg-slate-950 lg:overflow-hidden"
+  >
     <div
       v-if="isSidebarOpen"
-      class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+      class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
       @click="closeSidebar"
     ></div>
 
@@ -120,7 +122,9 @@
       </div>
     </aside>
 
-    <div class="flex h-svh flex-col bg-slate-50 min-h-0 relative lg:ml-0">
+    <div
+      class="flex w-full h-svh flex-col bg-slate-50 min-h-0 relative lg:ml-0"
+    >
       <header
         class="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur"
       >
@@ -181,7 +185,7 @@
           isBiker ? 'h-[calc(100vh-105px)]' : 'h-[calc(100vh-50px)] ',
         ]"
       >
-        <div class="mx-auto h-full w-full max-w-6xl space-y-6">
+        <div class="mx-auto h-full w-full max-w-7xl space-y-6">
           <slot />
         </div>
       </main>

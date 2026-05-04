@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-full flex flex-col gap-4 pt-0 md:py-4">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -15,14 +15,24 @@
         <div
           class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0"
         >
-          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0">
-            {{ auth.user?.role === 'admin' ? 'Registros' : 'Meus Registros' }}
+          <h1
+            class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0"
+          >
+            {{ auth.user?.role === "admin" ? "Registros" : "Meus Registros" }}
           </h1>
 
           <!-- Search (admin only) -->
-          <div v-if="auth.user?.role === 'admin'" class="relative w-full sm:w-32 md:w-48 shrink-0 sm:shrink">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-              <UIcon name="i-heroicons-magnifying-glass" class="h-4 w-4 text-gray-400" />
+          <div
+            v-if="auth.user?.role === 'admin'"
+            class="relative w-full sm:w-32 md:w-48 shrink-0 sm:shrink"
+          >
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2"
+            >
+              <UIcon
+                name="i-heroicons-magnifying-glass"
+                class="h-4 w-4 text-gray-400"
+              />
             </div>
             <input
               v-model="search"
@@ -44,8 +54,12 @@
             </button>
 
             <!-- Week selects -->
-            <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
-              <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+            <div
+              class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0"
+            >
+              <div
+                class="flex-1 flex items-center justify-center gap-1 min-w-0"
+              >
                 <select
                   v-model="pickerMonth"
                   @change="onMonthChange"
@@ -104,15 +118,35 @@
             />
           </div>
           <div>
-            <p v-if="auth.user?.role === 'admin'" class="font-bold text-gray-900 leading-tight">
+            <p
+              v-if="auth.user?.role === 'admin'"
+              class="font-bold text-gray-900 leading-tight"
+            >
               {{ row.biker_name }}
             </p>
-            <p class="font-medium text-gray-700 leading-tight" :class="auth.user?.role === 'admin' ? 'text-[11px]' : ''">
+            <p
+              class="font-medium text-gray-700 leading-tight"
+              :class="auth.user?.role === 'admin' ? 'text-[11px]' : ''"
+            >
               {{ row.company_name }}
             </p>
-            <p class="text-[10px] text-gray-500 mt-0.5">
-              {{ formatDateBR(row.date) }}
-            </p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[10px] text-gray-500">
+                {{ formatDateBR(row.date) }}
+              </span>
+              <span
+                v-if="row.is_paid"
+                class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-green-100 text-green-700 uppercase tracking-wider"
+              >
+                Pago
+              </span>
+              <span
+                v-else
+                class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-orange-100 text-orange-700 uppercase tracking-wider"
+              >
+                Pendente
+              </span>
+            </div>
           </div>
         </div>
       </template>
@@ -179,6 +213,20 @@
             <p class="text-gray-900 font-medium">
               {{ formatDateBR(selectedPayment.date) }}
             </p>
+            <div class="mt-1">
+              <span
+                v-if="selectedPayment.is_paid"
+                class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wider"
+              >
+                Pago
+              </span>
+              <span
+                v-else
+                class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 uppercase tracking-wider"
+              >
+                Pendente
+              </span>
+            </div>
           </div>
           <div class="text-right">
             <div
@@ -526,7 +574,7 @@ const formatDateBR = (dateStr: string) => {
 
 const filteredPayments = computed(() => {
   let list = payments.value;
-  
+
   if (weekRange.value.from && weekRange.value.to) {
     list = list.filter((p) => {
       if (!p.date) return true;

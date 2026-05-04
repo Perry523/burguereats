@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-64px)] h-full flex flex-col gap-4 pt-0 md:pt-6">
+  <div class="h-[calc(100vh-64px)] h-full flex flex-col gap-4 pt-0 md:py-4">
     <TableBase
       class="flex-1 min-h-0 bg-white rounded-lg pt-2 md:pt-5 pb-0 px-0 shadow-sm border border-gray-200"
       :loading="isLoading"
@@ -13,22 +13,48 @@
       hide-actions
     >
       <template #filter>
-        <div class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0">
-          <h1 class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0">
+        <div
+          class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0"
+        >
+          <h1
+            class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0"
+          >
             Financeiro Entregadores
           </h1>
 
           <!-- Search -->
-          <div class="relative w-full sm:w-32 md:w-48 shrink-0 sm:shrink">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-              <UIcon name="i-heroicons-magnifying-glass" class="h-4 w-4 text-gray-400" />
+          <div
+            class="flex items-center w-full sm:w-32 md:w-48 shrink-0 sm:shrink"
+          >
+            <div class="relative w-full mr-3">
+              <div
+                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2"
+              >
+                <UIcon
+                  name="i-heroicons-magnifying-glass"
+                  class="h-4 w-4 text-gray-400"
+                />
+              </div>
+              <input
+                v-model="search"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
+                placeholder="Buscar entregador..."
+              />
             </div>
-            <input
-              v-model="search"
-              type="text"
-              class="block w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-2 text-xs sm:text-sm focus:border-primary focus:ring-primary shadow-sm"
-              placeholder="Buscar entregador..."
-            />
+            <button
+              @click="loadData"
+              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
+              title="Atualizar"
+            >
+              <UIcon
+                name="i-heroicons-arrow-path"
+                :class="[
+                  'h-4 w-4 sm:h-5 sm:w-5',
+                  isLoading ? 'animate-spin' : '',
+                ]"
+              />
+            </button>
           </div>
 
           <!-- Pagination and Week Controls wrapper for mobile -->
@@ -43,8 +69,12 @@
             </button>
 
             <!-- Week selects -->
-            <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0">
-              <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+            <div
+              class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0"
+            >
+              <div
+                class="flex-1 flex items-center justify-center gap-1 min-w-0"
+              >
                 <select
                   v-model="pickerMonth"
                   @change="onMonthChange"
@@ -78,20 +108,6 @@
               title="Próxima semana"
             >
               <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
-            </button>
-
-            <button
-              @click="loadData"
-              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
-              title="Atualizar"
-            >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                :class="[
-                  'h-4 w-4 sm:h-5 sm:w-5',
-                  isLoading ? 'animate-spin' : '',
-                ]"
-              />
             </button>
           </div>
         </div>
@@ -172,15 +188,27 @@
           na liquidação.
         </p>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Valor do Novo Adiantamento (R$)</label
-          >
-          <Currency
-            v-model="advanceForm.amount"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-            placeholder="R$ 0,00"
-          />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Valor do Novo Adiantamento</label
+            >
+            <Currency
+              v-model="advanceForm.amount"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+              placeholder="R$ 0,00"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Data</label
+            >
+            <input
+              type="date"
+              v-model="advanceForm.date"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm bg-white"
+            />
+          </div>
         </div>
 
         <div
@@ -211,7 +239,7 @@
     <!-- Pagar (Liquidação) Confirmation Modal -->
     <BaseDialog
       v-model="showPagarModal"
-      :title="'Confirmar Pagamento - ' + (selectedBiker?.name || '')"
+      :title="'Pagar - ' + (selectedBiker?.name || '')"
     >
       <div class="p-4 space-y-4">
         <!-- Week scope indicator -->
@@ -315,7 +343,7 @@ const search = ref("");
 const showAdvanceModal = ref(false);
 const showPagarModal = ref(false);
 const selectedBiker = ref<any>(null);
-const advanceForm = ref({ amount: 0 });
+const advanceForm = ref({ amount: 0, date: toISODate(new Date()) });
 const isSubmitting = ref(false);
 const advanceError = ref("");
 
@@ -361,7 +389,8 @@ const weekRange = ref({
   to: toISODate(initSunday),
 });
 const pickerMonth = ref(initMonday.getMonth());
-const pickerWeek = ref("");
+const initLabel = `${String(initMonday.getDate()).padStart(2, "0")}/${String(initMonday.getMonth() + 1).padStart(2, "0")} – ${String(initSunday.getDate()).padStart(2, "0")}/${String(initSunday.getMonth() + 1).padStart(2, "0")}`;
+const pickerWeek = ref(initLabel);
 
 const weeksInMonth = computed(() => {
   const year = new Date().getFullYear();
@@ -493,6 +522,7 @@ const loadData = async () => {
 const openAdvanceModal = (biker: any) => {
   selectedBiker.value = biker;
   advanceForm.value.amount = 0; // Starts from 0 because we only input the new advance now
+  advanceForm.value.date = toISODate(new Date());
   advanceError.value = "";
   showAdvanceModal.value = true;
 };
@@ -508,7 +538,10 @@ const saveAdvance = async () => {
       `/api/biker-payments/${selectedBiker.value.id}`,
       {
         method: "PUT",
-        body: { advance_money: Number(advanceForm.value.amount) },
+        body: {
+          advance_money: Number(advanceForm.value.amount),
+          date: advanceForm.value.date,
+        },
       },
     );
 

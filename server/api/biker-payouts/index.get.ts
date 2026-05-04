@@ -5,7 +5,8 @@ export default defineEventHandler(async (event) => {
   try {
     const auth = requireAuth(event);
     const q = getQuery(event);
-    const dateRange = q.dateRange as string | undefined;
+    const dateFrom = q.dateFrom as string | undefined;
+    const dateTo = q.dateTo as string | undefined;
     const bikerId = q.bikerId as string | undefined;
 
     if (!auth || (auth.role !== "admin" && auth.role !== "biker")) {
@@ -56,30 +57,19 @@ export default defineEventHandler(async (event) => {
     }
 
     // Date Range Filter
-    if (dateRange && dateRange !== "all") {
-        const now = dayjs();
-        let dateFrom;
-        let dateTo = now.endOf("day").toISOString();
-        
-        switch (dateRange) {
-          case "today":
-            dateFrom = now.startOf("day").toISOString();
-            break;
-          case "yesterday":
-            dateFrom = now.subtract(1, "day").startOf("day").toISOString();
-            dateTo = now.subtract(1, "day").endOf("day").toISOString();
-            break;
-          case "last_week":
-            dateFrom = now.subtract(7, "day").startOf("day").toISOString();
-            break;
-          case "last_month":
-            dateFrom = now.subtract(1, "month").startOf("day").toISOString();
-            break;
-        }
-
-        if (dateFrom) {
-            query = query.gte("created_at", dateFrom).lte("created_at", dateTo);
-        }
+    if (dateFrom && dateTo) {
+      // Instead of relying purely on Supabase complex .or() which can have syntax issues, 
+      // let's fetch using a simpler condition: either created_at is in range, or week_from is in range.
+      const startOfDay = dayjs(dateFrom).startOf("day").toISOString();
+      const endOfDay = dayjs(dateTo).endOf("day").toISOString();
+      
+      // We want payouts where:
+      // (week_from >= dateFrom AND week_from <= dateTo) OR
+      // (week_from is null AND created_at >= startOfDay AND created_at <= endOfDay)
+      query = query.or(
+        `and(week_from.gte.${dateFrom},week_from.lte.${dateTo}),` +
+        `and(week_from.is.null,created_at.gte.${startOfDay},created_at.lte.${endOfDay})`
+      );
     }
 
     const { data: payouts, error } = await query;
