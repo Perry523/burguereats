@@ -185,7 +185,7 @@
           isBiker ? 'h-[calc(100vh-105px)]' : 'h-[calc(100vh-50px)] ',
         ]"
       >
-        <div class="mx-auto h-full w-full max-w-7xl space-y-6">
+        <div class="mx-auto overflow-auto h-full w-full max-w-7xl space-y-6">
           <slot />
         </div>
       </main>
