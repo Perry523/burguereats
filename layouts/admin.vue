@@ -94,7 +94,7 @@
           </div>
         </div>
       </div>
-      <nav class="flex-1 space-y-2 overflow-y-auto p-6">
+      <nav class="flex-1 space-y-2 overflow-y-auto p-2 py-4">
         <NuxtLink
           v-for="item in navItems"
           :key="item.to"
@@ -237,6 +237,11 @@ if (!authStore.user) {
 }
 
 const adminNavItems = [
+  {
+    label: "Resumo da Semana",
+    to: "/admin/weekly-summary",
+    icon: "i-ph-calendar-check-duotone",
+  },
   { label: "Dashboard", to: "/admin", icon: "i-ph-chart-pie-duotone" },
   {
     label: "Entregadores",
@@ -244,16 +249,15 @@ const adminNavItems = [
     icon: "i-ph-users-four-duotone",
   },
   {
-    label: "Financeiro Moto",
+    label: "Pagamentos Pendentes",
     to: "/admin/bikers-financials",
     icon: "i-ph-coins-duotone",
   },
   {
-    label: "Resumo da Semana",
-    to: "/admin/weekly-summary",
-    icon: "i-ph-calendar-check-duotone",
+    label: "Pagamentos Realizados",
+    to: "/admin/payouts",
+    icon: "i-ph-bank-duotone",
   },
-  { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
   // { label: "Escala", to: "/admin/biker-assignments", icon: "i-ph-calendar-check-duotone" },
   { label: "Empresas", to: "/admin/companies", icon: "i-ph-buildings-duotone" },
   { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
@@ -291,7 +295,11 @@ const bikerNavItems = [
     to: "/admin/biker-payments",
     icon: "i-ph-wallet-duotone",
   },
-  { label: "Pagamentos", to: "/admin/payouts", icon: "i-ph-bank-duotone" },
+  {
+    label: "Pagamentos Recebidos",
+    to: "/admin/payouts",
+    icon: "i-ph-bank-duotone",
+  },
   { label: "Perfil", to: "/admin/profile", icon: "i-ph-user-circle-duotone" },
 ];
 
