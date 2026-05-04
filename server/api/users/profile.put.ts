@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     };
 
     const body = await readBody(event);
-    const { name, email, phone } = body;
+    const { name, email, phone, pix_key } = body;
 
     if (!name?.trim() || !email?.trim()) {
       throw createError({ statusCode: 400, statusMessage: "Name and email are required" });
@@ -55,6 +55,16 @@ export default defineEventHandler(async (event) => {
         .eq("id", decoded.id);
 
       if (error) throw error;
+
+      // Update pix_key in Entregadores
+      if (pix_key !== undefined) {
+        const { error: bikerError } = await supabase
+          .from("Entregadores")
+          .update({ pix_key: pix_key?.trim() || null })
+          .eq("userId", decoded.id);
+        
+        if (bikerError) throw bikerError;
+      }
     } else {
       if (phone !== undefined) updateData.phone = phone?.trim() || null;
       const { error } = await supabase

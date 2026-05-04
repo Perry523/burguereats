@@ -49,6 +49,18 @@
           />
         </div>
 
+        <div v-if="auth.user?.role === 'biker'">
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Chave PIX</label
+          >
+          <input
+            v-model="profileForm.pix_key"
+            type="text"
+            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="Sua chave PIX para recebimento"
+          />
+        </div>
+
         <button
           type="submit"
           :disabled="isSavingProfile"
@@ -131,6 +143,7 @@ const profileForm = reactive({
   name: auth.user?.name || "",
   email: auth.user?.email || "",
   phone: "",
+  pix_key: "",
 });
 
 const passwordForm = reactive({
@@ -147,14 +160,15 @@ onMounted(async () => {
   profileForm.name = auth.user?.name || "";
   profileForm.email = auth.user?.email || "";
 
-  // Fetch full profile to get phone
+  // Fetch full profile to get phone and pix_key
   try {
     const res = await $fetch<{ success: boolean; data: any }>("/api/auth/me");
     if (res.success && res.data) {
       profileForm.phone = res.data.phone || "";
+      profileForm.pix_key = res.data.pix_key || "";
     }
   } catch (e) {
-    // Ignore, phone just stays empty
+    // Ignore
   }
 });
 
@@ -167,6 +181,7 @@ const saveProfile = async () => {
         name: profileForm.name,
         email: profileForm.email,
         phone: profileForm.phone,
+        pix_key: profileForm.pix_key,
       },
     });
 

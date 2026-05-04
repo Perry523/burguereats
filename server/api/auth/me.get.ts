@@ -70,12 +70,13 @@ export default defineEventHandler(async (event) => {
     } else {
       const { data: bikerRecord } = await supabase
         .from("Entregadores")
-        .select("companyId, wallet")
+        .select("companyId, wallet, pix_key")
         .eq("userId", userData.id)
         .single();
       
       companyId = bikerRecord?.companyId;
       userData.wallet = Number(bikerRecord?.wallet) || 0;
+      userData.pix_key = bikerRecord?.pix_key || null;
     }
 
     if (companyId) {
@@ -98,6 +99,7 @@ export default defineEventHandler(async (event) => {
         company: company,
         role: userType,
         wallet: userData.wallet,
+        pix_key: userData.pix_key,
       },
     };
   } catch (error) {
