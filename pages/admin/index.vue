@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] h-full flex flex-col pt-0 md:py-4 overflow-auto"
-  >
+  <div class="h-full flex flex-col pt-0 md:py-4 overflow-auto">
     <!-- Stat Cards + Filters -->
     <div class="shrink-0 mb-5">
       <!-- Filter Bar -->

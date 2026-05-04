@@ -16,16 +16,14 @@
         <div
           class="w-full px-3 sm:px-5 pb-1 md:pb-4 flex flex-wrap sm:flex-nowrap items-center gap-2 overflow-hidden shrink-0"
         >
-          <h1
+          <!-- <h1
             class="text-xl font-bold text-gray-900 hidden lg:block mr-2 shrink-0"
           >
             Financeiro Entregadores
-          </h1>
+          </h1> -->
 
           <!-- Search -->
-          <div
-            class="flex items-center w-full sm:w-32 md:w-48 shrink-0 sm:shrink"
-          >
+          <div class="flex items-center w-full shrink-0 sm:shrink">
             <div class="relative w-full mr-3">
               <div
                 class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2"
@@ -44,19 +42,18 @@
             </div>
             <button
               @click="loadData"
-              class="flex items-center justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
+              class="items-center sm:hidden flex lg:mr-4 justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
               title="Atualizar"
             >
               <UIcon
                 name="i-heroicons-arrow-path"
                 :class="[
-                  'h-4 w-4 sm:h-5 sm:w-5',
+                  'h-3 w-3 sm:h-5 sm:w-5',
                   isLoading ? 'animate-spin' : '',
                 ]"
               />
             </button>
           </div>
-
           <!-- Pagination and Week Controls wrapper for mobile -->
           <div class="flex items-center gap-1 sm:gap-2 w-full sm:w-auto flex-1">
             <!-- Prev arrow -->
@@ -70,7 +67,7 @@
 
             <!-- Week selects -->
             <div
-              class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1 min-w-0"
+              class="flex items-center md:min-w-96 gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1"
             >
               <div
                 class="flex-1 flex items-center justify-center gap-1 min-w-0"
@@ -110,6 +107,19 @@
               <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
             </button>
           </div>
+          <button
+            @click="loadData"
+            class="items-center hidden sm:flex lg:mr-4 justify-center p-2 text-gray-500 hover:text-primary transition-colors bg-white rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
+            title="Atualizar"
+          >
+            <UIcon
+              name="i-heroicons-arrow-path"
+              :class="[
+                'h-4 w-4 sm:h-5 sm:w-5',
+                isLoading ? 'animate-spin' : '',
+              ]"
+            />
+          </button>
         </div>
       </template>
 
@@ -266,16 +276,22 @@
         </div>
 
         <!-- PIX Key -->
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+        <div
+          class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center gap-3"
+        >
+          <div
+            class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0"
+          >
             <UIcon name="i-ph-bank" class="w-5 h-5 text-indigo-600" />
           </div>
           <div class="flex-1 overflow-hidden">
-            <p class="text-xs text-indigo-600 font-bold uppercase tracking-wider">
+            <p
+              class="text-xs text-indigo-600 font-bold uppercase tracking-wider"
+            >
               Chave PIX do Entregador
             </p>
             <p class="text-sm font-semibold text-indigo-900 truncate">
-              {{ selectedBiker?.pix_key || 'Não informada' }}
+              {{ selectedBiker?.pix_key || "Não informada" }}
             </p>
           </div>
         </div>

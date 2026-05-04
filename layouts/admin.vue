@@ -181,7 +181,7 @@
       </header>
       <main
         :class="[
-          ' lg:overflow-auto px-2 py-2 sm:px-6 lg:px-8',
+          ' lg:overflow-auto px-2 py-2 md:px-2 lg:px-8',
           isBiker ? 'h-[calc(100vh-105px)]' : 'h-[calc(100vh-50px)] ',
         ]"
       >

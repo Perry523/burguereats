@@ -143,7 +143,7 @@ export default defineEventHandler(async (event) => {
         // ── Payments for the selected range (paid + unpaid) ──
         let paymentsQueryBuilder = supabase
           .from("biker_payments")
-          .select("id, amount, total_deliveries, is_paid, date, company_id")
+          .select("id, amount, total_deliveries, is_paid, date, company_id, is_advance")
           .eq("biker_id", bikerId);
 
         if (dateFrom && dateTo) {
@@ -178,34 +178,21 @@ export default defineEventHandler(async (event) => {
         let unpaidDeliveriesCount = 0;
         let paidTotal = 0;
         let paidCount = 0;
+        let advances = 0;
 
         weekPayments.forEach(p => {
-          if (p.is_paid) {
-            paidTotal += Number(p.amount) || 0;
-            paidCount++;
+          if (p.is_advance) {
+            advances += Number(p.amount) || 0;
+            // Advances are technically "paid" if they were settled, but we just want to know the sum for the period.
           } else {
-            openPaymentsTotal += Number(p.amount) || 0;
-            unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
+            if (p.is_paid) {
+              paidTotal += Number(p.amount) || 0;
+              paidCount++;
+            } else {
+              openPaymentsTotal += Number(p.amount) || 0;
+              unpaidDeliveriesCount += Number(p.total_deliveries) || 0;
+            }
           }
-        });
-
-        // Fetch advances scoped by date range
-        let advancesQueryBuilder = supabase
-          .from("biker_payouts")
-          .select("amount_paid")
-          .eq("biker_id", b.id)
-          .eq("type", "advance");
-
-        if (dateFrom && dateTo) {
-          const startOfDay = dayjs(dateFrom).startOf("day").toISOString();
-          const endOfDay = dayjs(dateTo).endOf("day").toISOString();
-          advancesQueryBuilder = advancesQueryBuilder.gte("created_at", startOfDay).lte("created_at", endOfDay);
-        }
-
-        const { data: rawAdvances } = await advancesQueryBuilder;
-        let advances = 0;
-        (rawAdvances || []).forEach(a => {
-          advances += Number(a.amount_paid) || 0;
         });
 
         const totalFees = unpaidDeliveriesCount * 1;
@@ -236,42 +223,16 @@ export default defineEventHandler(async (event) => {
     const { data: pendingPayments } = await paymentsQuery;
     let pendingDeliveriesCount = 0;
     let totalPendingAmount = 0;
+    let totalAdvances = 0;
 
     (pendingPayments || []).forEach(p => {
-      pendingDeliveriesCount += Number(p.total_deliveries) || 0;
-      totalPendingAmount += Number(p.amount) || 0;
-    });
-
-    // Advance Money Calculation for Admin
-    let totalAdvances = 0;
-    let adminAdvancesQuery = supabase
-      .from("biker_payouts")
-      .select("amount_paid")
-      .eq("type", "advance");
-
-    if (dateFrom && dateTo) {
-      const startOfDay = dayjs(dateFrom).startOf("day").toISOString();
-      const endOfDay = dayjs(dateTo).endOf("day").toISOString();
-      adminAdvancesQuery = adminAdvancesQuery.gte("created_at", startOfDay).lte("created_at", endOfDay);
-    }
-    
-    if (bikerId && bikerId !== "all") {
-      adminAdvancesQuery = adminAdvancesQuery.eq("biker_id", bikerId);
-    } else if (companyId) {
-      const bIds = [...new Set((pendingPayments || []).map(p => p.biker_id))];
-      if (bIds.length > 0) {
-        adminAdvancesQuery = adminAdvancesQuery.in("biker_id", bIds);
+      if (p.is_advance) {
+        totalAdvances += Number(p.amount) || 0;
       } else {
-        adminAdvancesQuery = null as any; // Skip querying
+        pendingDeliveriesCount += Number(p.total_deliveries) || 0;
+        totalPendingAmount += Number(p.amount) || 0;
       }
-    }
-
-    if (adminAdvancesQuery) {
-      const { data: advancesData } = await adminAdvancesQuery;
-      (advancesData || []).forEach(a => {
-        totalAdvances += Number(a.amount_paid) || 0;
-      });
-    }
+    });
 
     stats.adminStats = {
       pendingDeliveriesCount,

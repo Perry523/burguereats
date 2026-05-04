@@ -578,7 +578,8 @@ const filteredPayments = computed(() => {
   if (weekRange.value.from && weekRange.value.to) {
     list = list.filter((p) => {
       if (!p.date) return true;
-      return p.date >= weekRange.value.from && p.date <= weekRange.value.to;
+      const pDate = p.date.split("T")[0];
+      return pDate >= weekRange.value.from && pDate <= weekRange.value.to;
     });
   }
 
@@ -594,6 +595,8 @@ const filteredPayments = computed(() => {
   return list;
 });
 
+let isFirstLoad = true;
+
 const fetchPayments = async () => {
   isLoading.value = true;
   try {
@@ -606,6 +609,38 @@ const fetchPayments = async () => {
         auth.user.wallet = res.data.wallet;
       }
       payments.value = res.data.payments;
+
+      if (isFirstLoad) {
+        isFirstLoad = false;
+        const hasCurrentWeekRecords = payments.value.some((p) => {
+          if (!p.date) return false;
+          const pDate = p.date.split("T")[0];
+          return pDate >= weekRange.value.from && pDate <= weekRange.value.to;
+        });
+
+        if (!hasCurrentWeekRecords && payments.value.length > 0) {
+          // Find the most recent date
+          const latestDateStr = payments.value[0].date?.split("T")[0];
+          if (latestDateStr) {
+            const [y, m, d] = latestDateStr.split("-").map(Number);
+            const latestDate = new Date(y, m - 1, d);
+            const mon = getMondayOf(latestDate);
+            const sun = new Date(mon);
+            sun.setDate(sun.getDate() + 6);
+
+            weekRange.value = { from: toISODate(mon), to: toISODate(sun) };
+            pickerMonth.value = mon.getMonth();
+
+            // Wait for computed weeksInMonth to update
+            setTimeout(() => {
+              const match = weeksInMonth.value.find(
+                (w) => toISODate(w.from) === weekRange.value.from,
+              );
+              if (match) pickerWeek.value = match.label;
+            }, 0);
+          }
+        }
+      }
     }
   } catch (e) {
     console.error("Error fetching payments:", e);
