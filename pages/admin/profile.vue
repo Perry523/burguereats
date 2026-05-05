@@ -43,6 +43,8 @@
           >
           <input
             v-model="profileForm.phone"
+            v-maska
+            data-maska="(##) #####-####"
             type="text"
             class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             placeholder="(00) 00000-0000"
@@ -180,7 +182,7 @@ const saveProfile = async () => {
       body: {
         name: profileForm.name,
         email: profileForm.email,
-        phone: profileForm.phone,
+        phone: profileForm.phone.replace(/\D/g, ""),
         pix_key: profileForm.pix_key,
       },
     });

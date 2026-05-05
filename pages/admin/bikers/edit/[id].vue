@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Adicionar Entregador</h1>
-        <p class="text-sm text-gray-500">Crie um novo registro de entregador (biker)</p>
+        <h1 class="text-3xl font-bold text-gray-900">Editar Entregador</h1>
+        <p class="text-sm text-gray-500">Atualize os dados do entregador (biker)</p>
       </div>
       <div class="flex items-center gap-3">
         <NuxtLink to="/admin/bikers">
@@ -16,17 +16,29 @@
         </NuxtLink>
         <button
           type="submit"
-          form="create-biker-form"
+          form="edit-biker-form"
           :disabled="isSaving"
           class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
         >
-          {{ isSaving ? "Salvando..." : "Salvar entregador" }}
+          {{ isSaving ? "Salvando..." : "Salvar alterações" }}
         </button>
       </div>
     </div>
 
+    <!-- Loading -->
+    <div
+      v-if="isLoadingBiker"
+      class="flex items-center justify-center py-16"
+    >
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-8 h-8 animate-spin text-primary"
+      />
+    </div>
+
     <form
-      id="create-biker-form"
+      v-else
+      id="edit-biker-form"
       @submit.prevent="saveBiker"
       class="max-w-2xl bg-white rounded-lg border border-gray-200 p-6 space-y-6"
     >
@@ -85,12 +97,11 @@
 
         <div class="md:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Senha <span class="text-red-500">*</span>
+            Nova Senha <span class="text-gray-400 text-xs">(Deixe em branco para não alterar)</span>
           </label>
           <input
             v-model="form.password"
             type="password"
-            required
             minlength="6"
             placeholder="Mínimo 6 caracteres"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -108,11 +119,14 @@ definePageMeta({
   layout: "admin",
 });
 
+const route = useRoute();
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
 const toast = useToast();
 
 const isSaving = ref(false);
+const isLoadingBiker = ref(true);
+const bikerId = computed(() => route.params.id as string);
 
 const form = reactive({
   name: "",
@@ -122,30 +136,54 @@ const form = reactive({
   pix_key: "",
 });
 
+const loadBiker = async () => {
+  try {
+    const response = await $fetch<{ success: boolean; data: any }>(
+      `/api/bikers/${bikerId.value}`,
+    );
+    if (response?.success && response.data) {
+      form.name = response.data.name || "";
+      form.email = response.data.email || "";
+      form.phone = response.data.phone || "";
+      form.pix_key = response.data.pix_key || "";
+    } else {
+      toast.add({ color: "error", title: "Entregador não encontrado" });
+      navigateTo("/admin/bikers");
+    }
+  } catch (error) {
+    console.error("Error loading biker:", error);
+    toast.add({ color: "error", title: "Erro ao carregar entregador" });
+    navigateTo("/admin/bikers");
+  } finally {
+    isLoadingBiker.value = false;
+  }
+};
+
 const saveBiker = async () => {
-  const companyId = user.value?.company?.id;
-  // Biker can now be created without a company association
-  
   isSaving.value = true;
   try {
-    const payload = {
-      ...form,
+    const payload: any = {
+      name: form.name,
+      email: form.email,
       phone: form.phone.replace(/\D/g, ""),
-      companyId: companyId || null,
+      pix_key: form.pix_key,
     };
+    if (form.password) {
+      payload.password = form.password;
+    }
 
-    await $fetch("/api/bikers", {
-      method: "POST",
+    await $fetch(`/api/bikers/${bikerId.value}`, {
+      method: "PUT",
       body: payload,
     });
 
-    toast.add({ color: "success", title: "Entregador criado com sucesso" });
+    toast.add({ color: "success", title: "Entregador atualizado com sucesso" });
     await navigateTo("/admin/bikers");
   } catch (error: any) {
-    console.error("Error saving biker:", error);
+    console.error("Error updating biker:", error);
     toast.add({
       color: "error",
-      title: "Erro ao criar entregador",
+      title: "Erro ao atualizar entregador",
       description: error.data?.statusMessage || "Tente novamente em instantes",
     });
   } finally {
@@ -154,8 +192,9 @@ const saveBiker = async () => {
 };
 
 onMounted(async () => {
-  if (!user.value?.company?.id) {
+  if (!user.value?.company?.id && user.value?.role !== "admin") {
     await auth.getCurrentUser();
   }
+  await loadBiker();
 });
 </script>

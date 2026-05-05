@@ -38,6 +38,8 @@
           </label>
           <UInput
             v-model="phone"
+            v-maska
+            data-maska="(##) #####-####"
             type="text"
             placeholder="(00) 00000-0000"
             required
@@ -132,7 +134,7 @@ const handleRegister = async () => {
   }
 
   const trimmedEmail = email.value.trim().toLowerCase()
-  const trimmedPhone = phone.value.trim()
+  const trimmedPhone = phone.value.replace(/\D/g, "")
 
   isLoading.value = true
   error.value = ''

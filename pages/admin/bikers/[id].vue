@@ -168,7 +168,7 @@
                       </p>
                     </div>
                     <p class="font-medium text-gray-900">
-                      {{ biker.phone || "Não informado" }}
+                      {{ formatPhone(biker.phone) || "Não informado" }}
                     </p>
                   </div>
 

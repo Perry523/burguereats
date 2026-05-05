@@ -9,7 +9,7 @@
       :actions="tableActions"
       v-model:page="page"
       v-model:per_page="itemsPerPage"
-      hide-edit
+      @edit="handleEdit"
       hide-delete
     >
       <template #filter>
@@ -68,6 +68,10 @@
         >
           {{ row.isActive ? "Ativo" : "Inativo" }}
         </span>
+      </template>
+
+      <template #phone="{ row }">
+        {{ formatPhone(row.phone) }}
       </template>
     </TableBase>
 
@@ -233,6 +237,10 @@ const columns = [
   { key: "phone", label: "Telefone" },
   { key: "status", label: "Status" },
 ];
+
+const handleEdit = (biker: Biker) => {
+  navigateTo(`/admin/bikers/edit/${biker.id}`);
+};
 
 const tableActions: any[] = [
   {
