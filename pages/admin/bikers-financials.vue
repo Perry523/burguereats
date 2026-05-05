@@ -172,7 +172,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
           >
             <UIcon name="i-ph-money" class="w-4 h-4" />
-            Adiantar
+            Adiantamentos
           </button>
           <button
             @click="openPagarModal(row)"
@@ -189,13 +189,191 @@
     <!-- Advance Money Modal -->
     <BaseDialog
       v-model="showAdvanceModal"
-      :title="'Adiantamento - ' + (selectedBiker?.name || '')"
+      :title="'Adiantamentos - ' + (selectedBiker?.name || '')"
+    >
+      <div class="p-4 flex flex-col gap-4">
+        <!-- <p class="text-sm text-gray-600">
+          Gerencie os adiantamentos do entregador para esta semana.
+        </p> -->
+
+        <!-- Week Navigator for Modal -->
+        <div class="flex items-center gap-1 sm:gap-2 w-full">
+          <!-- Prev arrow -->
+          <button
+            @click="shiftWeek(-1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+            title="Semana anterior"
+          >
+            <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+          </button>
+
+          <!-- Week selects -->
+          <div
+            class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 flex-1"
+          >
+            <div class="flex-1 flex items-center justify-center gap-1 min-w-0">
+              <select
+                v-model="pickerMonth"
+                @change="onMonthChange"
+                class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+              >
+                <option v-for="(m, i) in months" :key="i" :value="i">
+                  {{ m }}
+                </option>
+              </select>
+              <span class="text-gray-300 text-xs">·</span>
+              <select
+                v-model="pickerWeek"
+                @change="onWeekChange"
+                class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 truncate"
+              >
+                <option
+                  v-for="w in weeksInMonth"
+                  :key="w.label"
+                  :value="w.label"
+                >
+                  {{ w.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Next arrow -->
+          <button
+            @click="shiftWeek(1)"
+            class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+            title="Próxima semana"
+          >
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- List of advances -->
+        <div
+          class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden"
+        >
+          <div
+            class="px-4 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center"
+          >
+            <span class="text-xs font-bold text-gray-600 uppercase"
+              >Histórico da Semana</span
+            >
+            <div class="flex items-center gap-2">
+              <button
+                @click="loadAdvances"
+                class="p-1.5 text-gray-500 hover:text-primary rounded-lg hover:bg-gray-200 transition-colors"
+                title="Atualizar"
+              >
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="w-4 h-4"
+                  :class="{ 'animate-spin': isFetchingAdvances }"
+                />
+              </button>
+              <button
+                @click="openAddAdvanceModal"
+                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus transition-colors"
+              >
+                <UIcon name="i-heroicons-plus" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-if="isFetchingAdvances && advancesList.length === 0"
+            class="p-4 text-center text-sm text-gray-500"
+          >
+            Carregando...
+          </div>
+          <div
+            v-else-if="advancesList.length === 0"
+            class="p-4 text-center text-sm text-gray-500"
+          >
+            Nenhum adiantamento nesta semana.
+          </div>
+          <ul v-else class="divide-y divide-gray-200">
+            <li
+              v-for="adv in advancesList"
+              :key="adv.id"
+              class="p-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+            >
+              <div
+                v-if="editingAdvance?.id === adv.id"
+                class="flex-1 flex gap-2 items-center mr-2"
+              >
+                <Currency
+                  v-model="editingAdvance.amount"
+                  class="w-24 px-2 py-1 text-sm border border-gray-300 rounded"
+                />
+                <input
+                  type="date"
+                  v-model="editingAdvance.date"
+                  class="w-32 px-2 py-1 text-sm border border-gray-300 rounded"
+                />
+              </div>
+              <div v-else class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ formatCurrency(adv.amount) }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ formatDateBR(adv.date) }}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <template v-if="editingAdvance?.id === adv.id">
+                  <button
+                    @click="saveEditAdvance"
+                    class="p-1 text-green-600 hover:bg-green-50 rounded"
+                    title="Salvar"
+                  >
+                    <UIcon name="i-heroicons-check" class="w-4 h-4" />
+                  </button>
+                  <button
+                    @click="editingAdvance = null"
+                    class="p-1 text-gray-500 hover:bg-gray-200 rounded"
+                    title="Cancelar"
+                  >
+                    <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                  </button>
+                </template>
+                <template v-else-if="!adv.is_paid">
+                  <button
+                    @click="startEditAdvance(adv)"
+                    class="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                    title="Editar"
+                  >
+                    <UIcon name="i-heroicons-pencil-square" class="w-4 h-4" />
+                  </button>
+                  <button
+                    @click="deleteAdvance(adv.id)"
+                    class="p-1 text-red-600 hover:bg-red-50 rounded"
+                    title="Excluir"
+                  >
+                    <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                  </button>
+                </template>
+                <template v-else>
+                  <span class="px-2 py-0.5 text-[10px] font-bold tracking-wide text-green-700 bg-green-100 rounded-full uppercase">
+                    Pago
+                  </span>
+                </template>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </BaseDialog>
+
+    <!-- Create Advance Modal -->
+    <BaseDialog
+      v-model="showAddAdvanceModal"
+      :title="'Novo Adiantamento - ' + (selectedBiker?.name || '')"
     >
       <div class="p-4 space-y-4">
         <p class="text-sm text-gray-600">
-          Lance o valor do adiantamento concedido ao entregador hoje. Este valor
-          será somado ao total adiantado e diminuirá do montante final a pagar
-          na liquidação.
+          Lance o valor do adiantamento concedido ao entregador. Este valor será
+          diminuído do montante final a pagar na liquidação.
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -230,7 +408,7 @@
 
         <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
           <button
-            @click="showAdvanceModal = false"
+            @click="showAddAdvanceModal = false"
             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancelar
@@ -372,11 +550,17 @@ const bikers = ref<any[]>([]);
 const search = ref("");
 
 const showAdvanceModal = ref(false);
+const showAddAdvanceModal = ref(false);
 const showPagarModal = ref(false);
 const selectedBiker = ref<any>(null);
 const advanceForm = ref({ amount: 0, date: toISODate(new Date()) });
 const isSubmitting = ref(false);
 const advanceError = ref("");
+const advancesList = ref<any[]>([]);
+const isFetchingAdvances = ref(false);
+const editingAdvance = ref<{ id: string; amount: number; date: string } | null>(
+  null,
+);
 
 const page = ref(1);
 const itemsPerPage = ref(10);
@@ -450,6 +634,7 @@ function onMonthChange() {
     pickerWeek.value = w.label;
     weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
     loadData();
+    if (showAdvanceModal.value) loadAdvances();
   }
 }
 
@@ -458,6 +643,7 @@ function onWeekChange() {
   if (w) {
     weekRange.value = { from: toISODate(w.from), to: toISODate(w.to) };
     loadData();
+    if (showAdvanceModal.value) loadAdvances();
   }
 }
 
@@ -474,6 +660,7 @@ function shiftWeek(dir: 1 | -1) {
   if (match) pickerWeek.value = match.label;
   else pickerWeek.value = "";
   loadData();
+  if (showAdvanceModal.value) loadAdvances();
 }
 
 const initWeekLabel =
@@ -543,11 +730,11 @@ const loadData = async () => {
     const res = await $fetch<{ success: boolean; data?: any[] }>(
       `/api/biker-payments/financials?dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`,
     );
-    
+
     if (isFirstLoad && res.success && res.data) {
       // Check if there is any financial activity this week
       const hasActivity = res.data.some(
-        (b) => b.wallet > 0 || b.total_deliveries > 0 || b.advance_money > 0
+        (b) => b.wallet > 0 || b.total_deliveries > 0 || b.advance_money > 0,
       );
       if (!hasActivity) {
         isFirstLoad = false;
@@ -566,12 +753,36 @@ const loadData = async () => {
   }
 };
 
-const openAdvanceModal = (biker: any) => {
+const loadAdvances = async () => {
+  if (!selectedBiker.value) return;
+  isFetchingAdvances.value = true;
+  try {
+    const res = await $fetch<{ success: boolean; data: any[] }>(
+      `/api/biker-payments/advances?biker_id=${selectedBiker.value.id}&dateFrom=${weekRange.value.from}&dateTo=${weekRange.value.to}`,
+    );
+    if (res.success) {
+      advancesList.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("Failed to load advances:", error);
+    toast.add({ color: "error", title: "Erro ao carregar adiantamentos" });
+  } finally {
+    isFetchingAdvances.value = false;
+  }
+};
+
+const openAdvanceModal = async (biker: any) => {
   selectedBiker.value = biker;
-  advanceForm.value.amount = 0; // Starts from 0 because we only input the new advance now
+  editingAdvance.value = null;
+  showAdvanceModal.value = true;
+  await loadAdvances();
+};
+
+const openAddAdvanceModal = () => {
+  advanceForm.value.amount = 0;
   advanceForm.value.date = toISODate(new Date());
   advanceError.value = "";
-  showAdvanceModal.value = true;
+  showAddAdvanceModal.value = true;
 };
 
 const saveAdvance = async () => {
@@ -596,16 +807,75 @@ const saveAdvance = async () => {
     if (res.success) {
       toast.add({
         color: "success",
-        title: "Adiantamento lançado como registro da semana!",
+        title: "Adiantamento lançado com sucesso!",
       });
-      showAdvanceModal.value = false;
-      await loadData(); // Refresh the list
+      advanceForm.value.amount = 0;
+      showAddAdvanceModal.value = false;
+      await loadAdvances();
+      await loadData();
     }
   } catch (error: any) {
     advanceError.value =
       error?.data?.statusMessage || "Erro ao lançar adiantamento";
   } finally {
     isSubmitting.value = false;
+  }
+};
+
+const startEditAdvance = (adv: any) => {
+  editingAdvance.value = {
+    id: adv.id,
+    amount: adv.amount,
+    date: adv.date,
+  };
+};
+
+const saveEditAdvance = async () => {
+  if (!editingAdvance.value) return;
+  try {
+    const res = await $fetch<{ success: boolean }>(
+      `/api/biker-payments/${editingAdvance.value.id}`,
+      {
+        method: "PUT",
+        body: {
+          amount: Number(editingAdvance.value.amount),
+          date: editingAdvance.value.date,
+        },
+      },
+    );
+    if (res.success) {
+      toast.add({ color: "success", title: "Adiantamento atualizado!" });
+      editingAdvance.value = null;
+      await loadAdvances();
+      await loadData();
+    }
+  } catch (error: any) {
+    toast.add({
+      color: "error",
+      title: error?.data?.statusMessage || "Erro ao atualizar",
+    });
+  }
+};
+
+const deleteAdvance = async (id: string) => {
+  if (!confirm("Tem certeza que deseja excluir este adiantamento?")) return;
+  try {
+    const res = await $fetch<{ success: boolean }>(
+      `/api/biker-payments/${id}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (res.success) {
+      toast.add({ color: "success", title: "Adiantamento excluído!" });
+      await loadAdvances();
+      await loadData();
+    }
+  } catch (error: any) {
+    toast.add({
+      color: "error",
+      title: error?.data?.statusMessage || "Erro ao excluir",
+    });
   }
 };
 

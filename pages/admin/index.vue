@@ -257,7 +257,7 @@
           </div>
         </div>
 
-        <div
+        <!-- <div
           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
           <div class="flex items-center justify-between gap-3">
@@ -280,7 +280,7 @@
               />
             </div>
           </div>
-        </div>
+        </div> -->
 
         <div
           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
@@ -315,7 +315,11 @@
               <p class="text-sm font-medium text-gray-500 truncate">A Pagar</p>
               <p
                 class="text-3xl sm:text-4xl font-bold mt-2 truncate"
-                :class="(stats.adminStats?.totalNet || 0) < 0 ? 'text-red-600' : 'text-green-600'"
+                :class="
+                  (stats.adminStats?.totalNet || 0) < 0
+                    ? 'text-red-600'
+                    : 'text-green-600'
+                "
               >
                 {{ formatCurrency(stats.adminStats?.totalNet || 0) }}
               </p>
@@ -836,7 +840,9 @@ const fetchStats = async () => {
       const hasData =
         d.totalDeliveries > 0 ||
         (d.recentDeliveries && d.recentDeliveries.length > 0) ||
-        (d.adminStats && (d.adminStats.pendingDeliveriesCount > 0 || d.adminStats.totalGross > 0));
+        (d.adminStats &&
+          (d.adminStats.pendingDeliveriesCount > 0 ||
+            d.adminStats.totalGross > 0));
 
       if (!hasData) {
         isFirstLoad = false;

@@ -9,7 +9,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const id = getRouterParam(event, "id");
-    const body = await readBody(event);
 
     if (!id) {
       throw createError({ statusCode: 400, statusMessage: "Payment ID is required" });
@@ -21,24 +20,17 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const updates: any = {};
-    if (body.amount !== undefined) updates.amount = Number(body.amount);
-    if (body.date !== undefined) updates.date = body.date;
-    
-    // We update the record
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("biker_payments")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
+      .delete()
+      .eq("id", id);
 
     if (error) throw error;
 
-    return { success: true, data };
+    return { success: true };
   } catch (error: any) {
     if (error.statusCode) throw error;
-    console.error("Error updating payment:", error);
-    throw createError({ statusCode: 500, statusMessage: "Failed to update payment" });
+    console.error("Error deleting payment:", error);
+    throw createError({ statusCode: 500, statusMessage: "Failed to delete payment" });
   }
 });
