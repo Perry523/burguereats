@@ -128,10 +128,10 @@
             <p
               class="text-gray-500 text-xs font-medium uppercase tracking-wider"
             >
-              Total Registros
+              Total de Entregas
             </p>
             <p class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">
-              {{ summary.totalRecords }}
+              {{ summary.totalDeliveries || 0 }}
             </p>
           </div>
           <div class="p-3 bg-blue-50 rounded-lg shrink-0">

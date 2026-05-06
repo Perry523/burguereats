@@ -39,6 +39,9 @@ export default defineEventHandler(async (event) => {
 
     // Gross total
     const grossTotal = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    
+    // Total deliveries
+    const totalDeliveries = allPayments.reduce((acc, p) => acc + (Number(p.total_deliveries) || 0), 0);
 
     // Get unique biker IDs
     const bikerIds = [...new Set(allPayments.map((p) => p.biker_id).filter(Boolean))];
@@ -159,6 +162,7 @@ export default defineEventHandler(async (event) => {
       data: {
         grossTotal,
         totalRecords: allPayments.length,
+        totalDeliveries,
         bikers,
         companyBreakdown,
         companies: allCompanies || [],

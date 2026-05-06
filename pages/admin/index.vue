@@ -357,7 +357,7 @@
           </div>
         </div>
 
-        <div
+        <!-- <div
           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
         >
           <div class="flex items-center justify-between gap-3">
@@ -378,7 +378,7 @@
               />
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
 
       <!-- Manager 3 Cards -->
