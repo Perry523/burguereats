@@ -195,7 +195,8 @@ export default defineEventHandler(async (event) => {
         });
 
         const totalFees = unpaidDeliveriesCount * 1;
-        const weekPaid = weekPayments.length > 0 && paidCount === weekPayments.length;
+        const regularPaymentsCount = weekPayments.filter((p: any) => !p.is_advance).length;
+        const weekPaid = regularPaymentsCount > 0 && paidCount === regularPaymentsCount;
 
         financial = {
           wallet: openPaymentsTotal,      // gross unpaid for this period

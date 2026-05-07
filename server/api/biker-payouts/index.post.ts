@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
-    const { biker_id, dateFrom, dateTo } = body;
+    const { biker_id, dateFrom, dateTo, paymentDate } = body;
     if (!biker_id) throw createError({ statusCode: 400, statusMessage: "Missing biker_id" });
     if (!dateFrom || !dateTo) throw createError({ statusCode: 400, statusMessage: "Missing dateFrom/dateTo" });
 
@@ -65,18 +65,26 @@ export default defineEventHandler(async (event) => {
     const deliveryFee = weekDeliveries * 1; // R$ 1.00 per delivery
     const netPaid = weekWallet - advanceMoney - deliveryFee;
 
+    const payoutData: any = {
+      biker_id,
+      amount_paid: netPaid,
+      discounts: advanceMoney,
+      delivery_fee_total: deliveryFee,
+      type: 'settlement',
+      week_from: dateFrom,
+      week_to: dateTo,
+    };
+
+    if (paymentDate) {
+      // Append current time to make it a valid timestamp if needed, or just let Supabase parse the date. 
+      // Supabase correctly parses YYYY-MM-DD to YYYY-MM-DDT00:00:00Z for timestampz fields.
+      payoutData.created_at = paymentDate;
+    }
+
     // 4. Create the payout receipt (settlement)
     const { data: payout, error: insertErr } = await supabase
       .from("biker_payouts")
-      .insert([{
-        biker_id,
-        amount_paid: netPaid,
-        discounts: advanceMoney,
-        delivery_fee_total: deliveryFee,
-        type: 'settlement',
-        week_from: dateFrom,
-        week_to: dateTo,
-      }])
+      .insert([payoutData])
       .select()
       .single();
 

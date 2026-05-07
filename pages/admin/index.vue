@@ -164,6 +164,15 @@
         </div>
       </div>
 
+      <!-- Week Paid Banner -->
+      <div
+        v-if="stats.financial?.weekPaid"
+        class="bg-green-500 text-white rounded-xl p-4 mb-5 flex items-center gap-3 shadow-sm"
+      >
+        <UIcon name="i-heroicons-check-circle-solid" class="w-6 h-6" />
+        <p class="font-bold">Os acertos desta semana já foram pagos!</p>
+      </div>
+
       <!-- Biker Profile Card (when specific biker selected) -->
       <div
         v-if="selectedBikerData"
