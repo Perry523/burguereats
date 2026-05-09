@@ -218,7 +218,9 @@
 
       <!-- Week Paid Banner -->
       <div
-        v-if="stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+        v-if="
+          stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+        "
         class="bg-green-500 text-white rounded-xl p-4 flex items-center gap-3 shadow-sm border border-green-600 mb-6"
       >
         <UIcon name="i-heroicons-check-circle-solid" class="w-6 h-6 shrink-0" />
@@ -294,13 +296,18 @@
           ]"
         >
           <div
-            v-if="stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+            v-if="
+              stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+            "
             class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg"
           >
             PAGO
           </div>
           <div
-            v-else-if="!stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+            v-else-if="
+              !stats.financial?.weekPaid &&
+              stats.financial?.weekPayments?.length
+            "
             class="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg"
           >
             PENDENTE
@@ -309,7 +316,8 @@
             <div>
               <p class="text-gray-500 text-sm font-medium">
                 {{
-                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
                     ? "Valor Pago"
                     : "Líquido a Receber"
                 }}
@@ -317,7 +325,8 @@
               <p
                 :class="[
                   'text-3xl font-bold mt-1 shrink-0',
-                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
                     ? 'text-green-700'
                     : 'text-orange-600',
                 ]"
@@ -325,7 +334,8 @@
                 {{
                   stats.financial
                     ? formatCurrency(
-                        stats.financial.weekPaid && stats.financial.weekPayments?.length
+                        stats.financial.weekPaid &&
+                          stats.financial.weekPayments?.length
                           ? stats.financial.paidTotal
                           : stats.financial.netPay,
                       )
@@ -336,20 +346,23 @@
             <div
               :class="[
                 'p-3 rounded-lg shrink-0 ml-2',
-                stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                stats.financial?.weekPaid &&
+                stats.financial?.weekPayments?.length
                   ? 'bg-green-100'
                   : 'bg-orange-50',
               ]"
             >
               <UIcon
                 :name="
-                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
                     ? 'i-ph-check-circle-duotone'
                     : 'i-ph-money-duotone'
                 "
                 :class="[
                   'w-8 h-8',
-                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
                     ? 'text-green-600'
                     : 'text-orange-500',
                 ]"
@@ -385,7 +398,11 @@
               ]"
             >
               <UIcon
-                :name="item.is_paid ? 'i-heroicons-check-circle' : 'i-heroicons-clock'"
+                :name="
+                  item.is_paid
+                    ? 'i-heroicons-check-circle'
+                    : 'i-heroicons-clock'
+                "
                 :class="[
                   'w-6 h-6',
                   item.is_paid ? 'text-green-600' : 'text-orange-500',
@@ -417,7 +434,7 @@
                     : 'bg-orange-100 text-orange-700',
                 ]"
               >
-                {{ item.is_paid ? 'Pago' : 'Pendente' }}
+                {{ item.is_paid ? "Pago" : "Pendente" }}
               </span>
             </div>
           </div>
@@ -586,7 +603,7 @@ const weeksInMonth = computed(() => {
       mon.setDate(mon.getDate() + 7);
       continue;
     }
-    const label = `Semana ${i + 1} (${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")})`;
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
     weeks.push({ label, from: new Date(mon), to: new Date(sun) });
     mon = new Date(mon);
     mon.setDate(mon.getDate() + 7);
@@ -766,7 +783,11 @@ const fetchStats = async () => {
     const res = await $fetch<{ success: boolean; data: any }>(url);
     if (res.success && res.data) {
       stats.value = res.data;
-      if (isBikerRole.value && auth.user && res.data.financial?.netPay !== undefined) {
+      if (
+        isBikerRole.value &&
+        auth.user &&
+        res.data.financial?.netPay !== undefined
+      ) {
         auth.user.wallet = res.data.financial.netPay;
       }
     }

@@ -350,7 +350,7 @@ const weeksInMonth = computed(() => {
       mon.setDate(mon.getDate() + 7);
       continue;
     }
-    const label = `Semana ${i + 1} (${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")})`;
+    const label = `${String(mon.getDate()).padStart(2, "0")}/${String(mon.getMonth() + 1).padStart(2, "0")} – ${String(sun.getDate()).padStart(2, "0")}/${String(sun.getMonth() + 1).padStart(2, "0")}`;
     weeks.push({ label, from: new Date(mon), to: new Date(sun) });
     mon = new Date(mon);
     mon.setDate(mon.getDate() + 7);
