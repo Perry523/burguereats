@@ -154,18 +154,18 @@
               <!-- Wallet Display -->
               <div
                 v-if="isBiker"
-                class="hidden sm:flex flex-col items-end mr-2 bg-green-50 px-3 py-1 rounded-lg border border-green-100"
+                class="flex flex-col items-end mr-2 bg-green-50 px-3 py-1 rounded-lg border border-green-100"
               >
                 <span
                   class="text-[10px] font-bold text-green-600 uppercase tracking-wider leading-none"
-                  >Carteira</span
+                  >A Receber</span
                 >
                 <span class="text-sm font-bold text-green-700 leading-tight">{{
                   formatCurrency(bikerWallet)
                 }}</span>
               </div>
               <PwaTracker v-if="isBiker" />
-              <Notifications />
+              <!-- <Notifications /> -->
               <div class="hidden text-right sm:block">
                 <p class="text-sm font-semibold text-slate-900">
                   {{ userName }}
