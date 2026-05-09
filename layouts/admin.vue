@@ -303,7 +303,7 @@ const bikerNavItems = [
     icon: "i-ph-wallet-duotone",
   },
   {
-    label: "Pagamentos Recebidos",
+    label: "Pagamentos",
     to: "/admin/payouts",
     icon: "i-ph-bank-duotone",
   },
