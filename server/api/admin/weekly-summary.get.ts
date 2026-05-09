@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     // Build query for biker_payments in the date range
     let paymentsQuery = supabase
       .from("biker_payments")
-      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid");
+      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance");
 
     if (dateFrom && dateTo) {
       paymentsQuery = paymentsQuery.gte("date", dateFrom).lte("date", dateTo);
@@ -37,14 +37,17 @@ export default defineEventHandler(async (event) => {
 
     const allPayments = payments || [];
 
-    // Gross total
-    const grossTotal = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-    
-    // Total deliveries
-    const totalDeliveries = allPayments.reduce((acc, p) => acc + (Number(p.total_deliveries) || 0), 0);
+    // Only normal payment records (exclude advances) for all aggregations
+    const normalPayments = allPayments.filter((p: any) => !p.is_advance);
 
-    // Get unique biker IDs
-    const bikerIds = [...new Set(allPayments.map((p) => p.biker_id).filter(Boolean))];
+    // Gross total — advances must not inflate the billed amount
+    const grossTotal = normalPayments.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+
+    // Total deliveries
+    const totalDeliveries = normalPayments.reduce((acc: number, p: any) => acc + (Number(p.total_deliveries) || 0), 0);
+
+    // Get unique biker IDs (from normal payments only)
+    const bikerIds = [...new Set(normalPayments.map((p: any) => p.biker_id).filter(Boolean))];
 
     // Fetch biker names
     let bikerMap: Record<string, string> = {};
@@ -84,7 +87,9 @@ export default defineEventHandler(async (event) => {
       records: number;
     }> = {};
 
-    allPayments.forEach((p) => {
+    // Use only normal payments for biker grouping — advances must not
+    // add fake "working days", inflate records count, or gross amount.
+    normalPayments.forEach((p: any) => {
       if (!bikerGroupMap[p.biker_id]) {
         bikerGroupMap[p.biker_id] = {
           bikerId: p.biker_id,
@@ -125,7 +130,7 @@ export default defineEventHandler(async (event) => {
     const companyBreakdown: { companyId: string; companyName: string; gross: number; bikerCount: number }[] = [];
     if (!companyId) {
       const companyGroupMap: Record<string, { companyId: string; companyName: string; gross: number; bikerIds: Set<string> }> = {};
-      allPayments.forEach((p) => {
+      normalPayments.forEach((p: any) => {
         if (!companyGroupMap[p.company_id]) {
           companyGroupMap[p.company_id] = {
             companyId: p.company_id,
@@ -161,7 +166,7 @@ export default defineEventHandler(async (event) => {
       success: true,
       data: {
         grossTotal,
-        totalRecords: allPayments.length,
+        totalRecords: normalPayments.length,
         totalDeliveries,
         bikers,
         companyBreakdown,

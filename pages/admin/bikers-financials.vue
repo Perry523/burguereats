@@ -168,11 +168,19 @@
       <template #custom_actions="{ row }">
         <div class="flex items-center gap-2">
           <button
+            @click="openWeekRecordsModal(row)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+            title="Ver registros da semana"
+          >
+            <UIcon name="i-ph-list-bullets" class="w-4 h-4" />
+            Registros
+          </button>
+          <button
             @click="openAdvanceModal(row)"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
           >
             <UIcon name="i-ph-money" class="w-4 h-4" />
-            Adiantamentos
+            Adiantar
           </button>
           <button
             @click="openPagarModal(row)"
@@ -543,6 +551,104 @@
         </div>
       </div>
     </BaseDialog>
+
+    <!-- Week Records Modal -->
+    <BaseDialog
+      v-model="showWeekRecordsModal"
+      :title="'Registros da Semana – ' + (selectedBiker?.name || '')"
+    >
+      <div class="p-4 flex flex-col gap-4">
+        <!-- Week label -->
+        <div class="flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-xl px-4 py-2.5">
+          <UIcon name="i-heroicons-calendar-days" class="w-4 h-4 text-sky-500 shrink-0" />
+          <span class="text-sm font-semibold text-sky-800">
+            {{ formatDateBR(weekRange.from) }} – {{ formatDateBR(weekRange.to) }}
+          </span>
+        </div>
+
+        <!-- Loading -->
+        <div v-if="isFetchingWeekRecords" class="py-8 text-center text-gray-400 flex flex-col items-center gap-2">
+          <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin" />
+          <span class="text-sm">Carregando...</span>
+        </div>
+
+        <!-- Empty -->
+        <div v-else-if="weekRecordsList.length === 0" class="py-8 text-center text-gray-400">
+          <UIcon name="i-heroicons-inbox" class="w-10 h-10 mx-auto text-gray-300 mb-2" />
+          <p class="text-sm">Nenhum registro nesta semana.</p>
+        </div>
+
+        <!-- List -->
+        <div v-else class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+          <!-- Header row -->
+          <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-4 py-2 bg-gray-100 border-b border-gray-200 text-[10px] font-bold uppercase text-gray-500 tracking-wider">
+            <span>Data / Empresa</span>
+            <span class="text-center">Entregas</span>
+            <span class="text-right">Valor</span>
+            <span class="text-center">Status</span>
+          </div>
+          <ul class="divide-y divide-gray-200">
+            <li
+              v-for="rec in weekRecordsList"
+              :key="rec.id"
+              class="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-4 py-3 items-center hover:bg-gray-100 transition-colors"
+              :class="rec.is_advance ? 'bg-amber-50/60' : ''"
+            >
+              <!-- Date + label -->
+              <div>
+                <p class="text-sm font-semibold text-gray-900">{{ formatDateBR(rec.date) }}</p>
+                <span
+                  v-if="rec.is_advance"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700"
+                >
+                  <UIcon name="i-ph-money" class="w-3 h-3" /> Adiantamento
+                </span>
+                <p v-else class="text-xs text-gray-500">{{ rec.company_name }}</p>
+              </div>
+
+              <!-- Deliveries -->
+              <span class="text-center text-sm text-gray-600">
+                {{ rec.is_advance ? '—' : (rec.total_deliveries || 0) }}
+              </span>
+
+              <!-- Amount -->
+              <span
+                class="text-right font-bold text-sm"
+                :class="rec.is_advance ? 'text-amber-700' : 'text-emerald-700'"
+              >
+                {{ rec.is_advance ? '- ' : '' }}{{ formatCurrency(rec.amount) }}
+              </span>
+
+              <!-- Status -->
+              <span
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase justify-center"
+                :class="rec.is_paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
+              >
+                {{ rec.is_paid ? 'Pago' : 'Pendente' }}
+              </span>
+            </li>
+          </ul>
+
+          <!-- Totals footer -->
+          <div class="px-4 py-3 bg-gray-100 border-t border-gray-200 flex flex-col gap-1">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Bruto registros:</span>
+              <span class="font-bold text-gray-900">{{ formatCurrency(weekRecordsGross) }}</span>
+            </div>
+            <div v-if="weekRecordsAdvances > 0" class="flex justify-between text-sm text-amber-700">
+              <span>Adiantamentos:</span>
+              <span class="font-bold">- {{ formatCurrency(weekRecordsAdvances) }}</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold border-t border-gray-200 pt-1 mt-1">
+              <span class="text-gray-700">Líquido estimado:</span>
+              <span :class="weekRecordsNet >= 0 ? 'text-green-700' : 'text-red-700'">
+                {{ formatCurrency(weekRecordsNet) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </BaseDialog>
   </div>
 </template>
 
@@ -564,6 +670,7 @@ const search = ref("");
 const showAdvanceModal = ref(false);
 const showAddAdvanceModal = ref(false);
 const showPagarModal = ref(false);
+const showWeekRecordsModal = ref(false);
 const selectedBiker = ref<any>(null);
 const advanceForm = ref({ amount: 0, date: toISODate(new Date()) });
 const paymentDate = ref(toISODate(new Date()));
@@ -571,6 +678,8 @@ const isSubmitting = ref(false);
 const advanceError = ref("");
 const advancesList = ref<any[]>([]);
 const isFetchingAdvances = ref(false);
+const weekRecordsList = ref<any[]>([]);
+const isFetchingWeekRecords = ref(false);
 const editingAdvance = ref<{ id: string; amount: number; date: string } | null>(
   null,
 );
@@ -782,6 +891,43 @@ const loadAdvances = async () => {
   } finally {
     isFetchingAdvances.value = false;
   }
+};
+
+const loadWeekRecords = async () => {
+  if (!selectedBiker.value) return;
+  isFetchingWeekRecords.value = true;
+  try {
+    const params = new URLSearchParams({
+      bikerId: selectedBiker.value.id,
+      dateFrom: weekRange.value.from,
+      dateTo: weekRange.value.to,
+      perPage: "200",
+    });
+    const res = await $fetch<{ success: boolean; data: any }>(`/api/biker-payments/records?${params.toString()}`);
+    if (res.success && res.data) {
+      // Enrich company names for normal records
+      weekRecordsList.value = res.data.records || [];
+    }
+  } catch (error) {
+    console.error("Failed to load week records:", error);
+    toast.add({ color: "error", title: "Erro ao carregar registros" });
+  } finally {
+    isFetchingWeekRecords.value = false;
+  }
+};
+
+const weekRecordsGross = computed(() =>
+  weekRecordsList.value.filter((r) => !r.is_advance).reduce((acc, r) => acc + (Number(r.amount) || 0), 0)
+);
+const weekRecordsAdvances = computed(() =>
+  weekRecordsList.value.filter((r) => r.is_advance && !r.is_paid).reduce((acc, r) => acc + (Number(r.amount) || 0), 0)
+);
+const weekRecordsNet = computed(() => weekRecordsGross.value - weekRecordsAdvances.value);
+
+const openWeekRecordsModal = async (biker: any) => {
+  selectedBiker.value = biker;
+  showWeekRecordsModal.value = true;
+  await loadWeekRecords();
 };
 
 const openAdvanceModal = async (biker: any) => {

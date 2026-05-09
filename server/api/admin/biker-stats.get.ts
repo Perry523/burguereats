@@ -181,8 +181,12 @@ export default defineEventHandler(async (event) => {
 
         weekPayments.forEach(p => {
           if (p.is_advance) {
-            advances += Number(p.amount) || 0;
-            // Advances are technically "paid" if they were settled, but we just want to know the sum for the period.
+            // Only count advances that haven't been paid yet as a deduction.
+            // Advances already marked as paid were settled in a previous payout
+            // and must NOT be subtracted from the current netPay.
+            if (!p.is_paid) {
+              advances += Number(p.amount) || 0;
+            }
           } else {
             if (p.is_paid) {
               paidTotal += Number(p.amount) || 0;

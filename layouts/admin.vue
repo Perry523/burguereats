@@ -256,6 +256,11 @@ const adminNavItems = [
     icon: "i-ph-coins-duotone",
   },
   {
+    label: "Registros",
+    to: "/admin/registros",
+    icon: "i-ph-list-bullets-duotone",
+  },
+  {
     label: "Pagamentos Realizados",
     to: "/admin/payouts",
     icon: "i-ph-bank-duotone",
