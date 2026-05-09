@@ -12,7 +12,16 @@
         {{ getTitle }}
       </div>
     </div>
-    <div class="flex">
+    <div class="flex items-center gap-2">
+      <div
+        v-if="authStore.user?.role === 'biker'"
+        class="hidden sm:flex flex-col items-end justify-center bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-3 py-0.5 rounded-lg mr-1"
+      >
+        <span class="text-[9px] font-bold text-green-700 dark:text-green-400 tracking-wider">A RECEBER</span>
+        <span class="text-sm font-bold text-green-800 dark:text-green-300 leading-tight">
+          {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(authStore.user?.wallet || 0) }}
+        </span>
+      </div>
       <div class="btn btn-circle btn-ghost">
         <Notifications />
       </div>

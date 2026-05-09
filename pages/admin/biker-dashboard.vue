@@ -216,6 +216,15 @@
         </p>
       </UCard> -->
 
+      <!-- Week Paid Banner -->
+      <div
+        v-if="stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+        class="bg-green-500 text-white rounded-xl p-4 flex items-center gap-3 shadow-sm border border-green-600 mb-6"
+      >
+        <UIcon name="i-heroicons-check-circle-solid" class="w-6 h-6 shrink-0" />
+        <p class="font-bold">Os acertos desta semana já foram pagos!</p>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Meus ganhos / Saldo total -->
         <UCard class="bg-white shadow-sm border border-gray-200">
@@ -276,30 +285,148 @@
         </UCard>
 
         <!-- Lucro Líquido -->
-        <UCard class="bg-white shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
+        <UCard
+          :class="[
+            'shadow-sm border relative overflow-hidden',
+            stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+              ? 'bg-green-50 border-green-200'
+              : 'bg-white border-gray-200',
+          ]"
+        >
+          <div
+            v-if="stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+            class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg"
+          >
+            PAGO
+          </div>
+          <div
+            v-else-if="!stats.financial?.weekPaid && stats.financial?.weekPayments?.length"
+            class="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg"
+          >
+            PENDENTE
+          </div>
+          <div class="flex items-center justify-between mt-1">
             <div>
               <p class="text-gray-500 text-sm font-medium">
-                Líquido Disponível
+                {{
+                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                    ? "Valor Pago"
+                    : "Líquido a Receber"
+                }}
               </p>
-              <p class="text-3xl font-bold text-green-600 mt-1 shrink-0">
+              <p
+                :class="[
+                  'text-3xl font-bold mt-1 shrink-0',
+                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                    ? 'text-green-700'
+                    : 'text-orange-600',
+                ]"
+              >
                 {{
                   stats.financial
-                    ? formatCurrency(stats.financial.netPay)
+                    ? formatCurrency(
+                        stats.financial.weekPaid && stats.financial.weekPayments?.length
+                          ? stats.financial.paidTotal
+                          : stats.financial.netPay,
+                      )
                     : formatCurrency(0)
                 }}
               </p>
             </div>
-            <div class="p-3 bg-green-50 rounded-lg shrink-0 ml-2">
-              <UIcon name="i-ph-money-duotone" class="w-8 h-8 text-green-600" />
+            <div
+              :class="[
+                'p-3 rounded-lg shrink-0 ml-2',
+                stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                  ? 'bg-green-100'
+                  : 'bg-orange-50',
+              ]"
+            >
+              <UIcon
+                :name="
+                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                    ? 'i-ph-check-circle-duotone'
+                    : 'i-ph-money-duotone'
+                "
+                :class="[
+                  'w-8 h-8',
+                  stats.financial?.weekPaid && stats.financial?.weekPayments?.length
+                    ? 'text-green-600'
+                    : 'text-orange-500',
+                ]"
+              />
             </div>
           </div>
         </UCard>
       </div>
 
-      <UCard class="bg-white shadow-sm border border-gray-200 mt-8">
+      <!-- Registros da Semana -->
+      <UCard
+        v-if="stats.financial?.weekPayments?.length > 0"
+        class="bg-white shadow-sm border border-gray-200 mt-6"
+      >
         <h2 class="text-xl font-semibold text-gray-800 mb-4 px-1">
-          Histórico de Entregas
+          Registros da Semana
+        </h2>
+        <div class="flex flex-col gap-3">
+          <div
+            v-for="item in stats.financial.weekPayments"
+            :key="item.id"
+            :class="[
+              'p-4 rounded-xl border flex items-center gap-4 transition-colors',
+              item.is_paid
+                ? 'bg-green-50/50 border-green-100'
+                : 'bg-white border-gray-200',
+            ]"
+          >
+            <div
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
+                item.is_paid ? 'bg-green-100' : 'bg-orange-100',
+              ]"
+            >
+              <UIcon
+                :name="item.is_paid ? 'i-heroicons-check-circle' : 'i-heroicons-clock'"
+                :class="[
+                  'w-6 h-6',
+                  item.is_paid ? 'text-green-600' : 'text-orange-500',
+                ]"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-900 truncate">
+                {{ item.company_name }}
+              </p>
+              <p class="text-sm text-gray-500">
+                {{ formatDateBR(item.date) }}
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <p
+                :class="[
+                  'font-bold text-lg',
+                  item.is_paid ? 'text-green-700' : 'text-gray-900',
+                ]"
+              >
+                {{ formatCurrency(item.amount) }}
+              </p>
+              <span
+                :class="[
+                  'inline-block px-2 py-0.5 rounded text-[10px] font-bold mt-1 uppercase tracking-wider',
+                  item.is_paid
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-orange-100 text-orange-700',
+                ]"
+              >
+                {{ item.is_paid ? 'Pago' : 'Pendente' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </UCard>
+
+      <UCard class="bg-white shadow-sm border border-gray-200 mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 px-1">
+          Últimas Entregas
         </h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-left text-gray-500">
@@ -565,6 +692,12 @@ const formatDate = (dateString: string) => {
   }).format(d);
 };
 
+const formatDateBR = (dateStr: string) => {
+  if (!dateStr) return "-";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+};
+
 const loadBikerProfile = async () => {
   // Only allow actual biker-role users to use tracking features.
   // This prevents admin/manager users (who may have an Entregadores record)
@@ -633,6 +766,9 @@ const fetchStats = async () => {
     const res = await $fetch<{ success: boolean; data: any }>(url);
     if (res.success && res.data) {
       stats.value = res.data;
+      if (isBikerRole.value && auth.user && res.data.financial?.netPay !== undefined) {
+        auth.user.wallet = res.data.financial.netPay;
+      }
     }
   } catch (error) {
     console.error("Error fetching stats:", error);
