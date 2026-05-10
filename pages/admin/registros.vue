@@ -457,7 +457,7 @@
     </BaseDialog>
 
     <!-- Zoom Modal -->
-    <div v-if="zoomedImage" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm" @click="zoomedImage = null">
+    <div v-if="zoomedImage" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm" @click="zoomedImage = null">
       <button class="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors">
         <UIcon name="i-heroicons-x-mark" class="w-8 h-8" />
       </button>
