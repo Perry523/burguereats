@@ -434,16 +434,10 @@
             </div>
             <button
               @click="toggleCheck(selectedRecord)"
-              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              :class="selectedRecord.is_checked ? 'bg-primary' : 'bg-gray-200'"
-              role="switch"
-              :aria-checked="selectedRecord.is_checked"
+              class="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              :class="selectedRecord.is_checked ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary-focus'"
             >
-              <span
-                aria-hidden="true"
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                :class="selectedRecord.is_checked ? 'translate-x-5' : 'translate-x-0'"
-              />
+              {{ selectedRecord.is_checked ? 'Desfazer Aprovação' : 'Aprovar' }}
             </button>
           </div>
         </div>
