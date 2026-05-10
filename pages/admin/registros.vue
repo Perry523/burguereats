@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-full flex flex-col pt-0 md:py-4 max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8 gap-4 overflow-auto"
+    class="h-full flex flex-col pt-0 md:py-4 max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8 gap-3 overflow-auto"
   >
     <!-- Filters card -->
     <div
@@ -98,7 +98,7 @@
 
         <!-- Paid status -->
         <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[140px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
+          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
         >
           <span
             class="shrink-0 w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center"
@@ -112,7 +112,7 @@
             <p
               class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
             >
-              Status
+              Pagamento
             </p>
             <select
               v-model="filterPaid"
@@ -122,6 +122,36 @@
               <option value="">Todos</option>
               <option value="false">Pendentes</option>
               <option value="true">Pagos</option>
+            </select>
+          </div>
+        </label>
+
+        <!-- Approval filter -->
+        <label
+          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
+        >
+          <span
+            class="shrink-0 w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center"
+          >
+            <UIcon
+              name="i-heroicons-check-badge"
+              class="w-4 h-4 text-blue-500"
+            />
+          </span>
+          <div class="flex-1 min-w-0">
+            <p
+              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+            >
+              Aprovação
+            </p>
+            <select
+              v-model="filterChecked"
+              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
+              @change="onFilterChange"
+            >
+              <option value="">Todas</option>
+              <option value="false">Não aprovadas</option>
+              <option value="true">Aprovadas</option>
             </select>
           </div>
         </label>
@@ -158,7 +188,7 @@
           <select
             v-model="pickerWeek"
             @change="onWeekChange"
-            class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[200px] truncate"
+            class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[180px] truncate"
           >
             <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
               {{ w.label }}
@@ -187,41 +217,38 @@
       </div>
     </div>
 
-    <!-- Summary pills -->
-    <div class="flex flex-wrap gap-3 shrink-0">
-      <div
-        class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm"
-      >
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-xs text-gray-500">Total registros:</span>
-        <span class="text-sm font-bold text-gray-800">{{ totalCount }}</span>
-      </div>
-      <div
-        class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm"
-      >
-        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-        <span class="text-xs text-gray-500">Bruto:</span>
-        <span class="text-sm font-bold text-gray-800">{{
-          formatCurrency(totalGross)
-        }}</span>
-      </div>
-      <div
-        class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm"
-      >
-        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span class="text-xs text-gray-500">Adiantamentos:</span>
-        <span class="text-sm font-bold text-amber-700">{{
-          formatCurrency(totalAdvances)
-        }}</span>
-      </div>
-      <div
-        class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm"
-      >
-        <span class="w-2 h-2 rounded-full bg-red-400"></span>
-        <span class="text-xs text-gray-500">Pendentes:</span>
-        <span class="text-sm font-bold text-red-700">{{
-          formatCurrency(totalPending)
-        }}</span>
+    <!-- Summary row: pills + week picker side by side on desktop -->
+    <div class="flex flex-col md:flex-row md:items-center gap-3 shrink-0">
+      <!-- Pills grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+          <div class="min-w-0">
+            <p class="text-[10px] text-gray-400 leading-none">Registros</p>
+            <p class="text-sm font-bold text-gray-800">{{ totalCount }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+          <div class="min-w-0">
+            <p class="text-[10px] text-gray-400 leading-none">Bruto</p>
+            <p class="text-sm font-bold text-gray-800">{{ formatCurrency(totalGross) }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+          <div class="min-w-0">
+            <p class="text-[10px] text-gray-400 leading-none">Adiant.</p>
+            <p class="text-sm font-bold text-amber-700">{{ formatCurrency(totalAdvances) }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+          <div class="min-w-0">
+            <p class="text-[10px] text-gray-400 leading-none">Pendentes</p>
+            <p class="text-sm font-bold text-red-700">{{ formatCurrency(totalPending) }}</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -267,7 +294,8 @@
                 Entregas
               </th>
               <th class="px-4 py-3 text-right whitespace-nowrap">Valor</th>
-              <th class="px-4 py-3 text-center whitespace-nowrap">Status</th>
+              <th class="px-4 py-3 text-center whitespace-nowrap">Pagamento</th>
+              <th class="px-4 py-3 text-center whitespace-nowrap">Aprovado</th>
               <th class="px-4 py-3 text-center whitespace-nowrap">Ações</th>
             </tr>
           </thead>
@@ -324,7 +352,7 @@
                 </span>
               </td>
 
-              <!-- Status -->
+              <!-- Pagamento -->
               <td class="px-4 py-3 text-center">
                 <span
                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
@@ -335,21 +363,31 @@
                   "
                 >
                   <UIcon
-                    :name="
-                      r.is_paid
-                        ? 'i-heroicons-check-circle'
-                        : 'i-heroicons-clock'
-                    "
+                    :name="r.is_paid ? 'i-heroicons-check-circle' : 'i-heroicons-clock'"
                     class="w-3 h-3"
                   />
                   {{ r.is_paid ? "Pago" : "Pendente" }}
                 </span>
+              </td>
+
+              <!-- Aprovado -->
+              <td class="px-4 py-3 text-center">
                 <span
-                  v-if="r.is_checked"
-                  class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
-                  title="Foto validada"
+                  v-if="r.is_advance"
+                  class="text-gray-300 text-xs">—</span>
+                <span
+                  v-else-if="r.is_checked"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
                 >
                   <UIcon name="i-heroicons-check-badge" class="w-3 h-3" />
+                  Sim
+                </span>
+                <span
+                  v-else
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-gray-100 text-gray-500"
+                >
+                  <UIcon name="i-heroicons-x-circle" class="w-3 h-3" />
+                  Não
                 </span>
               </td>
 
@@ -486,6 +524,7 @@ const filterCompany = ref("");
 const filterBiker = ref("");
 const filterType = ref("");
 const filterPaid = ref("");
+const filterChecked = ref("");
 const isRefreshing = ref(false);
 
 const zoomedImage = ref<string | null>(null);
@@ -657,6 +696,7 @@ const fetchRecords = async () => {
     if (filterBiker.value) params.set("bikerId", filterBiker.value);
     if (filterType.value) params.set("type", filterType.value);
     if (filterPaid.value !== "") params.set("isPaid", filterPaid.value);
+    if (filterChecked.value !== "") params.set("isChecked", filterChecked.value);
 
     const res = await $fetch<{ success: boolean; data: any }>(
       `/api/biker-payments/records?${params.toString()}`,

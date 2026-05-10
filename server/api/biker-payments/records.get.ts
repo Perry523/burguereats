@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
     // "advance" | "normal" | "" (all)
     const type = query.type as string | undefined;
     const isPaid = query.isPaid as string | undefined; // "true" | "false" | ""
+    const isChecked = query.isChecked as string | undefined; // "true" | "false" | ""
     const page = Number(query.page) || 1;
     const perPage = Math.min(Number(query.perPage) || 50, 200);
 
@@ -40,6 +41,8 @@ export default defineEventHandler(async (event) => {
     if (type === "normal") q = q.eq("is_advance", false);
     if (isPaid === "true") q = q.eq("is_paid", true);
     if (isPaid === "false") q = q.eq("is_paid", false);
+    if (isChecked === "true") q = q.eq("is_checked", true);
+    if (isChecked === "false") q = q.eq("is_checked", false);
 
     // Pagination
     const from = (page - 1) * perPage;
