@@ -251,14 +251,14 @@ const adminNavItems = [
     icon: "i-ph-motorcycle",
   },
   {
-    label: "Pagamentos Pendentes",
-    to: "/admin/bikers-financials",
-    icon: "i-ph-coins-duotone",
-  },
-  {
     label: "Registros",
     to: "/admin/registros",
     icon: "i-ph-list-bullets-duotone",
+  },
+  {
+    label: "Pagamentos Pendentes",
+    to: "/admin/bikers-financials",
+    icon: "i-ph-coins-duotone",
   },
   {
     label: "Pagamentos Realizados",

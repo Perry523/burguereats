@@ -172,6 +172,48 @@
         >
       </template>
 
+      <template #is_paid="{ row }">
+        <span
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+          :class="
+            row.is_paid
+              ? 'bg-green-100 text-green-700'
+              : 'bg-yellow-100 text-yellow-700'
+          "
+        >
+          <UIcon
+            :name="
+              row.is_paid
+                ? 'i-heroicons-check-circle'
+                : 'i-heroicons-clock'
+            "
+            class="w-3 h-3"
+          />
+          {{ row.is_paid ? "Pago" : "Pendente" }}
+        </span>
+      </template>
+
+      <template #is_checked="{ row }">
+        <span
+          v-if="row.is_advance"
+          class="text-gray-300 text-xs"
+        >—</span>
+        <span
+          v-else-if="row.is_checked"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
+        >
+          <UIcon name="i-heroicons-check-badge" class="w-3 h-3" />
+          Sim
+        </span>
+        <span
+          v-else
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-gray-100 text-gray-500"
+        >
+          <UIcon name="i-heroicons-x-circle" class="w-3 h-3" />
+          Não
+        </span>
+      </template>
+
       <!-- Ver mais action -->
       <template #additional-actions="{ item }">
         <li v-if="!item.is_paid && !item.is_checked" @click="editPayment(item)">
@@ -624,6 +666,8 @@ const columns = [
   { key: "company_name", label: "Restaurante", sm: true },
   { key: "total_deliveries", label: "Volume" },
   { key: "amount", label: "Valor", sm: true },
+  { key: "is_paid", label: "Pagamento" },
+  { key: "is_checked", label: "Aprovado" },
 ];
 
 const viewDetails = (payment: any) => {
