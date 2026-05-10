@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     // Ensure it's not paid
     const { data: currentPayment, error: checkErr } = await supabase
       .from("biker_payments")
-      .select("is_paid, is_advance, biker_id")
+      .select("is_paid, is_advance, biker_id, is_checked")
       .eq("id", id)
       .single();
 
@@ -30,6 +30,10 @@ export default defineEventHandler(async (event) => {
 
     if (currentPayment.is_advance) {
       throw createError({ statusCode: 403, statusMessage: "Cannot delete an advance record" });
+    }
+
+    if (currentPayment.is_checked) {
+      throw createError({ statusCode: 400, statusMessage: "Registros validados não podem ser excluídos" });
     }
 
     // Admins can delete any, bikers can only delete their own

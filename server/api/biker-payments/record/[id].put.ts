@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     // Ensure it's not paid
     const { data: currentPayment, error: checkErr } = await supabase
       .from("biker_payments")
-      .select("is_paid, is_advance, biker_id")
+      .select("is_paid, is_advance, biker_id, is_checked")
       .eq("id", id)
       .single();
 
@@ -32,6 +32,11 @@ export default defineEventHandler(async (event) => {
 
     if (currentPayment.is_advance && auth.role !== "admin") {
       throw createError({ statusCode: 400, statusMessage: "Cannot edit an advance record" });
+    }
+
+    const isOnlyChecking = Object.keys(body).length === 1 && body.is_checked !== undefined;
+    if (currentPayment.is_checked && !isOnlyChecking) {
+      throw createError({ statusCode: 400, statusMessage: "Registros validados não podem ser editados" });
     }
 
     // Admins can edit any, bikers can only edit their own

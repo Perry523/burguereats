@@ -344,6 +344,13 @@
                   />
                   {{ r.is_paid ? "Pago" : "Pendente" }}
                 </span>
+                <span
+                  v-if="r.is_checked"
+                  class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
+                  title="Comprovante validado"
+                >
+                  <UIcon name="i-heroicons-check-badge" class="w-3 h-3" />
+                </span>
               </td>
 
               <!-- Actions -->

@@ -1,6 +1,5 @@
 import { H3Error } from 'h3'
 import { createClient } from "@supabase/supabase-js";
-import { requireAuth } from '../utils/auth' // wait, I don't know if this exists in uploads, let's use the same as index.post.ts, wait, how did index.post.ts import requireAuth? It didn't import it, maybe it's auto-imported.
 
 const BUCKET_NAME = 'receipts'
 

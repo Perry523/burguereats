@@ -146,6 +146,13 @@
               >
                 Pendente
               </span>
+              <span
+                v-if="row.is_checked"
+                class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-100 text-blue-700 uppercase tracking-wider flex items-center gap-0.5"
+              >
+                <UIcon name="i-heroicons-check-badge" class="w-2.5 h-2.5" />
+                Validado
+              </span>
             </div>
           </div>
         </div>
@@ -167,7 +174,7 @@
 
       <!-- Ver mais action -->
       <template #additional-actions="{ item }">
-        <li v-if="!item.is_paid" @click="editPayment(item)">
+        <li v-if="!item.is_paid && !item.is_checked" @click="editPayment(item)">
           <a
             class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150 cursor-pointer"
           >
@@ -178,7 +185,7 @@
             Editar
           </a>
         </li>
-        <li v-if="!item.is_paid" @click="deletePayment(item)">
+        <li v-if="!item.is_paid && !item.is_checked" @click="deletePayment(item)">
           <a
             class="flex items-center gap-3 text-base py-2.5 px-4 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer"
           >
