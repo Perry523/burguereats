@@ -281,7 +281,7 @@
 
         <div v-if="selectedPayment.image_url">
           <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Foto do dia</p>
-          <img :src="selectedPayment.image_url" class="w-full rounded-xl border border-gray-200" alt="Foto do dia" />
+          <img :src="selectedPayment.image_url" @click="zoomedImage = selectedPayment.image_url" class="w-full rounded-xl border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity" alt="Foto do dia" />
           <div v-if="selectedPayment.is_checked" class="flex items-center gap-2 mt-2 bg-green-50 p-2 rounded-lg text-green-700 text-sm font-semibold">
             <UIcon name="i-heroicons-check-circle" class="w-5 h-5" />
             Foto validada
@@ -433,6 +433,14 @@
         </div>
       </div>
     </BaseDialog>
+
+    <!-- Zoom Modal -->
+    <div v-if="zoomedImage" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm" @click="zoomedImage = null">
+      <button class="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors">
+        <UIcon name="i-heroicons-x-mark" class="w-8 h-8" />
+      </button>
+      <img :src="zoomedImage" class="max-w-full max-h-full object-contain select-none shadow-2xl rounded-sm" @click.stop />
+    </div>
   </div>
 </template>
 
@@ -463,6 +471,7 @@ const dateChecked = ref(false);
 const isSubmitting = ref(false);
 const submitError = ref("");
 const editingPaymentId = ref<string | null>(null);
+const zoomedImage = ref<string | null>(null);
 
 const todayStr = () => {
   const d = new Date();

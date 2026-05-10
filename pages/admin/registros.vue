@@ -425,7 +425,7 @@
 
         <div v-if="selectedRecord.image_url" class="mt-4 border-t border-gray-100 pt-4">
           <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Foto do dia</p>
-          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50" alt="Foto do dia" />
+          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity" alt="Foto do dia" @click="zoomedImage = selectedRecord.image_url" />
           
           <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
             <div class="flex-1">
@@ -455,6 +455,14 @@
         </div>
       </div>
     </BaseDialog>
+
+    <!-- Zoom Modal -->
+    <div v-if="zoomedImage" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm" @click="zoomedImage = null">
+      <button class="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors">
+        <UIcon name="i-heroicons-x-mark" class="w-8 h-8" />
+      </button>
+      <img :src="zoomedImage" class="max-w-full max-h-full object-contain select-none shadow-2xl rounded-sm" @click.stop />
+    </div>
   </div>
 </template>
 
@@ -474,8 +482,10 @@ const filterCompany = ref("");
 const filterBiker = ref("");
 const filterType = ref("");
 const filterPaid = ref("");
+const isRefreshing = ref(false);
 
-// Data
+const zoomedImage = ref<string | null>(null);
+
 const records = ref<any[]>([]);
 const totalCount = ref(0);
 const bikers = ref<{ id: string; name: string }[]>([]);
