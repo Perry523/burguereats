@@ -272,6 +272,19 @@
           </div>
         </div>
 
+        <div v-if="selectedPayment.image_url">
+          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Comprovante</p>
+          <img :src="selectedPayment.image_url" class="w-full rounded-xl border border-gray-200" alt="Comprovante" />
+          <div v-if="selectedPayment.is_checked" class="flex items-center gap-2 mt-2 bg-green-50 p-2 rounded-lg text-green-700 text-sm font-semibold">
+            <UIcon name="i-heroicons-check-circle" class="w-5 h-5" />
+            Comprovante validado
+          </div>
+          <div v-else class="flex items-center gap-2 mt-2 bg-yellow-50 p-2 rounded-lg text-yellow-700 text-sm font-semibold">
+            <UIcon name="i-heroicons-clock" class="w-5 h-5" />
+            Aguardando validação
+          </div>
+        </div>
+
         <div class="flex justify-end pt-2">
           <button
             @click="showDetailsModal = false"
@@ -367,6 +380,27 @@
           </div>
         </div>
 
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (Opcional)</label>
+          <div class="mt-1 flex items-center gap-4">
+            <input
+              type="file"
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              @change="onFileChange"
+            />
+          </div>
+          <div v-if="form.image_url || filePreview" class="mt-2 relative inline-block">
+            <img :src="filePreview || form.image_url" class="h-24 rounded-lg border border-gray-200" alt="Preview" />
+            <button
+              @click.prevent="clearImage"
+              class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 shadow-sm"
+            >
+              <UIcon name="i-heroicons-x-circle" class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
         <div
           v-if="submitError"
           class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
@@ -439,7 +473,25 @@ const form = ref({
   company_id: "",
   amount: 0,
   total_deliveries: 0,
+  image_url: "",
 });
+
+const selectedFile = ref<File | null>(null);
+const filePreview = ref<string>("");
+
+const onFileChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    selectedFile.value = target.files[0];
+    filePreview.value = URL.createObjectURL(target.files[0]);
+  }
+};
+
+const clearImage = () => {
+  selectedFile.value = null;
+  filePreview.value = "";
+  form.value.image_url = "";
+};
 
 // ── Week Range Picker ──────────────────────────────────────────────
 const months = [
@@ -656,7 +708,9 @@ const openAddModal = async () => {
     company_id: "",
     amount: 0,
     total_deliveries: 0,
+    image_url: "",
   };
+  clearImage();
   vinculatedCompanies.value = [];
   dateChecked.value = false;
   submitError.value = "";
@@ -671,7 +725,9 @@ const editPayment = async (payment: any) => {
     company_id: payment.company_id,
     amount: payment.amount,
     total_deliveries: payment.total_deliveries || 0,
+    image_url: payment.image_url || "",
   };
+  clearImage();
   vinculatedCompanies.value = [];
   dateChecked.value = false;
   submitError.value = "";
@@ -735,6 +791,22 @@ const submitPayment = async () => {
   isSubmitting.value = true;
   submitError.value = "";
   try {
+    let finalImageUrl = form.value.image_url;
+
+    if (selectedFile.value) {
+      const formData = new FormData();
+      formData.append("file", selectedFile.value);
+      const uploadRes = await $fetch<{ success: boolean; data?: { url: string } }>("/api/uploads/biker-receipt", {
+        method: "POST",
+        body: formData,
+      });
+      if (uploadRes.success && uploadRes.data) {
+        finalImageUrl = uploadRes.data.url;
+      } else {
+        toast.add({ color: "warning", title: "Erro ao enviar imagem. Salvando sem imagem..." });
+      }
+    }
+
     const url = editingPaymentId.value
       ? `/api/biker-payments/record/${editingPaymentId.value}`
       : "/api/biker-payments";
@@ -750,6 +822,7 @@ const submitPayment = async () => {
           company_id: form.value.company_id,
           amount: form.value.amount,
           total_deliveries: form.value.total_deliveries,
+          image_url: finalImageUrl,
         },
       },
     );

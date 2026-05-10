@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
-    const { date, amount, total_deliveries, company_id } = body;
+    const { date, amount, total_deliveries, company_id, image_url } = body;
 
     if (!date || amount === undefined || amount === null || !company_id) {
       throw createError({
@@ -81,6 +81,8 @@ export default defineEventHandler(async (event) => {
         date,
         amount: Number(amount),
         total_deliveries: Number(total_deliveries) || 0,
+        image_url: image_url || null,
+        is_checked: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

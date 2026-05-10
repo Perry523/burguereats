@@ -268,6 +268,7 @@
               </th>
               <th class="px-4 py-3 text-right whitespace-nowrap">Valor</th>
               <th class="px-4 py-3 text-center whitespace-nowrap">Status</th>
+              <th class="px-4 py-3 text-center whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -344,6 +345,17 @@
                   {{ r.is_paid ? "Pago" : "Pendente" }}
                 </span>
               </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3 text-center">
+                <button
+                  @click="viewDetails(r)"
+                  class="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                  title="Ver detalhes"
+                >
+                  <UIcon name="i-heroicons-eye" class="w-5 h-5" />
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -381,6 +393,67 @@
         </div>
       </div>
     </div>
+
+    <!-- Details Modal -->
+    <BaseDialog v-model="showDetailsModal" title="Detalhes do Registro">
+      <div class="p-4 space-y-4" v-if="selectedRecord">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Entregador</p>
+            <p class="text-gray-900 font-medium">{{ selectedRecord.biker_name }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Data</p>
+            <p class="text-gray-900 font-medium">{{ formatDateBR(selectedRecord.date) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Empresa</p>
+            <p class="text-gray-900 font-medium">{{ selectedRecord.company_name }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Valor</p>
+            <p class="text-green-700 font-bold">{{ formatCurrency(selectedRecord.amount) }}</p>
+          </div>
+        </div>
+
+        <div v-if="selectedRecord.image_url" class="mt-4 border-t border-gray-100 pt-4">
+          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Comprovante</p>
+          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50" alt="Comprovante" />
+          
+          <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-gray-800">Validação do Comprovante</p>
+              <p class="text-xs text-gray-500">Confirme se o comprovante confere com o valor</p>
+            </div>
+            <button
+              @click="toggleCheck(selectedRecord)"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              :class="selectedRecord.is_checked ? 'bg-primary' : 'bg-gray-200'"
+              role="switch"
+              :aria-checked="selectedRecord.is_checked"
+            >
+              <span
+                aria-hidden="true"
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="selectedRecord.is_checked ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+        </div>
+        <div v-else class="mt-4 border-t border-gray-100 pt-4">
+          <p class="text-sm text-gray-500 italic text-center py-4">Nenhum comprovante anexado a este registro.</p>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button
+            @click="showDetailsModal = false"
+            class="px-6 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus transition-colors shadow-sm"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </BaseDialog>
   </div>
 </template>
 
@@ -406,6 +479,10 @@ const records = ref<any[]>([]);
 const totalCount = ref(0);
 const bikers = ref<{ id: string; name: string }[]>([]);
 const companies = ref<{ id: string; name: string }[]>([]);
+
+// Modal state
+const showDetailsModal = ref(false);
+const selectedRecord = ref<any>(null);
 
 // Pagination
 const currentPage = ref(1);
@@ -581,6 +658,28 @@ const fetchRecords = async () => {
     toast.add({ color: "error", title: "Erro ao carregar registros" });
   } finally {
     isLoading.value = false;
+  }
+};
+
+const viewDetails = (r: any) => {
+  selectedRecord.value = r;
+  showDetailsModal.value = true;
+};
+
+const toggleCheck = async (r: any) => {
+  try {
+    const newValue = !r.is_checked;
+    const res = await $fetch<{ success: boolean }>(`/api/biker-payments/record/${r.id}`, {
+      method: "PUT",
+      body: { is_checked: newValue },
+    });
+    if (res.success) {
+      r.is_checked = newValue;
+      toast.add({ color: "success", title: "Status atualizado com sucesso!" });
+    }
+  } catch (error: any) {
+    console.error("Erro ao validar:", error);
+    toast.add({ color: "error", title: error?.data?.statusMessage || "Erro ao atualizar status" });
   }
 };
 

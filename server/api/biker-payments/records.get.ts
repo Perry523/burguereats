@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
     let q = supabase
       .from("biker_payments")
-      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance, created_at", { count: "exact" })
+      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance, image_url, is_checked, created_at", { count: "exact" })
       .order("date", { ascending: false })
       .order("created_at", { ascending: false });
 
