@@ -19,6 +19,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    if (!image_url) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Foto do dia é obrigatória",
+      });
+    }
+
     if (Number(amount) <= 0) {
       throw createError({ statusCode: 400, statusMessage: "Valor deve ser maior que zero" });
     }

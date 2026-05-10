@@ -280,11 +280,11 @@
         </div>
 
         <div v-if="selectedPayment.image_url">
-          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Comprovante</p>
-          <img :src="selectedPayment.image_url" class="w-full rounded-xl border border-gray-200" alt="Comprovante" />
+          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Foto do dia</p>
+          <img :src="selectedPayment.image_url" class="w-full rounded-xl border border-gray-200" alt="Foto do dia" />
           <div v-if="selectedPayment.is_checked" class="flex items-center gap-2 mt-2 bg-green-50 p-2 rounded-lg text-green-700 text-sm font-semibold">
             <UIcon name="i-heroicons-check-circle" class="w-5 h-5" />
-            Comprovante validado
+            Foto validada
           </div>
           <div v-else class="flex items-center gap-2 mt-2 bg-yellow-50 p-2 rounded-lg text-yellow-700 text-sm font-semibold">
             <UIcon name="i-heroicons-clock" class="w-5 h-5" />
@@ -388,7 +388,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (Opcional)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Foto do dia <span class="text-red-500">*</span></label>
           <div class="mt-1 flex items-center gap-4">
             <input
               type="file"
@@ -425,7 +425,7 @@
           <button
             v-if="vinculatedCompanies.length > 0 && form.company_id"
             @click="submitPayment"
-            :disabled="isSubmitting || !form.amount || form.amount <= 0"
+            :disabled="isSubmitting || !form.amount || form.amount <= 0 || (!selectedFile && !form.image_url)"
             class="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-focus focus:outline-none disabled:opacity-50 transition-colors"
           >
             {{ isSubmitting ? "Salvando..." : "Salvar Registro" }}

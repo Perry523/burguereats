@@ -347,7 +347,7 @@
                 <span
                   v-if="r.is_checked"
                   class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
-                  title="Comprovante validado"
+                  title="Foto validada"
                 >
                   <UIcon name="i-heroicons-check-badge" class="w-3 h-3" />
                 </span>
@@ -424,13 +424,13 @@
         </div>
 
         <div v-if="selectedRecord.image_url" class="mt-4 border-t border-gray-100 pt-4">
-          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Comprovante</p>
-          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50" alt="Comprovante" />
+          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Foto do dia</p>
+          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50" alt="Foto do dia" />
           
           <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
             <div class="flex-1">
-              <p class="text-sm font-semibold text-gray-800">Validação do Comprovante</p>
-              <p class="text-xs text-gray-500">Confirme se o comprovante confere com o valor</p>
+              <p class="text-sm font-semibold text-gray-800">Validação da Foto</p>
+              <p class="text-xs text-gray-500">Confirme se a foto confere com o valor</p>
             </div>
             <button
               @click="toggleCheck(selectedRecord)"
@@ -448,7 +448,7 @@
           </div>
         </div>
         <div v-else class="mt-4 border-t border-gray-100 pt-4">
-          <p class="text-sm text-gray-500 italic text-center py-4">Nenhum comprovante anexado a este registro.</p>
+          <p class="text-sm text-gray-500 italic text-center py-4">Nenhuma foto anexada a este registro.</p>
         </div>
 
         <div class="flex justify-end pt-4">
