@@ -6,247 +6,286 @@
     <div
       class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden shrink-0"
     >
-      <!-- Row 1: company + biker + type + paid filter -->
-      <div
-        class="flex flex-wrap items-stretch divide-x divide-gray-100 border-b border-gray-100"
+      <!-- Toggle header -->
+      <button
+        @click="filtersOpen = !filtersOpen"
+        class="md:hidden w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors"
+        :class="filtersOpen ? 'border-b border-gray-100' : ''"
       >
-        <!-- Company -->
-        <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[160px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
-        >
+        <div class="flex items-center gap-2">
+          <UIcon name="i-ph-funnel-duotone" class="w-4 h-4 text-primary" />
+          <span class="text-sm font-semibold text-gray-700">Filtros</span>
+          <!-- active badges -->
           <span
-            class="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"
+            v-if="activeFilterCount > 0"
+            class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold"
+            >{{ activeFilterCount }}</span
           >
-            <UIcon
-              name="i-ph-storefront-duotone"
-              class="w-4 h-4 text-emerald-500"
-            />
-          </span>
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
-            >
-              Empresa
-            </p>
-            <select
-              v-model="filterCompany"
-              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
-              @change="onFilterChange"
-            >
-              <option value="">Todas</option>
-              <option v-for="c in companies" :key="c.id" :value="c.id">
-                {{ c.name }}
-              </option>
-            </select>
-          </div>
-        </label>
+        </div>
+        <UIcon
+          :name="
+            filtersOpen ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'
+          "
+          class="w-4 h-4 text-gray-400"
+        />
+      </button>
 
-        <!-- Biker -->
-        <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[160px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
+      <!-- Collapsible body (mobile toggle, always visible on desktop) -->
+      <div class="hidden md:block" :class="{ '!block': filtersOpen }">
+        <!-- Row 1: company + biker + type + paid + approval -->
+        <div
+          class="flex flex-wrap items-stretch divide-x divide-gray-100 border-b border-gray-100"
         >
-          <span
-            class="shrink-0 w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center"
+          <!-- Company -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[160px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
           >
-            <UIcon name="i-ph-motorcycle" class="w-4 h-4 text-violet-500" />
-          </span>
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"
             >
-              Entregador
-            </p>
-            <select
-              v-model="filterBiker"
-              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
-              @change="onFilterChange"
-            >
-              <option value="">Todos</option>
-              <option v-for="b in bikers" :key="b.id" :value="b.id">
-                {{ b.name }}
-              </option>
-            </select>
-          </div>
-        </label>
+              <UIcon
+                name="i-ph-storefront-duotone"
+                class="w-4 h-4 text-emerald-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Empresa
+              </p>
+              <select
+                v-model="filterCompany"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
+                @change="onFilterChange"
+              >
+                <option value="">Todas</option>
+                <option v-for="c in companies" :key="c.id" :value="c.id">
+                  {{ c.name }}
+                </option>
+              </select>
+            </div>
+          </label>
 
-        <!-- Type -->
-        <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[140px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
-        >
-          <span
-            class="shrink-0 w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center"
+          <!-- Biker -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[160px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
           >
-            <UIcon name="i-ph-funnel-duotone" class="w-4 h-4 text-amber-500" />
-          </span>
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center"
             >
-              Tipo
-            </p>
-            <select
-              v-model="filterType"
-              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
-              @change="onFilterChange"
-            >
-              <option value="">Todos</option>
-              <option value="normal">Registros</option>
-              <option value="advance">Adiantamentos</option>
-            </select>
-          </div>
-        </label>
+              <UIcon name="i-ph-motorcycle" class="w-4 h-4 text-violet-500" />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Entregador
+              </p>
+              <select
+                v-model="filterBiker"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate appearance-none"
+                @change="onFilterChange"
+              >
+                <option value="">Todos</option>
+                <option v-for="b in bikers" :key="b.id" :value="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+          </label>
 
-        <!-- Paid status -->
-        <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
-        >
-          <span
-            class="shrink-0 w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center"
+          <!-- Type -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[140px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
           >
-            <UIcon
-              name="i-ph-check-circle-duotone"
-              class="w-4 h-4 text-sky-500"
-            />
-          </span>
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center"
             >
-              Pagamento
-            </p>
-            <select
-              v-model="filterPaid"
-              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
-              @change="onFilterChange"
-            >
-              <option value="">Todos</option>
-              <option value="false">Pendentes</option>
-              <option value="true">Pagos</option>
-            </select>
-          </div>
-        </label>
+              <UIcon
+                name="i-ph-funnel-duotone"
+                class="w-4 h-4 text-amber-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Tipo
+              </p>
+              <select
+                v-model="filterType"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
+                @change="onFilterChange"
+              >
+                <option value="">Todos</option>
+                <option value="normal">Registros</option>
+                <option value="advance">Adiantamentos</option>
+              </select>
+            </div>
+          </label>
 
-        <!-- Approval filter -->
-        <label
-          class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
-        >
-          <span
-            class="shrink-0 w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center"
+          <!-- Paid status -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
           >
-            <UIcon
-              name="i-heroicons-check-badge"
-              class="w-4 h-4 text-blue-500"
-            />
-          </span>
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center"
             >
-              Aprovação
-            </p>
-            <select
-              v-model="filterChecked"
-              class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
-              @change="onFilterChange"
+              <UIcon
+                name="i-ph-check-circle-duotone"
+                class="w-4 h-4 text-sky-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Pagamento
+              </p>
+              <select
+                v-model="filterPaid"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
+                @change="onFilterChange"
+              >
+                <option value="">Todos</option>
+                <option value="false">Pendentes</option>
+                <option value="true">Pagos</option>
+              </select>
+            </div>
+          </label>
+
+          <!-- Approval filter -->
+          <label
+            class="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-[130px] hover:bg-gray-50/70 transition-colors cursor-pointer group"
+          >
+            <span
+              class="shrink-0 w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center"
             >
-              <option value="">Todas</option>
-              <option value="false">Não aprovadas</option>
-              <option value="true">Aprovadas</option>
-            </select>
-          </div>
-        </label>
+              <UIcon
+                name="i-heroicons-check-badge"
+                class="w-4 h-4 text-blue-500"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-none mb-0.5"
+              >
+                Aprovação
+              </p>
+              <select
+                v-model="filterChecked"
+                class="w-full text-sm font-semibold text-gray-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer appearance-none"
+                @change="onFilterChange"
+              >
+                <option value="">Todas</option>
+                <option value="false">Não aprovadas</option>
+                <option value="true">Aprovadas</option>
+              </select>
+            </div>
+          </label>
+        </div>
       </div>
+    </div>
 
-      <!-- Row 2: week picker + refresh -->
-      <div class="flex items-center gap-2 px-3 py-2">
+    <!-- Summary row: week picker + cards in one row -->
+    <div class="flex flex-col md:flex-row md:items-center gap-2 shrink-0">
+      <!-- Week picker (compact) -->
+      <div
+        class="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-2 py-2 shadow-sm md:shrink-0 min-w-0 overflow-hidden"
+      >
         <button
           @click="shiftWeek(-1)"
-          class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
         >
-          <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+          <UIcon name="i-heroicons-chevron-left" class="w-3.5 h-3.5" />
         </button>
-
-        <div class="flex-1 flex items-center justify-center gap-2">
-          <span
-            class="w-5 h-5 rounded-md bg-sky-50 flex items-center justify-center shrink-0"
-          >
-            <UIcon
-              name="i-heroicons-calendar-days"
-              class="w-3.5 h-3.5 text-sky-500"
-            />
-          </span>
+        <div class="flex items-center gap-1.5 px-1 min-w-0 flex-1">
+          <UIcon
+            name="i-heroicons-calendar-days"
+            class="w-3.5 h-3.5 text-sky-500 shrink-0"
+          />
           <select
             v-model="pickerMonth"
             @change="onMonthChange"
-            class="text-sm font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+            class="text-xs font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
           >
             <option v-for="(m, i) in months" :key="i" :value="i">
               {{ m }}
             </option>
           </select>
-          <span class="text-gray-300 text-xs">·</span>
+          <span class="text-gray-300 text-[10px]">·</span>
           <select
             v-model="pickerWeek"
             @change="onWeekChange"
-            class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[180px] truncate"
+            class="text-xs text-gray-500 bg-transparent border-none focus:ring-0 cursor-pointer p-0 max-w-[100px] sm:max-w-[150px] truncate"
           >
             <option v-for="w in weeksInMonth" :key="w.label" :value="w.label">
               {{ w.label }}
             </option>
           </select>
         </div>
-
         <button
           @click="shiftWeek(1)"
-          class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
         >
-          <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          <UIcon name="i-heroicons-chevron-right" class="w-3.5 h-3.5" />
         </button>
-
         <button
           @click="fetchRecords"
-          class="ml-1 p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
           title="Atualizar"
         >
           <UIcon
             name="i-heroicons-arrow-path"
-            class="w-4 h-4"
+            class="w-3.5 h-3.5"
             :class="{ 'animate-spin': isLoading }"
           />
         </button>
       </div>
-    </div>
 
-    <!-- Summary row: pills + week picker side by side on desktop -->
-    <div class="flex flex-col md:flex-row md:items-center gap-3 shrink-0">
-      <!-- Pills grid -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
-        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+      <!-- Pills -->
+      <div class="hidden md:grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+        <div
+          class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
+        >
           <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
           <div class="min-w-0">
             <p class="text-[10px] text-gray-400 leading-none">Registros</p>
             <p class="text-sm font-bold text-gray-800">{{ totalCount }}</p>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+        <div
+          class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
+        >
           <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
           <div class="min-w-0">
             <p class="text-[10px] text-gray-400 leading-none">Bruto</p>
-            <p class="text-sm font-bold text-gray-800">{{ formatCurrency(totalGross) }}</p>
+            <p class="text-sm font-bold text-gray-800">
+              {{ formatCurrency(totalGross) }}
+            </p>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+        <div
+          class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
+        >
           <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
           <div class="min-w-0">
             <p class="text-[10px] text-gray-400 leading-none">Adiant.</p>
-            <p class="text-sm font-bold text-amber-700">{{ formatCurrency(totalAdvances) }}</p>
+            <p class="text-sm font-bold text-amber-700">
+              {{ formatCurrency(totalAdvances) }}
+            </p>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm">
+        <div
+          class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
+        >
           <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
           <div class="min-w-0">
             <p class="text-[10px] text-gray-400 leading-none">Pendentes</p>
-            <p class="text-sm font-bold text-red-700">{{ formatCurrency(totalPending) }}</p>
+            <p class="text-sm font-bold text-red-700">
+              {{ formatCurrency(totalPending) }}
+            </p>
           </div>
         </div>
       </div>
@@ -363,7 +402,11 @@
                   "
                 >
                   <UIcon
-                    :name="r.is_paid ? 'i-heroicons-check-circle' : 'i-heroicons-clock'"
+                    :name="
+                      r.is_paid
+                        ? 'i-heroicons-check-circle'
+                        : 'i-heroicons-clock'
+                    "
                     class="w-3 h-3"
                   />
                   {{ r.is_paid ? "Pago" : "Pendente" }}
@@ -372,9 +415,7 @@
 
               <!-- Aprovado -->
               <td class="px-4 py-3 text-center">
-                <span
-                  v-if="r.is_advance"
-                  class="text-gray-300 text-xs">—</span>
+                <span v-if="r.is_advance" class="text-gray-300 text-xs">—</span>
                 <span
                   v-else-if="r.is_checked"
                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700"
@@ -444,43 +485,91 @@
       <div class="p-4 space-y-4" v-if="selectedRecord">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Entregador</p>
-            <p class="text-gray-900 font-medium">{{ selectedRecord.biker_name }}</p>
+            <p
+              class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1"
+            >
+              Entregador
+            </p>
+            <p class="text-gray-900 font-medium">
+              {{ selectedRecord.biker_name }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Data</p>
-            <p class="text-gray-900 font-medium">{{ formatDateBR(selectedRecord.date) }}</p>
+            <p
+              class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1"
+            >
+              Data
+            </p>
+            <p class="text-gray-900 font-medium">
+              {{ formatDateBR(selectedRecord.date) }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Empresa</p>
-            <p class="text-gray-900 font-medium">{{ selectedRecord.company_name }}</p>
+            <p
+              class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1"
+            >
+              Empresa
+            </p>
+            <p class="text-gray-900 font-medium">
+              {{ selectedRecord.company_name }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Valor</p>
-            <p class="text-green-700 font-bold">{{ formatCurrency(selectedRecord.amount) }}</p>
+            <p
+              class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1"
+            >
+              Valor
+            </p>
+            <p class="text-green-700 font-bold">
+              {{ formatCurrency(selectedRecord.amount) }}
+            </p>
           </div>
         </div>
 
-        <div v-if="selectedRecord.image_url" class="mt-4 border-t border-gray-100 pt-4">
-          <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Foto do dia</p>
-          <img :src="selectedRecord.image_url" class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity" alt="Foto do dia" @click="zoomedImage = selectedRecord.image_url" />
-          
-          <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <div
+          v-if="selectedRecord.image_url"
+          class="mt-4 border-t border-gray-100 pt-4"
+        >
+          <p
+            class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2"
+          >
+            Foto do dia
+          </p>
+          <img
+            :src="selectedRecord.image_url"
+            class="w-full rounded-xl border border-gray-200 mb-4 max-h-64 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+            alt="Foto do dia"
+            @click="zoomedImage = selectedRecord.image_url"
+          />
+
+          <div
+            class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200"
+          >
             <div class="flex-1">
-              <p class="text-sm font-semibold text-gray-800">Validação da Foto</p>
-              <p class="text-xs text-gray-500">Confirme se a foto confere com o valor</p>
+              <p class="text-sm font-semibold text-gray-800">
+                Validação da Foto
+              </p>
+              <p class="text-xs text-gray-500">
+                Confirme se a foto confere com o valor
+              </p>
             </div>
             <button
               @click="toggleCheck(selectedRecord)"
               class="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              :class="selectedRecord.is_checked ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary-focus'"
+              :class="
+                selectedRecord.is_checked
+                  ? 'bg-red-500 hover:bg-red-600'
+                  : 'bg-primary hover:bg-primary-focus'
+              "
             >
-              {{ selectedRecord.is_checked ? 'Desfazer Aprovação' : 'Aprovar' }}
+              {{ selectedRecord.is_checked ? "Desfazer Aprovação" : "Aprovar" }}
             </button>
           </div>
         </div>
         <div v-else class="mt-4 border-t border-gray-100 pt-4">
-          <p class="text-sm text-gray-500 italic text-center py-4">Nenhuma foto anexada a este registro.</p>
+          <p class="text-sm text-gray-500 italic text-center py-4">
+            Nenhuma foto anexada a este registro.
+          </p>
         </div>
 
         <div class="flex justify-end pt-4">
@@ -497,11 +586,21 @@
     <!-- Zoom Modal -->
     <ClientOnly>
       <Teleport to="body">
-        <div v-if="zoomedImage" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm" @click="zoomedImage = null">
-          <button class="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors">
+        <div
+          v-if="zoomedImage"
+          class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          @click="zoomedImage = null"
+        >
+          <button
+            class="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors"
+          >
             <UIcon name="i-heroicons-x-mark" class="w-8 h-8" />
           </button>
-          <img :src="zoomedImage" class="max-w-full max-h-full object-contain select-none shadow-2xl rounded-sm" @click.stop />
+          <img
+            :src="zoomedImage"
+            class="max-w-full max-h-full object-contain select-none shadow-2xl rounded-sm"
+            @click.stop
+          />
         </div>
       </Teleport>
     </ClientOnly>
@@ -526,6 +625,20 @@ const filterType = ref("");
 const filterPaid = ref("");
 const filterChecked = ref("");
 const isRefreshing = ref(false);
+
+// Filter panel toggle – open on desktop (md+), closed by default on mobile
+const filtersOpen = ref(false);
+
+const activeFilterCount = computed(
+  () =>
+    [
+      filterCompany.value,
+      filterBiker.value,
+      filterType.value,
+      filterPaid.value,
+      filterChecked.value,
+    ].filter((v) => v !== "").length,
+);
 
 const zoomedImage = ref<string | null>(null);
 
@@ -696,7 +809,8 @@ const fetchRecords = async () => {
     if (filterBiker.value) params.set("bikerId", filterBiker.value);
     if (filterType.value) params.set("type", filterType.value);
     if (filterPaid.value !== "") params.set("isPaid", filterPaid.value);
-    if (filterChecked.value !== "") params.set("isChecked", filterChecked.value);
+    if (filterChecked.value !== "")
+      params.set("isChecked", filterChecked.value);
 
     const res = await $fetch<{ success: boolean; data: any }>(
       `/api/biker-payments/records?${params.toString()}`,
@@ -724,17 +838,23 @@ const viewDetails = (r: any) => {
 const toggleCheck = async (r: any) => {
   try {
     const newValue = !r.is_checked;
-    const res = await $fetch<{ success: boolean }>(`/api/biker-payments/record/${r.id}`, {
-      method: "PUT",
-      body: { is_checked: newValue },
-    });
+    const res = await $fetch<{ success: boolean }>(
+      `/api/biker-payments/record/${r.id}`,
+      {
+        method: "PUT",
+        body: { is_checked: newValue },
+      },
+    );
     if (res.success) {
       r.is_checked = newValue;
       toast.add({ color: "success", title: "Status atualizado com sucesso!" });
     }
   } catch (error: any) {
     console.error("Erro ao validar:", error);
-    toast.add({ color: "error", title: error?.data?.statusMessage || "Erro ao atualizar status" });
+    toast.add({
+      color: "error",
+      title: error?.data?.statusMessage || "Erro ao atualizar status",
+    });
   }
 };
 
