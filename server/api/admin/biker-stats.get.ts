@@ -169,7 +169,7 @@ export default defineEventHandler(async (event) => {
 
         const weekPayments = sortedPayments.map((p: any) => ({
           ...p,
-          company_name: companyMap[p.company_id] || "Desconhecida",
+          company_name: p.is_advance ? "Adiantamento" : (companyMap[p.company_id] || "Desconhecida"),
         }));
 
         // Compute totals from the week's records

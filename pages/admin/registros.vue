@@ -524,6 +524,16 @@
               {{ formatCurrency(selectedRecord.amount) }}
             </p>
           </div>
+          <div v-if="!selectedRecord.is_advance">
+            <p
+              class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1"
+            >
+              Total de Entregas
+            </p>
+            <p class="text-gray-900 font-medium">
+              {{ selectedRecord.total_deliveries || 0 }}
+            </p>
+          </div>
         </div>
 
         <div
