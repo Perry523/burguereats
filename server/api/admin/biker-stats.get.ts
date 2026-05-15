@@ -231,20 +231,43 @@ export default defineEventHandler(async (event) => {
           }
         });
 
-        const totalFees = unpaidDeliveriesCount * 1;
+        let totalFees = unpaidDeliveriesCount * 1;
         const regularPaymentsCount = weekPayments.filter(
           (p: any) => !p.is_advance,
         ).length;
         const weekPaid =
           regularPaymentsCount > 0 && paidCount === regularPaymentsCount;
 
+        // When the week is paid, fetch the actual net amount from biker_payouts
+        // instead of using the gross sum from biker_payments (which doesn't
+        // account for advance and delivery fee deductions).
+        let actualPaidTotal = paidTotal;
+        if (weekPaid && dateFrom && dateTo) {
+          const { data: payoutRecord } = await supabase
+            .from("biker_payouts")
+            .select("amount_paid, discounts, delivery_fee_total")
+            .eq("biker_id", bikerId)
+            .eq("week_from", dateFrom)
+            .eq("week_to", dateTo)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (payoutRecord) {
+            actualPaidTotal = Number(payoutRecord.amount_paid) || 0;
+            // Also reflect the actual discounts from the payout receipt
+            advances = Number(payoutRecord.discounts) || 0;
+            totalFees = Number(payoutRecord.delivery_fee_total) || 0;
+          }
+        }
+
         financial = {
-          wallet: openPaymentsTotal, // gross unpaid for this period
+          wallet: weekPaid ? paidTotal : openPaymentsTotal, // gross for this period
           advances,
           totalFees,
           netPay: openPaymentsTotal - advances - totalFees,
           weekPaid,
-          paidTotal,
+          paidTotal: actualPaidTotal,
           weekPayments,
         };
       }
