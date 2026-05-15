@@ -251,15 +251,28 @@
           </div>
         </UCard>
 
-        <!-- Descontos pendentes -->
+        <!-- Descontos pendentes / aplicados -->
         <UCard class="bg-white shadow-sm border border-gray-200">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm font-medium">
-                Descontos Pendentes
+                {{
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
+                    ? "Descontos Aplicados"
+                    : "Descontos Pendentes"
+                }}
               </p>
               <div class="mt-1">
-                <p class="text-3xl font-bold text-red-600">
+                <p
+                  :class="[
+                    'text-3xl font-bold',
+                    stats.financial?.weekPaid &&
+                    stats.financial?.weekPayments?.length
+                      ? 'text-gray-600'
+                      : 'text-red-600',
+                  ]"
+                >
                   {{
                     stats.financial
                       ? formatCurrency(
@@ -277,10 +290,29 @@
                 </p>
               </div>
             </div>
-            <div class="p-3 bg-red-50 rounded-lg">
+            <div
+              :class="[
+                'p-3 rounded-lg',
+                stats.financial?.weekPaid &&
+                stats.financial?.weekPayments?.length
+                  ? 'bg-gray-100'
+                  : 'bg-red-50',
+              ]"
+            >
               <UIcon
-                name="i-ph-trend-down-duotone"
-                class="w-8 h-8 text-red-400"
+                :name="
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
+                    ? 'i-ph-check-circle-duotone'
+                    : 'i-ph-trend-down-duotone'
+                "
+                :class="[
+                  'w-8 h-8',
+                  stats.financial?.weekPaid &&
+                  stats.financial?.weekPayments?.length
+                    ? 'text-gray-400'
+                    : 'text-red-400',
+                ]"
               />
             </div>
           </div>
@@ -783,13 +815,6 @@ const fetchStats = async () => {
     const res = await $fetch<{ success: boolean; data: any }>(url);
     if (res.success && res.data) {
       stats.value = res.data;
-      if (
-        isBikerRole.value &&
-        auth.user &&
-        res.data.financial?.netPay !== undefined
-      ) {
-        auth.user.wallet = res.data.financial.netPay;
-      }
     }
   } catch (error) {
     console.error("Error fetching stats:", error);

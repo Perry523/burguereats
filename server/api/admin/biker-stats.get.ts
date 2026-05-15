@@ -265,7 +265,7 @@ export default defineEventHandler(async (event) => {
           wallet: weekPaid ? paidTotal : openPaymentsTotal, // gross for this period
           advances,
           totalFees,
-          netPay: openPaymentsTotal - advances - totalFees,
+          netPay: weekPaid ? actualPaidTotal : openPaymentsTotal - advances - totalFees,
           weekPaid,
           paidTotal: actualPaidTotal,
           weekPayments,
