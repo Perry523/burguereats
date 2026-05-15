@@ -9,14 +9,14 @@ export default defineEventHandler(async (event) => {
     let bikerId = query.bikerId as string | undefined;
     const dateRange = query.dateRange as string | undefined;
     const dateFrom = query.dateFrom as string | undefined; // yyyy-mm-dd
-    const dateTo = query.dateTo as string | undefined;     // yyyy-mm-dd
+    const dateTo = query.dateTo as string | undefined; // yyyy-mm-dd
 
     // Enforcement: Managers can only see their own company's stats
-    if (auth.role === 'manager') {
+    if (auth.role === "manager") {
       companyId = auth.companyId as string;
     }
 
-    if (!companyId && auth.role !== 'admin' && auth.role !== 'biker') {
+    if (!companyId && auth.role !== "admin" && auth.role !== "biker") {
       throw createError({
         statusCode: 400,
         statusMessage: "Company ID is required",
@@ -32,13 +32,13 @@ export default defineEventHandler(async (event) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (auth.role === 'biker') {
+    if (auth.role === "biker") {
       const { data: entregador } = await supabase
-        .from('Entregadores')
-        .select('id')
-        .eq('userId', auth.id)
+        .from("Entregadores")
+        .select("id")
+        .eq("userId", auth.id)
         .single();
-      
+
       if (entregador) {
         bikerId = entregador.id;
       }
@@ -63,28 +63,35 @@ export default defineEventHandler(async (event) => {
     const now = dayjs();
     if (dateFrom && dateTo) {
       // Explicit date range from week picker (takes priority)
-      ordersQuery = ordersQuery.gte("created_at", `${dateFrom}T00:00:00`).lte("created_at", `${dateTo}T23:59:59`);
+      ordersQuery = ordersQuery
+        .gte("created_at", `${dateFrom}T00:00:00`)
+        .lte("created_at", `${dateTo}T23:59:59`);
     } else if (dateRange && dateRange !== "all") {
       let dfrom: string | null = null;
       let dto = now.endOf("day").toISOString();
       switch (dateRange) {
         case "today":
-          dfrom = now.startOf("day").toISOString(); break;
+          dfrom = now.startOf("day").toISOString();
+          break;
         case "yesterday":
           dfrom = now.subtract(1, "day").startOf("day").toISOString();
-          dto = now.subtract(1, "day").endOf("day").toISOString(); break;
+          dto = now.subtract(1, "day").endOf("day").toISOString();
+          break;
         case "last_week":
-          dfrom = now.subtract(7, "day").startOf("day").toISOString(); break;
+          dfrom = now.subtract(7, "day").startOf("day").toISOString();
+          break;
         case "last_month":
-          dfrom = now.subtract(1, "month").startOf("day").toISOString(); break;
+          dfrom = now.subtract(1, "month").startOf("day").toISOString();
+          break;
       }
-      if (dfrom) ordersQuery = ordersQuery.gte("created_at", dfrom).lte("created_at", dto);
+      if (dfrom)
+        ordersQuery = ordersQuery
+          .gte("created_at", dfrom)
+          .lte("created_at", dto);
     }
-    
+
     // --- PAYMENTS QUERY FOR ADMIN STATS ---
-    let paymentsQuery = supabase
-      .from("biker_payments")
-      .select("*");
+    let paymentsQuery = supabase.from("biker_payments").select("*");
 
     if (companyId) {
       paymentsQuery = paymentsQuery.eq("company_id", companyId);
@@ -92,21 +99,29 @@ export default defineEventHandler(async (event) => {
     if (bikerId && bikerId !== "all") {
       paymentsQuery = paymentsQuery.eq("biker_id", bikerId);
     }
-    
+
     if (dateFrom && dateTo) {
       paymentsQuery = paymentsQuery.gte("date", dateFrom).lte("date", dateTo);
     } else if (dateRange && dateRange !== "all") {
       let dFromStr = "";
       let dToStr = now.endOf("day").format("YYYY-MM-DD");
       switch (dateRange) {
-        case "today": dFromStr = now.format("YYYY-MM-DD"); break;
+        case "today":
+          dFromStr = now.format("YYYY-MM-DD");
+          break;
         case "yesterday":
           dFromStr = now.subtract(1, "day").format("YYYY-MM-DD");
-          dToStr = dFromStr; break;
-        case "last_week": dFromStr = now.subtract(7, "day").format("YYYY-MM-DD"); break;
-        case "last_month": dFromStr = now.subtract(1, "month").format("YYYY-MM-DD"); break;
+          dToStr = dFromStr;
+          break;
+        case "last_week":
+          dFromStr = now.subtract(7, "day").format("YYYY-MM-DD");
+          break;
+        case "last_month":
+          dFromStr = now.subtract(1, "month").format("YYYY-MM-DD");
+          break;
       }
-      if (dFromStr) paymentsQuery = paymentsQuery.gte("date", dFromStr).lte("date", dToStr);
+      if (dFromStr)
+        paymentsQuery = paymentsQuery.gte("date", dFromStr).lte("date", dToStr);
     }
     // ------------------------------------
 
@@ -118,15 +133,20 @@ export default defineEventHandler(async (event) => {
     let totalEarned = 0;
     let totalSpent = 0;
 
-    const completedOrders = (allOrders || []).filter(o => o.status === "completed" || o.status === "delivering");
+    const completedOrders = (allOrders || []).filter(
+      (o) => o.status === "completed" || o.status === "delivering",
+    );
 
-    completedOrders.forEach(order => {
+    completedOrders.forEach((order) => {
       totalEarned += order.total || 0;
       totalSpent += order.delivery_fee || 0;
     });
 
     const recentDeliveries = (allOrders || [])
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
       .slice(0, 10);
 
     // Extra financial stats if a specific biker is selected
@@ -137,25 +157,36 @@ export default defineEventHandler(async (event) => {
         .select("advance_money")
         .eq("id", bikerId)
         .single();
-      
+
       if (b) {
         // ── Payments for the selected range (paid + unpaid) ──
         let paymentsQueryBuilder = supabase
           .from("biker_payments")
-          .select("id, amount, total_deliveries, is_paid, date, company_id, is_advance")
+          .select(
+            "id, amount, total_deliveries, is_paid, date, company_id, is_advance",
+          )
           .eq("biker_id", bikerId);
 
         if (dateFrom && dateTo) {
-          paymentsQueryBuilder = paymentsQueryBuilder.gte("date", dateFrom).lte("date", dateTo);
+          paymentsQueryBuilder = paymentsQueryBuilder
+            .gte("date", dateFrom)
+            .lte("date", dateTo);
         }
 
         const { data: rawPayments, error: payErr } = await paymentsQueryBuilder;
         if (payErr) console.error("payments query error:", payErr);
 
-        const sortedPayments = (rawPayments || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const sortedPayments = (rawPayments || []).sort(
+          (a: any, b: any) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
 
         // Enrich with company names
-        const companyIds = [...new Set(sortedPayments.map((p: any) => p.company_id).filter(Boolean))];
+        const companyIds = [
+          ...new Set(
+            sortedPayments.map((p: any) => p.company_id).filter(Boolean),
+          ),
+        ];
         let companyMap: Record<string, string> = {};
         if (companyIds.length > 0) {
           const { data: companies } = await supabase
@@ -169,7 +200,9 @@ export default defineEventHandler(async (event) => {
 
         const weekPayments = sortedPayments.map((p: any) => ({
           ...p,
-          company_name: p.is_advance ? "Adiantamento" : (companyMap[p.company_id] || "Desconhecida"),
+          company_name: p.is_advance
+            ? "Adiantamento"
+            : companyMap[p.company_id] || "Adiantamento",
         }));
 
         // Compute totals from the week's records
@@ -179,7 +212,7 @@ export default defineEventHandler(async (event) => {
         let paidCount = 0;
         let advances = 0;
 
-        weekPayments.forEach(p => {
+        weekPayments.forEach((p) => {
           if (p.is_advance) {
             // Only count advances that haven't been paid yet as a deduction.
             // Advances already marked as paid were settled in a previous payout
@@ -199,11 +232,14 @@ export default defineEventHandler(async (event) => {
         });
 
         const totalFees = unpaidDeliveriesCount * 1;
-        const regularPaymentsCount = weekPayments.filter((p: any) => !p.is_advance).length;
-        const weekPaid = regularPaymentsCount > 0 && paidCount === regularPaymentsCount;
+        const regularPaymentsCount = weekPayments.filter(
+          (p: any) => !p.is_advance,
+        ).length;
+        const weekPaid =
+          regularPaymentsCount > 0 && paidCount === regularPaymentsCount;
 
         financial = {
-          wallet: openPaymentsTotal,      // gross unpaid for this period
+          wallet: openPaymentsTotal, // gross unpaid for this period
           advances,
           totalFees,
           netPay: openPaymentsTotal - advances - totalFees,
@@ -220,7 +256,7 @@ export default defineEventHandler(async (event) => {
       totalEarned,
       totalSpent,
       recentDeliveries,
-      financial
+      financial,
     };
 
     // --- PROCESS PAYMENTS STATS FOR ADMIN ---
@@ -232,7 +268,7 @@ export default defineEventHandler(async (event) => {
     let totalAdvances = 0;
     let pendingAdvances = 0;
 
-    (allPayments || []).forEach(p => {
+    (allPayments || []).forEach((p) => {
       if (p.is_advance) {
         const amount = Number(p.amount) || 0;
         totalAdvances += amount;
@@ -242,7 +278,7 @@ export default defineEventHandler(async (event) => {
       } else {
         const deliveries = Number(p.total_deliveries) || 0;
         const amount = Number(p.amount) || 0;
-        
+
         totalDeliveriesCount += deliveries;
         totalGrossAmount += amount;
 
@@ -260,14 +296,21 @@ export default defineEventHandler(async (event) => {
       totalAdvances,
       pendingAdvances,
       totalServiceFee: pendingDeliveriesCount * 1,
-      totalNet: totalPendingAmount - (pendingDeliveriesCount * 1) - pendingAdvances,
-      pendingRegisters: (allPayments || []).filter(p => !p.is_paid).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10)
+      totalNet:
+        totalPendingAmount - pendingDeliveriesCount * 1 - pendingAdvances,
+      pendingRegisters: (allPayments || [])
+        .filter((p) => !p.is_paid)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .slice(0, 10),
     };
     // ----------------------------------------
 
     return {
       success: true,
-      data: stats
+      data: stats,
     };
   } catch (error: any) {
     if (error.statusCode) throw error;

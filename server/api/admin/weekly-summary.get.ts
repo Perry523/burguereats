@@ -14,15 +14,19 @@ export default defineEventHandler(async (event) => {
     const companyId = query.companyId as string | undefined;
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey)
+      throw new Error("Missing Supabase configuration");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Build query for biker_payments in the date range
     let paymentsQuery = supabase
       .from("biker_payments")
-      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance");
+      .select(
+        "id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance",
+      );
 
     if (dateFrom && dateTo) {
       paymentsQuery = paymentsQuery.gte("date", dateFrom).lte("date", dateTo);
@@ -41,13 +45,21 @@ export default defineEventHandler(async (event) => {
     const normalPayments = allPayments.filter((p: any) => !p.is_advance);
 
     // Gross total — advances must not inflate the billed amount
-    const grossTotal = normalPayments.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+    const grossTotal = normalPayments.reduce(
+      (acc: number, p: any) => acc + (Number(p.amount) || 0),
+      0,
+    );
 
     // Total deliveries
-    const totalDeliveries = normalPayments.reduce((acc: number, p: any) => acc + (Number(p.total_deliveries) || 0), 0);
+    const totalDeliveries = normalPayments.reduce(
+      (acc: number, p: any) => acc + (Number(p.total_deliveries) || 0),
+      0,
+    );
 
     // Get unique biker IDs (from normal payments only)
-    const bikerIds = [...new Set(normalPayments.map((p: any) => p.biker_id).filter(Boolean))];
+    const bikerIds = [
+      ...new Set(normalPayments.map((p: any) => p.biker_id).filter(Boolean)),
+    ];
 
     // Fetch biker names
     let bikerMap: Record<string, string> = {};
@@ -62,7 +74,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get unique company IDs and names
-    const companyIds = [...new Set(allPayments.map((p) => p.company_id).filter(Boolean))];
+    const companyIds = [
+      ...new Set(allPayments.map((p) => p.company_id).filter(Boolean)),
+    ];
     let companyMap: Record<string, string> = {};
     if (companyIds.length > 0) {
       const { data: companies } = await supabase
@@ -78,14 +92,17 @@ export default defineEventHandler(async (event) => {
     const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
     // Group by biker
-    const bikerGroupMap: Record<string, {
-      bikerId: string;
-      bikerName: string;
-      gross: number;
-      totalDeliveries: number;
-      days: Set<string>;
-      records: number;
-    }> = {};
+    const bikerGroupMap: Record<
+      string,
+      {
+        bikerId: string;
+        bikerName: string;
+        gross: number;
+        totalDeliveries: number;
+        days: Set<string>;
+        records: number;
+      }
+    > = {};
 
     // Use only normal payments for biker grouping — advances must not
     // add fake "working days", inflate records count, or gross amount.
@@ -127,14 +144,27 @@ export default defineEventHandler(async (event) => {
       .sort((a, b) => b.gross - a.gross);
 
     // Company breakdown (when no specific company filter)
-    const companyBreakdown: { companyId: string; companyName: string; gross: number; bikerCount: number }[] = [];
+    const companyBreakdown: {
+      companyId: string;
+      companyName: string;
+      gross: number;
+      bikerCount: number;
+    }[] = [];
     if (!companyId) {
-      const companyGroupMap: Record<string, { companyId: string; companyName: string; gross: number; bikerIds: Set<string> }> = {};
+      const companyGroupMap: Record<
+        string,
+        {
+          companyId: string;
+          companyName: string;
+          gross: number;
+          bikerIds: Set<string>;
+        }
+      > = {};
       normalPayments.forEach((p: any) => {
         if (!companyGroupMap[p.company_id]) {
           companyGroupMap[p.company_id] = {
             companyId: p.company_id,
-            companyName: companyMap[p.company_id] || "Desconhecida",
+            companyName: companyMap[p.company_id] || "Adiantamento",
             gross: 0,
             bikerIds: new Set(),
           };
@@ -171,12 +201,17 @@ export default defineEventHandler(async (event) => {
         bikers,
         companyBreakdown,
         companies: allCompanies || [],
-        selectedCompanyName: companyId ? (companyMap[companyId] || "Desconhecida") : null,
+        selectedCompanyName: companyId
+          ? companyMap[companyId] || "Adiantamento"
+          : null,
       },
     };
   } catch (error: any) {
     if (error.statusCode) throw error;
     console.error("Error fetching weekly summary:", error);
-    throw createError({ statusCode: 500, statusMessage: "Failed to fetch weekly summary" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to fetch weekly summary",
+    });
   }
 });

@@ -22,7 +22,8 @@ export default defineEventHandler(async (event) => {
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
+    if (!supabaseUrl || !supabaseKey)
+      throw new Error("Missing Supabase configuration");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -40,8 +41,12 @@ export default defineEventHandler(async (event) => {
     if (error) throw error;
 
     // Enrich with biker names and company names
-    const bikerIds = [...new Set((assignments || []).map((a: any) => a.biker_id))];
-    const companyIds = [...new Set((assignments || []).map((a: any) => a.company_id))];
+    const bikerIds = [
+      ...new Set((assignments || []).map((a: any) => a.biker_id)),
+    ];
+    const companyIds = [
+      ...new Set((assignments || []).map((a: any) => a.company_id)),
+    ];
 
     let bikerMap: Record<string, any> = {};
     let companyMap: Record<string, any> = {};
@@ -71,7 +76,7 @@ export default defineEventHandler(async (event) => {
       biker_name: bikerMap[a.biker_id]?.name || "Desconhecido",
       biker_email: bikerMap[a.biker_id]?.email || "",
       biker_phone: bikerMap[a.biker_id]?.phone || "",
-      company_name: companyMap[a.company_id]?.name || "Desconhecida",
+      company_name: companyMap[a.company_id]?.name || "Adiantamento",
     }));
 
     return { success: true, data: enriched };

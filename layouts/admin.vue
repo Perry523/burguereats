@@ -24,12 +24,12 @@
                 alt="Company Logo"
                 class="h-12 w-12 rounded-2xl object-cover"
               />
-              <div
+              <img
                 v-else
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold uppercase"
-              >
-                {{ companyInitials }}
-              </div>
+                src="/logo.png"
+                alt="Company Logo"
+                class="h-12 w-12 rounded-2xl bg-white object-cover"
+              />
               <div class="space-y-1">
                 <p class="text-sm font-semibold text-white">
                   {{ companyName }}
@@ -388,7 +388,7 @@ const isRouteActive = (path: string) => {
 };
 
 const companyName = computed(
-  () => authStore.user?.company?.name ?? "Restaurante",
+  () => authStore.user?.company?.name ?? "Vapt Vupt",
 );
 const companyEmail = computed(() => authStore.user?.company?.email ?? "");
 const companyLogo = computed(() => {

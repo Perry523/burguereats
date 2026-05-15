@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
+    if (!supabaseUrl || !supabaseKey)
+      throw new Error("Missing Supabase configuration");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -33,7 +34,10 @@ export default defineEventHandler(async (event) => {
     const dateTo = query.dateTo as string;
 
     if (!dateFrom || !dateTo) {
-      throw createError({ statusCode: 400, statusMessage: "dateFrom and dateTo required" });
+      throw createError({
+        statusCode: 400,
+        statusMessage: "dateFrom and dateTo required",
+      });
     }
 
     // Fetch assignments for this biker in the date range
@@ -48,7 +52,9 @@ export default defineEventHandler(async (event) => {
     if (assignErr) throw assignErr;
 
     // Enrich with company names
-    const companyIds = [...new Set((assignments || []).map((a: any) => a.company_id))];
+    const companyIds = [
+      ...new Set((assignments || []).map((a: any) => a.company_id)),
+    ];
     let companyMap: Record<string, any> = {};
 
     if (companyIds.length > 0) {
@@ -67,8 +73,10 @@ export default defineEventHandler(async (event) => {
       const hours = company?.operating_hours?.[dayOfWeek];
       return {
         ...a,
-        company_name: company?.name || "Desconhecida",
-        hours: hours?.enabled ? `${hours.open_time} - ${hours.close_time}` : null,
+        company_name: company?.name || "Adiantamento",
+        hours: hours?.enabled
+          ? `${hours.open_time} - ${hours.close_time}`
+          : null,
       };
     });
 
@@ -76,6 +84,9 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     if (error.statusCode) throw error;
     console.error("Error fetching biker escala:", error);
-    throw createError({ statusCode: 500, statusMessage: "Failed to fetch escala" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to fetch escala",
+    });
   }
 });

@@ -21,14 +21,19 @@ export default defineEventHandler(async (event) => {
     const perPage = Math.min(Number(query.perPage) || 50, 200);
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey)
+      throw new Error("Missing Supabase configuration");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let q = supabase
       .from("biker_payments")
-      .select("id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance, image_url, is_checked, created_at", { count: "exact" })
+      .select(
+        "id, biker_id, company_id, date, amount, total_deliveries, is_paid, is_advance, image_url, is_checked, created_at",
+        { count: "exact" },
+      )
       .order("date", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -54,8 +59,12 @@ export default defineEventHandler(async (event) => {
     // Enrich with biker and company names
     const allPayments = payments || [];
 
-    const bikerIds = [...new Set(allPayments.map((p: any) => p.biker_id).filter(Boolean))];
-    const companyIds = [...new Set(allPayments.map((p: any) => p.company_id).filter(Boolean))];
+    const bikerIds = [
+      ...new Set(allPayments.map((p: any) => p.biker_id).filter(Boolean)),
+    ];
+    const companyIds = [
+      ...new Set(allPayments.map((p: any) => p.company_id).filter(Boolean)),
+    ];
 
     let bikerMap: Record<string, string> = {};
     if (bikerIds.length > 0) {
@@ -78,7 +87,9 @@ export default defineEventHandler(async (event) => {
     const enriched = allPayments.map((p: any) => ({
       ...p,
       biker_name: bikerMap[p.biker_id] || "Desconhecido",
-      company_name: p.is_advance ? "Adiantamento" : (companyMap[p.company_id] || "Desconhecida"),
+      company_name: p.is_advance
+        ? "Adiantamento"
+        : companyMap[p.company_id] || "Adiantamento",
     }));
 
     // Also fetch all bikers and companies for filter dropdowns
@@ -106,6 +117,9 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     if (error.statusCode) throw error;
     console.error("Error fetching records:", error);
-    throw createError({ statusCode: 500, statusMessage: "Failed to fetch records" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to fetch records",
+    });
   }
 });

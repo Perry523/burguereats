@@ -69,6 +69,7 @@
               :class="{ 'border-orange-400 bg-orange-50': isDragging }"
             >
               <input
+                ref="fileInput"
                 type="file"
                 accept="image/*"
                 @change="handleFileSelect"
@@ -235,6 +236,7 @@ const imagePreview = ref<string | null>(null);
 const imageError = ref<string | null>(null);
 const objectUrl = ref<string | null>(null);
 const isDragging = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
   name: "",
@@ -285,6 +287,9 @@ const processFile = (file: File) => {
 const removeImage = () => {
   imageFile.value = null;
   form.image = "";
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
   if (objectUrl.value) {
     URL.revokeObjectURL(objectUrl.value);
     objectUrl.value = null;

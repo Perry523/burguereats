@@ -433,6 +433,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">Foto do dia <span class="text-red-500">*</span></label>
           <div class="mt-1 flex items-center gap-4">
             <input
+              ref="fileInput"
               type="file"
               accept="image/*"
               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
@@ -538,6 +539,7 @@ const form = ref({
   image_url: "",
 });
 
+const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFile = ref<File | null>(null);
 const filePreview = ref<string>("");
 
@@ -553,6 +555,9 @@ const clearImage = () => {
   selectedFile.value = null;
   filePreview.value = "";
   form.value.image_url = "";
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
 };
 
 // ── Week Range Picker ──────────────────────────────────────────────
