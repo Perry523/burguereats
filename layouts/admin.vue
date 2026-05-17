@@ -453,8 +453,23 @@ const fetchCompanies = async () => {
   }
 };
 
+const fetchBikerWallet = async () => {
+  if (authStore.user?.role !== "biker") return;
+  try {
+    const res = await $fetch<{ success: boolean; data?: { wallet: number } }>(
+      "/api/biker-payments",
+    );
+    if (res.success && res.data && authStore.user) {
+      authStore.user.wallet = res.data.wallet;
+    }
+  } catch (e) {
+    console.error("Error fetching biker wallet:", e);
+  }
+};
+
 onMounted(() => {
   fetchCompanies();
+  fetchBikerWallet();
 });
 
 watch(
